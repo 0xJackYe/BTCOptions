@@ -1,0 +1,9 @@
+[
+ {"name": "V1 (sandbox, unchanged)", "cfg": "V1"},
+ {"name": "Original idea (45d 25%OTM put after -5% day, hold)", "cfg": {"side": 0, "dte": 45, "delta": -0.25, "entry": 1, "entry_param": 0.05, "maxpos": 1, "tp": 1.0, "entry_hour": -1, "min_credit": 0.3}},
+ {"name": "A: weekly puts 0.20d, stop 2x, 4 lots (3x notional)", "cfg": {"side": 0, "dte": 7, "delta": 0.20, "tp": 1.0, "sl": 2.0, "maxpos": 4, "lever": 3.0, "min_credit": 0.2, "entry_hour": 8}},
+ {"name": "B: weekly puts 0.15d, stop 2x, 3 lots (3x notional)", "cfg": {"side": 0, "dte": 7, "delta": 0.15, "tp": 1.0, "sl": 2.0, "maxpos": 3, "lever": 3.0, "min_credit": 0.2, "entry_hour": 8}},
+ {"name": "C: weekly puts 0.08d, TP 90%, stop 2x, 4 lots (3x notional)", "cfg": {"side": 0, "dte": 7, "delta": 0.08, "tp": 0.9, "sl": 2.0, "maxpos": 4, "lever": 3.0, "min_credit": 0.5, "entry_hour": 8}},
+ {"name": "C-half: weekly puts 0.08d, TP 90%, stop 2x, 2 lots (1.5x notional)", "cfg": {"side": 0, "dte": 7, "delta": 0.08, "tp": 0.9, "sl": 2.0, "maxpos": 2, "lever": 1.5, "min_credit": 0.5, "entry_hour": 8}},
+ {"name": "D: 3-day puts 0.15d, stop 2x, 3 lots (3x notional)", "cfg": {"side": 0, "dte": 3, "delta": 0.15, "tp": 1.0, "sl": 2.0, "maxpos": 3, "lever": 3.0, "min_credit": 0.5, "entry_hour": 8}}
+]

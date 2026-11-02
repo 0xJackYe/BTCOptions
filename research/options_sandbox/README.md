@@ -6,6 +6,7 @@
 
 - [先读通俗策略说明](STRATEGY.md)
 - [查看冻结的年度示例与局限](examples/2026-11-03/README.md)
+- [Roast report: generator audit, calibrated v2 generator, V1 roast and strategy search (English)](roast/ROAST_REPORT.md)
 
 ## 从新clone开始
 

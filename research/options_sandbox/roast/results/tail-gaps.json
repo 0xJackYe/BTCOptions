@@ -1,0 +1,129 @@
+{
+ "real_2020_2026": {
+  "worst_1h_close_to_low": -0.2453302258162332,
+  "worst_4h_close_to_low": -0.2965343719303083,
+  "worst_24h_close_to_low": -0.5064252557508877
+ },
+ "injections": [
+  {
+   "drop": -0.15,
+   "pnl": -241.38820000000032,
+   "liquidated": false,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C (<=4 lots, 3x notional)"
+  },
+  {
+   "drop": -0.25,
+   "pnl": -503.0440000000002,
+   "liquidated": true,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C (<=4 lots, 3x notional)"
+  },
+  {
+   "drop": -0.35,
+   "pnl": -822.4172000000001,
+   "liquidated": true,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C (<=4 lots, 3x notional)"
+  },
+  {
+   "drop": -0.5,
+   "pnl": -1341.0520000000001,
+   "liquidated": true,
+   "bankrupt": true,
+   "open_lots_before_gap": null,
+   "strategy": "C (<=4 lots, 3x notional)"
+  },
+  {
+   "drop": -0.7,
+   "pnl": -2044.0484000000001,
+   "liquidated": true,
+   "bankrupt": true,
+   "open_lots_before_gap": null,
+   "strategy": "C (<=4 lots, 3x notional)"
+  },
+  {
+   "drop": -0.15,
+   "pnl": -109.29820000000018,
+   "liquidated": false,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C-half (<=2 lots)"
+  },
+  {
+   "drop": -0.25,
+   "pnl": -228.57800000000043,
+   "liquidated": false,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C-half (<=2 lots)"
+  },
+  {
+   "drop": -0.35,
+   "pnl": -387.70280000000025,
+   "liquidated": false,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C-half (<=2 lots)"
+  },
+  {
+   "drop": -0.5,
+   "pnl": -653.9760000000001,
+   "liquidated": true,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C-half (<=2 lots)"
+  },
+  {
+   "drop": -0.7,
+   "pnl": -1005.3992000000001,
+   "liquidated": true,
+   "bankrupt": true,
+   "open_lots_before_gap": null,
+   "strategy": "C-half (<=2 lots)"
+  },
+  {
+   "drop": -0.15,
+   "pnl": -54.08980000000008,
+   "liquidated": false,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C 1 lot (cash-secured)"
+  },
+  {
+   "drop": -0.25,
+   "pnl": -113.44600000000014,
+   "liquidated": false,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C 1 lot (cash-secured)"
+  },
+  {
+   "drop": -0.35,
+   "pnl": -189.68560000000002,
+   "liquidated": false,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C 1 lot (cash-secured)"
+  },
+  {
+   "drop": -0.5,
+   "pnl": -320.764,
+   "liquidated": false,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C 1 lot (cash-secured)"
+  },
+  {
+   "drop": -0.7,
+   "pnl": -499.02520000000004,
+   "liquidated": false,
+   "bankrupt": false,
+   "open_lots_before_gap": null,
+   "strategy": "C 1 lot (cash-secured)"
+  }
+ ]
+}
