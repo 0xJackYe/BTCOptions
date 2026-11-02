@@ -1,0 +1,9 @@
+# Portable source code; preserve frozen data byte-for-byte for provenance hashes.
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+*.json -text
+*.csv -text
+*.png binary

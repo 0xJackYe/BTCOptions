@@ -1,0 +1,71 @@
+{
+  "type": "deterministic_tail_injections_not_mixed_into_MC_probabilities",
+  "cases": [
+    {
+      "case": "put_down70pct_after_open",
+      "not_a_probability_estimate": true,
+      "pre_shock_spot": 75300.0,
+      "post_shock_spot": 22590.0,
+      "metrics": {
+        "end_nav": 835.015064,
+        "holding_benchmark_nav": 1225.9,
+        "total_return": -0.5361027422222222,
+        "excess_return": -0.2171582977777778,
+        "max_drawdown": 0.5361027422222222,
+        "max_mm_ae": 0.3971501781976753,
+        "opened_legs": 1.0,
+        "closed_legs": 1.0,
+        "potential_intrahour_liquidations": 0.0,
+        "failed_exit_hours": 0.0,
+        "all_fees": 0.23493599999999998,
+        "realized_option_pnl": -390.88493600000004,
+        "gross_premiums": 7.25,
+        "end_btc": 0.01,
+        "end_wallet_usdt": 609.1150640000001,
+        "spot_buys": 0.0,
+        "spot_sells": 0.0,
+        "cash_or_inventory_rejections": 0.0,
+        "margin_rejections": 0.0,
+        "invariant_violations": 0.0,
+        "terminal_option_liability": 0.0,
+        "initial_nav": 1800.0,
+        "cash_reserve_breach_hours": 0.0,
+        "option_pnl_including_terminal_liability": -390.88493600000004,
+        "inventory_rebalance_pnl_vs_hold": 0.0
+      }
+    },
+    {
+      "case": "call_up200pct_after_open",
+      "not_a_probability_estimate": true,
+      "pre_shock_spot": 84700.0,
+      "post_shock_spot": 254100.0,
+      "metrics": {
+        "end_nav": 1930.40898,
+        "holding_benchmark_nav": 3541.0,
+        "total_return": 0.0724494333333332,
+        "excess_return": -0.8947727888888889,
+        "max_drawdown": 0.03237008756669113,
+        "max_mm_ae": 1.6754428379325297,
+        "opened_legs": 1.0,
+        "closed_legs": 1.0,
+        "potential_intrahour_liquidations": 1.0,
+        "failed_exit_hours": 0.0,
+        "all_fees": 5.641020000000001,
+        "realized_option_pnl": -1610.59102,
+        "gross_premiums": 8.45,
+        "end_btc": 0.01,
+        "end_wallet_usdt": -610.5910200000001,
+        "spot_buys": 0.0,
+        "spot_sells": 0.0,
+        "cash_or_inventory_rejections": 0.0,
+        "margin_rejections": 0.0,
+        "invariant_violations": 0.0,
+        "terminal_option_liability": 0.0,
+        "initial_nav": 1800.0,
+        "cash_reserve_breach_hours": 0.0,
+        "option_pnl_including_terminal_liability": -1610.59102,
+        "inventory_rebalance_pnl_vs_hold": 0.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "version": "covered-inventory-v1-draft-2026-11-02",
+  "status": "frozen_research_reference_NOT_live_trading_NOT_optimal",
+  "initial_core_btc": 0.09,
+  "initial_strategy_btc": 0.01,
+  "initial_strategy_usdt": 1000,
+  "budget_note": "Hypothetical example budget, not an account balance or funding instruction.",
+  "capital": {
+    "additional_external_deposits_allowed": false,
+    "borrowing_allowed": false,
+    "cash_floor_usdt": 200,
+    "inventory_min_btc": 0,
+    "inventory_max_btc": 0.02,
+    "max_call_nominal_btc": 0.01,
+    "max_put_nominal_btc": 0.01,
+    "max_open_legs": 2,
+    "same_direction_stacking": false,
+    "put_cash_reserve_strike_multiplier": 1.1,
+    "premiums_increase_position_size": false
+  },
+  "signal": {
+    "bar": "BTCUSDT spot closed 1h, UTC boundaries",
+    "return_window_hours": 24,
+    "put_arm_return_lte": -0.03,
+    "call_arm_return_gte": 0.03,
+    "arm_on_cross_only": true,
+    "put_confirm_1h_return_gte": 0.0025,
+    "call_confirm_1h_return_lte": -0.0025,
+    "arm_expiry_hours": 12,
+    "confirmation_must_follow_arm_hour": true,
+    "shock_return_abs_gte_blocks": 0.1,
+    "shock_pause_hours": 24,
+    "per_side_cooldown_hours": 24,
+    "startup_replay_signals": false,
+    "repeated_same_direction_cross_resets_arm": false
+  },
+  "selection": {
+    "dte_min": 10,
+    "dte_max": 20,
+    "dte_target": 14,
+    "otm_distance_min": 0.1,
+    "otm_distance_max": 0.25,
+    "abs_delta_min": 0.05,
+    "abs_delta_max": 0.15,
+    "abs_delta_target": 0.1,
+    "mark_iv_over_rv20_min": 1.2,
+    "bid_iv_over_rv20_min": 1.0,
+    "rv20_closed_hourly_log_return_count": 480,
+    "rv_annual_hours": 8760,
+    "rv_sample_ddof": 1,
+    "spread_over_mid_max": 0.2,
+    "net_credit_after_estimated_entry_and_40pct_price_exit_fees_min_usdt": 1.0,
+    "depth_size_multiplier_each_side": 5,
+    "same_expiry_required": true,
+    "ranking": [
+      "abs(DTE-14) ASC",
+      "abs(abs(delta)-0.10) ASC",
+      "net_credit DESC",
+      "spread ASC",
+      "symbol ASC"
+    ],
+    "no_qualified_contract_action": "SKIP"
+  },
+  "freshness": {
+    "index_event_age_sec_max": 5,
+    "book_event_age_sec_max": 5,
+    "mark_http_received_age_sec_max": 10,
+    "catalog_received_age_sec_max": 300,
+    "account_received_age_sec_max": 10,
+    "http_rtt_ms_max": 2000,
+    "clock_offset_error_ms_max": 1000,
+    "signal_compute_within_bar_close_sec_max": 120
+  },
+  "margin": {
+    "post_order_im_over_adjusted_equity_max": 0.35,
+    "post_order_mm_over_adjusted_equity_max": 0.2,
+    "freeze_new_open_mm_ratio_gte": 0.3,
+    "close_all_mm_ratio_gte": 0.5,
+    "stress_mm_ratio_max": 0.6,
+    "stress_spot_returns": [
+      -0.75,
+      -0.5,
+      -0.3,
+      -0.2,
+      -0.1,
+      0,
+      0.1,
+      0.2,
+      0.5,
+      1.0,
+      2.0
+    ],
+    "stress_iv_shifts_absolute": [
+      0,
+      0.2,
+      0.4
+    ],
+    "stress_times": [
+      "now",
+      "min(now_plus_1_day,expiry_minus_1_second)",
+      "expiry_minus_1_second"
+    ],
+    "model": "Black-Scholes r=API riskFreeInterest, no drift forecast; mark-anchored theoretical revaluation",
+    "liquidation_fee_reserve_included": true,
+    "spot_is_not_options_collateral": true,
+    "stress_hard_gate_spot_returns": [
+      -0.5,
+      -0.3,
+      -0.2,
+      -0.1,
+      0,
+      0.1,
+      0.2,
+      0.5
+    ],
+    "stress_report_only_spot_returns": [
+      -0.75,
+      1.0,
+      2.0
+    ],
+    "stress_tail_warning": "Beyond the +/-50% admission grid, tail stresses are reported separately and can exceed liquidation thresholds. No stop rule guarantees execution or no liquidation."
+  },
+  "exit": {
+    "take_profit_net_fraction_of_initial_net_credit": 0.6,
+    "abs_delta_risk_exit_gte": 0.35,
+    "put_spot_touch": "index <= strike",
+    "call_spot_touch": "index >= strike",
+    "time_exit_hours_to_expiry_lte": 72,
+    "roll_allowed": false,
+    "risk_exit_put_then_spot_buy": true,
+    "risk_exit_call_then_spot_sell": true,
+    "profit_or_time_exit_spot_trade": false,
+    "inventory_conversion_expiry_sec": 60,
+    "spot_slippage_fraction_max": 0.003,
+    "spot_estimated_fee_fraction": 0.001,
+    "put_conversion_total_net_debit_lte_locked_reserve": true,
+    "call_conversion_sell_qty_lte_confirmed_closed_nominal": true,
+    "expiry_put_conversion_budget_debit": "Actual cash settlement payout plus exercise fee replaces option buyback cost."
+  },
+  "drawdown": {
+    "trigger_gte": 0.25,
+    "action": "cancel_open_orders_close_options_keep_spot_no_new_spot_buys",
+    "minimum_pause_days": 30,
+    "resume_drawdown_lt": 0.2,
+    "resume_healthy_continuous_minutes": 60
+  },
+  "execution": {
+    "entry_type": "LIMIT_FOK at current best bid; skip if FOK unsupported",
+    "entry_attempts_max": 3,
+    "entry_attempt_spacing_sec": 10,
+    "close_type": "LIMIT_IOC at ceil_to_tick(max(ask*1.02,ask+2*tick)), capped by exchange upper limit",
+    "risk_close_retry_sec": 5,
+    "risk_close_failure_alert_after_sec": 30,
+    "connection_loss_cancel_open_orders_after_sec": 5,
+    "single_outstanding_action_per_symbol": true,
+    "quantity_policy": "nominal / unit rounded DOWN to exchange lot step; must pass minQty/maxQty; pending open orders reserve all resources",
+    "order_status_unknown_action": "RECONCILE_NO_RESUBMIT",
+    "fees": "actual account fees required; public default option trade rate 0.00024 capped at 10% premium for estimates",
+    "profit_close_limit": "Cap BUY limit at the highest tick-rounded-down price whose full remaining fill plus fees and past closing costs stays within 40% of initial net credit. If cap < ask, skip. Risk/time exits override this profit cap."
+  },
+  "validation": {
+    "automatic_trading_enabled": false,
+    "paper_min_days": 90,
+    "paper_closed_option_legs_min": 20,
+    "rule_violations_max": 0,
+    "mandatory_tests": [
+      "no_eligible_contract",
+      "call_inventory_lock",
+      "put_cash_double_spend",
+      "partial_fill",
+      "unknown_order_status",
+      "fees_deducted_in_btc",
+      "margin_and_spot_separate",
+      "expiry_cash_settlement",
+      "book_stale",
+      "transfer_failure",
+      "exchange_halt"
+    ],
+    "historical_profitability_status": "not established; current snapshot cannot establish expectancy"
+  },
+  "implementation_note": "Reference specification. Hourly sandbox is a documented approximation; this JSON does not dynamically configure engine constants."
+}

@@ -1,0 +1,6 @@
+# Exact environment used for the frozen example: Python 3.9.13 on Windows.
+numpy==1.24.3
+pandas==2.1.4
+scipy==1.13.1
+numba==0.60.0
+matplotlib==3.7.1

@@ -1,0 +1,590 @@
+[
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-18.zip",
+    "sha256": "1e2d2ad7f767a6d554c54fc0d78b873ac0006094e9dbcd31324c9b9083e86655"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-19.zip",
+    "sha256": "39ff3532a12a15fca896730d79a9533aff7e47eca7bae2b397d6283ed680184d"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-20.zip",
+    "sha256": "ba86efa81ca4c2fa16dd0c9e436467be5914ca9f934a4bb7291ce8ba990dfd8c"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-21.zip",
+    "sha256": "02346a47c813fc082c8a87223cab489145f31e353a779bd8dd03254a02bcd16f"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-22.zip",
+    "sha256": "c2ab004534dd8254ccd7909aeeffb47bab4652107e5eb914f0d12765315ff163"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-23.zip",
+    "sha256": "15167f00b8bc23b8ba85e96157bc2222fdae0d0ab46b4f4df7ee41594457af58"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-24.zip",
+    "sha256": "c851f0f8a054c7070721a48283060c9949aa2bfb000e1c7b53b6b3f3411db340"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-25.zip",
+    "sha256": "11645627101a2015e0637b73093960f2868b4a22b1a6e31ea7cdb235139698f9"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-26.zip",
+    "sha256": "fbf272437266583760480f8f88b67087f30083ed1152714c9ccd408cc46f35ab"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-27.zip",
+    "sha256": "2642d341d6024e271510dddb7a39f5fcf75149b4a18c956c0ef4b67fc1ede7ab"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-28.zip",
+    "sha256": "1912cefbb6bf454990697e4d151978cb9b8f6bd4ea0237aceb8b6794642622b4"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-29.zip",
+    "sha256": "33b1b9b83bafff19e050937de54df3ea5ad8c77b152c2e71e98c10c16de0120d"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-30.zip",
+    "sha256": "cd0329052d27b5964af7a55b830e9aa33ccb5c9a0ff40754e279615641a7f0f2"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-05-31.zip",
+    "sha256": "7fcdc635989906fd32b0f59fa3a66d0feaff74435ae7af0c5546e8c0b38ab8be"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-01.zip",
+    "sha256": "e942bb6f58dd9528582913ef3302e906181523b09e942087d6e2fcd2951c5c80"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-02.zip",
+    "sha256": "46362b9a88d969d539d5e0d304eeee621bff5ff0dea67250321d1c2f6bdc53ea"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-03.zip",
+    "sha256": "10a2a3b6c20a4c753d1947b48177d5a16420b70b6a6ee3c27aa46b30e633b386"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-04.zip",
+    "sha256": "ef5b807ba6ee0e70e91ef24cf33ea5f22016b6ed1be406a2724023bcf003638e"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-05.zip",
+    "sha256": "46c6baa398fafbd682a9a85365bde9a0917083c08862cec500d5120fb190d3e6"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-06.zip",
+    "sha256": "c531a3c694700e9f0fc45a496db8749dd2f74766c050ded0b2e8e7cae449629b"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-07.zip",
+    "sha256": "08bb40f29c0314c73344d113c3ddcb06d1eb2b98548d73ab2d8367e573cbe9c4"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-08.zip",
+    "sha256": "877c5ebd23bbcf59e98a0f8dcbbab34f16819f1dc0f61f1e2829f97f483ca59a"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-09.zip",
+    "sha256": "91c99e961a91f23ec9127fa193f04e8cf3117b74f527fc358d09bd8cd6ad2445"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-10.zip",
+    "sha256": "5852e47c0aceea8324b95fde1cc8915befe996b0b5d62714577b912488c2c2c1"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-11.zip",
+    "sha256": "0d9871ca750c21083e71997ad765a9b7c9199450e9adcfbe4d18c3b39d275e73"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-12.zip",
+    "sha256": "3f9d9b6c0463558f362fa0a5f45ccd87c404f8b9021d5a07ac3dcf3ac7aae58b"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-13.zip",
+    "sha256": "632afeafe94e1727d7d07cbbb5032833ba0e68ccac55e883e77f44c4302ff025"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-14.zip",
+    "sha256": "a7f0d10fc97e52d59bb869bf5b483c0fe3c7c69c742995e0b9be45cb09d59370"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-15.zip",
+    "sha256": "69b8791cbdb55d518f85dc5d8ee6bf08b1c05dc5b7f0220aa1a1d80bae47cb47"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-16.zip",
+    "sha256": "e86e68614a23752a0bd7966e4df57aaebad7ac1976afbbe4a9bd60e79bad70fd"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-17.zip",
+    "sha256": "517c952c5c5a3625150fc9dea05a5daf786b64f9fd74841fa9d5464c87cf0469"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-18.zip",
+    "sha256": "61e943630da57aa9316393c853130e50e84fb9aa64adb47735ab05d85802b8a4"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-19.zip",
+    "sha256": "0ce3a92c35c822fb07b146b1c657eaa87ff587a6ef5bbfce3833282188670217"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-20.zip",
+    "sha256": "631a8532fb835b6aec3f4763de118f7a121b9b95b36f9ad22d4aaee21acb3d83"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-21.zip",
+    "sha256": "21d7fabd507a166e50515a1b0565eccb99fbf857c6a7d9dff7ed731d7456c332"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-22.zip",
+    "sha256": "2d603ed4274a5c1e064b221ece8b1fa03042320dd31edea2db7d4fedd99d3066"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-23.zip",
+    "sha256": "b3e16f2561e271403828709a8a2deeb587e455ce19bfca371035cb91ec838b99"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-24.zip",
+    "sha256": "f42a09e646c70e563a7ab201e6361e3df3d77b459051ab9599b853c746988922"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-25.zip",
+    "sha256": "744397218d9503dc9aeac54eeaa32fa683d7d67e6e803f3ab44073c80d6ce45d"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-26.zip",
+    "sha256": "5cd0665cad7c89c488404ef01a656b8e66e89596d6b6fa427e9caddab70ae46b"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-27.zip",
+    "sha256": "1fb2999e0648378df8933da8523a2ee8a4227667ff84d76cf09fe4a6b29b8109"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-28.zip",
+    "sha256": "c1919a796d34e1bc543b3adcfe91af7d3c3b156282a76cb13573d521482f63fa"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-29.zip",
+    "sha256": "fae35a3db6c30eda7f56e15c91ac0af7e9bc6181fc189523742bc7321f362892"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-06-30.zip",
+    "sha256": "1d3a2fec48de24935b79b00088039d018b4c959f955d2b92418b8e94bd422640"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-01.zip",
+    "sha256": "cf2d8ef761f2fdde05bd38f1bf8d710ab9ce5785cb43cad1753d704c35e854a3"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-02.zip",
+    "sha256": "f1fbff064d385ac70cb5f450c22b74c25fbab98a05a732f31ddcbde65902ac34"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-03.zip",
+    "sha256": "81f7a7c5320e3c2d7202fa7716961276a96af4c113c459d0b732885232ff39e7"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-04.zip",
+    "sha256": "deee792cf89c22b9bac732e5267472965fa5ab201d470cf04014980549b6a6ec"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-05.zip",
+    "sha256": "c9dc882a07ccb9bcfde550d0f2b247558143912af3f9a3aeb413a2897aa71a06"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-06.zip",
+    "sha256": "2e49380442f2365f3043e2e1438e74d262f85bd9daafd9c60ea87d02360b12e9"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-07.zip",
+    "sha256": "e180d670650ae11e1dd68d9a04b9e5c6adf0eb23baa288e1bac179080775b7f0"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-08.zip",
+    "sha256": "c7c3cd2e8f6c141b222eb2b0a1786fd8cb6f9af42185a18bccbc28e794b4ab66"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-09.zip",
+    "sha256": "d45af1f5c7f6859832bc8891a1b1f9a8d7ae5261f3b2c34bcea20f2f9eaa7071"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-10.zip",
+    "sha256": "c56a6d49575fbb9bb1ad730514ec1f2640b87c72ec2844f33f3d0d4d584a529e"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-11.zip",
+    "sha256": "183dd1442b98bbb16f9fad3d964df269efaf69e6cf682b4a71c61b1f54651125"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-12.zip",
+    "sha256": "47f1cfa5f12689595a242dfb65beb7299eca3e710fed517a1bd6a83cd79fc99e"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-13.zip",
+    "sha256": "150f6bb89e084af2e0997bf1438dc4638a32dd0f63d67fa740a50756ceaf1f60"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-14.zip",
+    "sha256": "e11df85b1d5e3210f8f7e6905ca4d89b7220ecf43e402756185d731be3fe806b"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-15.zip",
+    "sha256": "9d62ee94cb10b73164411a9e68a9cfb21be437307309e2f340019682dfb38f7c"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-16.zip",
+    "sha256": "160a2d16e836a58cce53d0d355d3507ea52a615270a430f0b380cebcfd90fa02"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-17.zip",
+    "sha256": "c3a66f26566e31d14f4785a10f6c710a45d77cdf7f89e9146a25ff31e2f095ec"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-18.zip",
+    "sha256": "a217d855f2761808f24b0cd4dc76fcff1e351727e9614ad76ba61a2ec81051ff"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-19.zip",
+    "sha256": "1278840f2282cf94d747bfebeb60697eb15fccc261feb38fb0fbb379a84aa669"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-20.zip",
+    "sha256": "132eef3cf89ca42d1c06ff3c689bff5194f14696f4f5acd6fef41c6f3f6a7898"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-21.zip",
+    "sha256": "d467647c756d7cf1bf00b2777feb22c6b06b8223bb7b6e7398de3fcedb9eaf6f"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-22.zip",
+    "sha256": "580c2fcba3226f61be819e2c992d1b21ff855d2301b9e42e460933c71454ef78"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-23.zip",
+    "sha256": "ef584cedaa0677289306b46e9495c9a5c335f027b5b45c9fcbce6488237d7825"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-24.zip",
+    "sha256": "00d8067aed632963eab6e03a2b29266fe561942f6b5cd55a368095e15214761e"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-25.zip",
+    "sha256": "5abec8706bc125c74013d6886fe7b1a3ead83801d383c7a44e217dc6108abd63"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-26.zip",
+    "sha256": "13abed827c265241f06a3f90477223e7d65290757e7ed877f0f1190b6bd40a1b"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-27.zip",
+    "sha256": "350c28400dd3cfb58df34bec6d50770401a9171411219b7a0f25b8a00214f717"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-28.zip",
+    "sha256": "ddac1da1fc21b8d838336966598e1c4d457a8453814855bc69da9953bd3e7afa"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-29.zip",
+    "sha256": "e6dbf972f9af359328f4680b84f1f0f900018f78c66809182e0eaf0ca171addb"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-30.zip",
+    "sha256": "5f6ac207b13a1033d912b319d54b7eb4fde669705206ed6cb16a13b3ffb87515"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-07-31.zip",
+    "sha256": "adbf48820f3dc48302a3692aefa6410b18e1cc9c80ac1dac39d6c5c87519b46a"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-01.zip",
+    "sha256": "f261a94b6b0170048df8bdc5b3e00cf044d12f30c4e6757b1510c0b2c61c7693"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-02.zip",
+    "sha256": "4ef7dae592f3bffc4e4a7daa3ab8af42dc4dbdaafd04480e3cf6280be47addd8"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-03.zip",
+    "sha256": "d08ae74e43691251b0c2bcbc47d4539f8193dfbd408699b475d569c79b3aaf46"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-04.zip",
+    "sha256": "38826a083f8bfb5d8173ff70579663cee46f82ca703e398fa1498c9838559da3"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-05.zip",
+    "sha256": "3bf02ffb04205c1dd371640838bead6a78badf7f173f2d2cf126b2b2c373b129"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-06.zip",
+    "sha256": "74ccf3dc0c45d562cc4bfc46c27969bd6e39872f3f722a3aa9796835e09360f8"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-07.zip",
+    "sha256": "49e4d237a0784c9e0f6ed2979d36089203d378d741b90f6d739568b94dfbb26b"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-08.zip",
+    "sha256": "b78837b6c3738172585299fac1c864c9c59869989b6d1b7cccb71e69db2a9b22"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-09.zip",
+    "sha256": "c42ce53ebf5dbf8f285117ccf00eeb4ac43954b4ffa803c2b92ec521e707ee48"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-10.zip",
+    "sha256": "0ecace04722977d2ce49718c7893b0feee81c3d5d2657e7e7615688b0a4fc37c"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-11.zip",
+    "sha256": "21ed9c39a35f2cc0950242858bbc5540447d020cf251bd429a9d771377621a9d"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-12.zip",
+    "sha256": "dd9c80f847343d45c44f2b83bbac44be74453af6649f86424c41ec85c2c2820c"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-13.zip",
+    "sha256": "6835f499144cdc50cbb454859b53512670c1369031c4b1afe2ba52f55bdd34fd"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-14.zip",
+    "sha256": "00cc3545252b658bc2a3883c6662c97a5ece175fbfa8b5e78193ac23f4445047"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-15.zip",
+    "sha256": "ddad0b324b3ac945306e1cb3001bfc4c2c5fca24587a14e045d2bd382e0644c4"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-16.zip",
+    "sha256": "84ba144603c47416ec2ec50b4c01faef36db28f4ed5e6d1f83d1634f558ea010"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-17.zip",
+    "sha256": "d64c5facc60701f826219f9d448dfd550f8166b5cf70890678b490f28bc85253"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-18.zip",
+    "sha256": "0b443488c11da5d33ccaf4cb5ee967e24fa5367dd762c0d6106e3118261d4fc9"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-19.zip",
+    "sha256": "d79925296af469f754ee0e66273bf7431605542a328937a94f4488c669dda808"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-20.zip",
+    "sha256": "7e021002cf4504bcdbd1c60dee075469188e39b3294dcb57b86653a16eb72534"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-21.zip",
+    "sha256": "b5fb4dacf8b133c43cdcf03d2a13bad33608b1809443b1fe1d2795aec66883ec"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-22.zip",
+    "sha256": "543bd2e1a9bb38286fbbaee5e3d2bc8d5629b86718b1e3782070640dbf93b7e8"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-23.zip",
+    "sha256": "ddb74cb7751f1bc06c27e05c014a3bb8bda2dabced022ffc632d8887219bd432"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-24.zip",
+    "sha256": "6bb5410e71b0edfc3dc759c661ab86ef8bd3b3768e2f941170d748df2f1a6804"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-25.zip",
+    "sha256": "651103f3ca768cf69199e2930f12a2e9fe003901570c919834b9dc52ba4fe1f7"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-26.zip",
+    "sha256": "4a770e16fab93aacba03e2408fc54cbb6fa16c5d6b9bf0a194fad653471f18e1"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-27.zip",
+    "sha256": "a0de503d8afc4242bb86442ab02b4eb6cf7a8a7d0d62682346084a1f2d76bbd1"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-28.zip",
+    "sha256": "7f71997a45eebc6bf9167640e5016934db15f962d1e32bec7360c3c22a7a8c2e"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-29.zip",
+    "sha256": "5e76fa9dd3d041119a73808222f0df07d9b90689ccc9a288f96cef06fc2ff6a7"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-30.zip",
+    "sha256": "50dec50c775c9bb65021231c46bee3aba4f42428cb0c82e864fa68e260df458e"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-08-31.zip",
+    "sha256": "a76ca936b29bd064ee1724c2f270fd93d07a5f61d540757e9be1b88b8739e5c1"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-01.zip",
+    "sha256": "6b2667aa7f15fb4d3aba2af2131240dc88878ccea51c87e48a780f887aa14f3a"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-02.zip",
+    "sha256": "f195ab2bf6b5ec5599889dd57d95d6644d9c21eef2a2342b103036646d4e337b"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-03.zip",
+    "sha256": "13d99d8a9706bed1eed17865fd3fa8e77a05f3484667454f73d53a04008ad6e3"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-04.zip",
+    "sha256": "c87cd09fad94848617f93556fdf46b9f1e7faf49129d0940d2555a1f56a0c4ae"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-05.zip",
+    "sha256": "9f6d32b608084fbc9d1fcc458224cb9372b077b8a976e579c6a43ab74a4499e4"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-06.zip",
+    "sha256": "2dc4eb66e060193a9de60e349d2eeaa3e17b824147874808ce8e06a82e95dc4d"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-07.zip",
+    "sha256": "ddd445e766a0d2a5415bb04075cba3f2a5cb40b3646292bce6bb5c43a8e81f54"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-19.zip",
+    "sha256": "bffe0eee798ba191c311241299c28152c30a5ddf19363e262d14a603d3bcf57d"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-20.zip",
+    "sha256": "bf618304e2384cc552e21b02f86cf0579edce053db1bf6bc3458a2abc26c98a3"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-21.zip",
+    "sha256": "f7e7ad190d75762a17842aee3fb907372f9152d77c4cc3f06107c482c6315b40"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-22.zip",
+    "sha256": "1f1b618f2067edd2d68a67805d269e30b97231184e812c2568eb902ffd38122f"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-23.zip",
+    "sha256": "9422437d1134310bd387769230e5a2f1787d0eca11ebd7795729de2519fa2adc"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-24.zip",
+    "sha256": "4932b74a18bb2aabf328e8cbed4feca7871a93f2104f43c52676acc43282f085"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-26.zip",
+    "sha256": "a23bafc4b6212577d838845050ba8026629ed1b55ba90ee7b4c6c9dbd1baba9a"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-27.zip",
+    "sha256": "a462c36e30a63c0a3528cfb642cab5314b982877bfaf585019cbf96002a43048"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-28.zip",
+    "sha256": "32a9095d13995175cf5d4a1db86aecda40810a6d38334d7d61a1c7b142370971"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-29.zip",
+    "sha256": "7eb3819c8f182958cf8d3ddc5edd440951b18904df0ab4187ec0ef1bebc6c0a1"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-09-30.zip",
+    "sha256": "d622a52cfa2c0febc4930562f5036f9c04680f210c238f9762fa74e4caaa5706"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-01.zip",
+    "sha256": "4694bf454d99e0891cfdd354336ae42380206f31bfdb651b26d3b4b0cbb46bbe"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-02.zip",
+    "sha256": "18dc487e435c17c8b3106806c40954ff1c19e696adf42feeec0e128aa1dfebb5"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-03.zip",
+    "sha256": "d97a7cec99bfc3e3be27766beab2ab7ec7ef414bb34f2b1381e2dfcde791034c"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-04.zip",
+    "sha256": "5fadd853e41966ab8842189e75d23ec9f0382bfdb8c708153f09297ec4c15f70"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-05.zip",
+    "sha256": "8f32b790287c701a3e41b023f695f4c1568cc7310c967b5dc1bef47f69dfb0c9"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-06.zip",
+    "sha256": "262b8ae315260ad370a9aef102021849732f715a481cd14ce9b5bec585eb23a3"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-07.zip",
+    "sha256": "2027821613931cc0c1677d61e505f0701b4bc39c6836b083ea3d11d6162d291d"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-08.zip",
+    "sha256": "b05b197b0a0cb349601fa9fc167cd3e03fe89a01b632009d1c21dce1cde36d75"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-09.zip",
+    "sha256": "ae678224058f6496172aa931e09005ae6c857ce2c6d983bd9aae39c80f19b3ea"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-10.zip",
+    "sha256": "80d485e7192b2974a816db55586f0fe3ae1cf9466f379f141eb2d79fbdcc914f"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-11.zip",
+    "sha256": "645002535e56cace4ac9c28ecf03718109e83030011882bf8870e72ff1999e4e"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-12.zip",
+    "sha256": "5a0ef4167e8fb68f6c9b227970a5502db237c619f646150500a8ed2809ec4a7c"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-13.zip",
+    "sha256": "41d8b4c333c2fda74f32686182e033ff8ddf8fddfbbe90b40375d89ff42fa3b8"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-14.zip",
+    "sha256": "f4e820a55a2d0dfa7bef6241edc0a73026cec80370f162670ef8978101a64cd3"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-15.zip",
+    "sha256": "d3560fc2e818681e577456970e1dab4225f0d82b16472bcab0cced2deb97a68e"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-16.zip",
+    "sha256": "46fb01ae0f8696177d357d9f72a1aa43c3a6902e9c2813bb5eb6c74c4488e758"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-17.zip",
+    "sha256": "1f7e160a02aa98f7cc5e2dab5e276307b362e40b76435bc73e142709f94e56f0"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-18.zip",
+    "sha256": "74803be61e1caf7f37690204b7a275882ba7e50afb5afbdba3a344a1b0499054"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-19.zip",
+    "sha256": "121771422e15fd6e8e7cfe29f59a7267135805c561954b5f1b49c72151e1f4ac"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-20.zip",
+    "sha256": "e665f1811bdc28f35f1dd23b71a22d3d85a67ec9908047e6c1c51dd730018419"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-21.zip",
+    "sha256": "2ef8723f3ca68663fed1d10ce3d7576f7b7d8b6126c444fa24c8bbefb1b28a97"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-22.zip",
+    "sha256": "e625ba340f8467f518ffddc5cfde217028186ee52bcc1b95f2711030665556d3"
+  },
+  {
+    "file": "BTCUSDT-EOHSummary-2023-10-23.zip",
+    "sha256": "6698f267c180be81c778ee3acc98686171b96874c88871503ac67ef67fb8b022"
+  }
+]
