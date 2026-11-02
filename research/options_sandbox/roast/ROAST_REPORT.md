@@ -362,3 +362,16 @@ python -m unittest test_engine2
 ```
 
 All runs are seeded; on 4 cores the whole chain takes about an hour, mostly stage 1.
+
+## Sources (external context)
+
+- Almeida, Grith, Miftachov & Wang, *Risk Premia in the Bitcoin Market* (Deribit options 2017–2022; BTC variance
+  risk premium far above the S&P 500's, higher in low-volatility states): <https://arxiv.org/html/2410.15195v2>
+- Aug-5-2024 crash, BTC implied-vol index (BVIV) ~60 → 89–97: Kaiko, <https://research.kaiko.com/insights/navigating-volatility-in-crypto-markets>;
+  DigOpp, <https://digopp.substack.com/p/crypto-market-update-post-jpy-liquidity>
+- BTC skew regime in 2025–26 (25Δ risk reversal −19 on 2026-02-05, positive from 2026-08-20): CME,
+  <https://www.cmegroup.com/articles/2026/bitcoin-options-volatility-spikes-and-recovery-signals.html>; Deribit insights,
+  <https://insights.deribit.com/industry/crypto-derivatives-analytics-report-week-25-2026/>
+- Stationary bootstrap (wrap-around): Politis & Romano (1994), <https://doi.org/10.1080/01621459.1994.10476870>
+- Everything else in this report is computed from the repository's own data plus the public Binance klines mirror
+  described in section 0.
