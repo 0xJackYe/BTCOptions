@@ -1,0 +1,12 @@
+{
+  "count": 2702,
+  "mean": -4.273249243560928e-18,
+  "std": 0.051971132413436774,
+  "robust_mad_std": 0.019256540030418746,
+  "skew": 0.2043563282025481,
+  "excess_kurtosis": 157.96085276860055,
+  "minimum": -0.8818317910066628,
+  "maximum": 0.7790433165786805,
+  "abs_greater_0p2_count": 11,
+  "note": "Residual jumps can include changing selected nearest-ATM contract as well as market repricing. Do not assume Gaussian solely from this standard deviation."
+}

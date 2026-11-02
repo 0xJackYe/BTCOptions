@@ -1,0 +1,271 @@
+{
+  "status": "holdout_diagnostic_not_guarantee_of_realism",
+  "holdout": "2025-2026-10 excluded from price fit",
+  "model_results": {
+    "stationary": {
+      "compatible_metrics": 8,
+      "total_metrics": 13,
+      "fraction": 0.6153846153846154,
+      "exploratory_gate_pass": false,
+      "gate": "Pre-specified descriptive gate: >=80% holdout diagnostics inside simulated 90d 95% envelopes. Not a formal distributional proof.",
+      "failed_metrics": [
+        "hourly_sd",
+        "hourly_q01",
+        "hourly_q99",
+        "hourly_q999",
+        "sq_acf168"
+      ]
+    },
+    "gjr_fhs": {
+      "compatible_metrics": 12,
+      "total_metrics": 13,
+      "fraction": 0.9230769230769231,
+      "exploratory_gate_pass": true,
+      "gate": "Pre-specified descriptive gate: >=80% holdout diagnostics inside simulated 90d 95% envelopes. Not a formal distributional proof.",
+      "failed_metrics": [
+        "sq_acf168"
+      ]
+    }
+  },
+  "metrics": [
+    {
+      "model": "stationary",
+      "metric": "hourly_sd",
+      "holdout_observed": 0.004640698064189477,
+      "simulation_p025": 0.005203483545243698,
+      "simulation_median": 0.00654733717740919,
+      "simulation_p975": 0.008981639721502403,
+      "compatible": false
+    },
+    {
+      "model": "stationary",
+      "metric": "hourly_q001",
+      "holdout_observed": -0.027608288848464824,
+      "simulation_p025": -0.07243223828638436,
+      "simulation_median": -0.03652101205390314,
+      "simulation_p975": -0.025492091757159878,
+      "compatible": true
+    },
+    {
+      "model": "stationary",
+      "metric": "hourly_q01",
+      "holdout_observed": -0.013900334588773747,
+      "simulation_p025": -0.02790457325914835,
+      "simulation_median": -0.01922197129591783,
+      "simulation_p975": -0.015033502341391298,
+      "compatible": false
+    },
+    {
+      "model": "stationary",
+      "metric": "hourly_q99",
+      "holdout_observed": 0.013105421985836196,
+      "simulation_p025": 0.01491749947078654,
+      "simulation_median": 0.019259128878682454,
+      "simulation_p975": 0.026544229964624244,
+      "compatible": false
+    },
+    {
+      "model": "stationary",
+      "metric": "hourly_q999",
+      "holdout_observed": 0.02567825553349279,
+      "simulation_p025": 0.026073309650639743,
+      "simulation_median": 0.035573012904911355,
+      "simulation_p975": 0.05273588469378474,
+      "compatible": false
+    },
+    {
+      "model": "stationary",
+      "metric": "daily_q01",
+      "holdout_observed": -0.06429721528249324,
+      "simulation_p025": -0.16002985050998392,
+      "simulation_median": -0.08601775290438432,
+      "simulation_p975": -0.05003254319921322,
+      "compatible": true
+    },
+    {
+      "model": "stationary",
+      "metric": "daily_q99",
+      "holdout_observed": 0.061961493212131534,
+      "simulation_p025": 0.05923901859996789,
+      "simulation_median": 0.09183694835912273,
+      "simulation_p975": 0.1364189479271609,
+      "compatible": true
+    },
+    {
+      "model": "stationary",
+      "metric": "abs_acf1",
+      "holdout_observed": 0.2694962392048896,
+      "simulation_p025": 0.17207593564245952,
+      "simulation_median": 0.25893487503225265,
+      "simulation_p975": 0.37081807911211484,
+      "compatible": true
+    },
+    {
+      "model": "stationary",
+      "metric": "abs_acf24",
+      "holdout_observed": 0.16096317431860116,
+      "simulation_p025": 0.0384072205686004,
+      "simulation_median": 0.10734346246161693,
+      "simulation_p975": 0.22350718687164714,
+      "compatible": true
+    },
+    {
+      "model": "stationary",
+      "metric": "sq_acf1",
+      "holdout_observed": 0.18351862001057498,
+      "simulation_p025": 0.02906165620113397,
+      "simulation_median": 0.13877389281760422,
+      "simulation_p975": 0.3805888090455333,
+      "compatible": true
+    },
+    {
+      "model": "stationary",
+      "metric": "sq_acf24",
+      "holdout_observed": 0.08745932662026197,
+      "simulation_p025": -0.0016496092218894172,
+      "simulation_median": 0.03834402980382999,
+      "simulation_p975": 0.15846484189737603,
+      "compatible": true
+    },
+    {
+      "model": "stationary",
+      "metric": "sq_acf168",
+      "holdout_observed": 0.09245786204757091,
+      "simulation_p025": -0.025717482188437685,
+      "simulation_median": -0.00515337396733298,
+      "simulation_p975": 0.06106920851876503,
+      "compatible": false
+    },
+    {
+      "model": "stationary",
+      "metric": "max_drawdown",
+      "holdout_observed": 0.26371856007232136,
+      "simulation_p025": 0.12155356632063272,
+      "simulation_median": 0.2415913930165856,
+      "simulation_p975": 0.511632999945173,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "hourly_sd",
+      "holdout_observed": 0.004640698064189477,
+      "simulation_p025": 0.003549211390691332,
+      "simulation_median": 0.005336717587195608,
+      "simulation_p975": 0.02256893099364941,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "hourly_q001",
+      "holdout_observed": -0.027608288848464824,
+      "simulation_p025": -0.18479117020662958,
+      "simulation_median": -0.03448623524080659,
+      "simulation_p975": -0.019568437703175897,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "hourly_q01",
+      "holdout_observed": -0.013900334588773747,
+      "simulation_p025": -0.0751358286198234,
+      "simulation_median": -0.015470192241379174,
+      "simulation_p975": -0.009852819946434686,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "hourly_q99",
+      "holdout_observed": 0.013105421985836196,
+      "simulation_p025": 0.010007577165923471,
+      "simulation_median": 0.01578477700062733,
+      "simulation_p975": 0.0654395995895759,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "hourly_q999",
+      "holdout_observed": 0.02567825553349279,
+      "simulation_p025": 0.018623841950133033,
+      "simulation_median": 0.03554537070995138,
+      "simulation_p975": 0.18028451694629044,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "daily_q01",
+      "holdout_observed": -0.06429721528249324,
+      "simulation_p025": -0.43099704070871997,
+      "simulation_median": -0.06977353510418513,
+      "simulation_p975": -0.04001770950155073,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "daily_q99",
+      "holdout_observed": 0.061961493212131534,
+      "simulation_p025": 0.04323291863706858,
+      "simulation_median": 0.07781318998836957,
+      "simulation_p975": 0.40427306050193024,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "abs_acf1",
+      "holdout_observed": 0.2694962392048896,
+      "simulation_p025": 0.12740667876078102,
+      "simulation_median": 0.2420753222500776,
+      "simulation_p975": 0.4342701866528778,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "abs_acf24",
+      "holdout_observed": 0.16096317431860116,
+      "simulation_p025": 0.041921209672293964,
+      "simulation_median": 0.15067209129854606,
+      "simulation_p975": 0.3832921628877106,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "sq_acf1",
+      "holdout_observed": 0.18351862001057498,
+      "simulation_p025": 0.036235541212639735,
+      "simulation_median": 0.1084037787832986,
+      "simulation_p975": 0.3446274383224207,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "sq_acf24",
+      "holdout_observed": 0.08745932662026197,
+      "simulation_p025": 0.01040900548931786,
+      "simulation_median": 0.05123983934687498,
+      "simulation_p975": 0.16928876868552706,
+      "compatible": true
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "sq_acf168",
+      "holdout_observed": 0.09245786204757091,
+      "simulation_p025": -0.02382473169943041,
+      "simulation_median": -0.006040254794333878,
+      "simulation_p975": 0.07758152538160282,
+      "compatible": false
+    },
+    {
+      "model": "gjr_fhs",
+      "metric": "max_drawdown",
+      "holdout_observed": 0.26371856007232136,
+      "simulation_p025": 0.09822788969417882,
+      "simulation_median": 0.21314388773669363,
+      "simulation_p975": 0.7531075544373307,
+      "compatible": true
+    }
+  ],
+  "notes": [
+    "Hourly/daily return tails and absolute/squared return ACF checked.",
+    "90d drawdowns compare like horizons; overlapping holdout windows are descriptive.",
+    "A failed generator remains visible and its strategy output must not be treated as validated market evidence."
+  ]
+}

@@ -1,0 +1,16 @@
+# Public data is downloaded locally and verified against official checksums.
+/data/
+# User-selected output directories should stay local. Frozen reviewed examples
+# are explicitly copied into examples/ before publication.
+/annual-results/
+/smoke-results/
+/results/
+__pycache__/
+*.py[cod]
+*.nbc
+*.nbi
+.pytest_cache/
+.env
+.env.*
+*.protected.json
+*.log

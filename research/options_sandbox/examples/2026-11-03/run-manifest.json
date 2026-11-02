@@ -1,0 +1,25 @@
+{
+  "seed": 20261102,
+  "paths_per_model": 256,
+  "days": 365,
+  "python": "3.9.13",
+  "numpy": "1.24.3",
+  "pandas": "2.1.4",
+  "scipy": "1.13.1",
+  "numba": "0.60.0",
+  "market_models": [
+    "stationary raw OHLC blocks mean72h",
+    "GJR-t likelihood + empirical filtered historical shocks"
+  ],
+  "source_sha256": {
+    "market_models.py": "e1be9488c0daa982135dbba924cc640aec74c1ba6dc86f45b1c5769d1bef1b72",
+    "strategy_engine.py": "8ce2e47ab150cff4d82ae54e7f2ecea51c9d1ef4be69cabfc5001e21a55c1a95",
+    "run_sandbox.py": "929440cfcc59052a6ac3b4832676122eb0b9dfcaccd60eda7ccfa2c22654de0b"
+  },
+  "input_sha256": {
+    "btc_spot_1h.csv": "f24b780116976ea366fb7138e0c48c30ed3b50081793c0bbd27c1a976ef8ce40",
+    "ssvi-calibration.json": "67d7a4af1c4870e3ea41cec739818e8ce97986e72df46bd166821707f3eb1c57",
+    "atm-joint-innovations.csv": "aa590d381479d64530b23b724ce9393a48ae5cd4877ecaac12a9a4cfe974ab02"
+  },
+  "no_network_or_private_account_access": true
+}

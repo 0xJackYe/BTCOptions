@@ -1,0 +1,16 @@
+{
+  "status": "frozen_research_run_NOT_profitability_certification",
+  "client_date": "2026-11-03",
+  "unit_tests_passed": 26,
+  "strategy_result_rows": 3072,
+  "numerical_failures": 0,
+  "inventory_or_coverage_violations": 0,
+  "terminal_liability_retained_paths": 107,
+  "cash_reserve_risk_paths": 4,
+  "published_port_matches_prior_research_numeric_results": true,
+  "live_account_access": false,
+  "orders_placed": false,
+  "fresh_source_only_tests_passed": 26,
+  "raw_data_or_credentials_required_for_tests": false,
+  "source_and_input_sha256_match_published_layout": true
+}
