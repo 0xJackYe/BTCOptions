@@ -40,25 +40,38 @@ def year_slices(cal):
     return out
 
 
-def run_all(strategies, noise_seeds=0):
+def year_markets(noise_seeds=0, years=None):
+    """Yield (year, draw, market, smile params, (weekday, hour)) for each calendar year of the REAL path.
+
+    (weekday, hour) is the real UTC time of the first traded hour, so engine2 expiries land on real
+    Fridays 08:00 UTC as Binance weeklies do. The sandbox's V1 engine has no calendar input and keeps
+    its synthetic Tuesday-00:00 start.
+    """
     cal, d, f = real_features()
-    rows = []
     for y, a, b in year_slices(cal):
-        fy = f[a:b].copy()
+        if years is not None and y not in years:
+            continue
+        t0 = pd.Timestamp(int(cal[a + 720]) + 3600, unit="s", tz="UTC")  # close time of the warmup hour
         for k in range(max(1, noise_seeds)):
             world = dict(v2.WORLD_DEFAULT, iv_noise=1.0 if noise_seeds else 0.0)
-            mk = v2.option_layer(fy, 7000 + k, world)
+            mk = v2.option_layer(f[a:b].copy(), 7000 + k, world)
             # option_layer rescales the start to S0; restore the REAL price level
             level = d.close.to_numpy()[a + 720] / mk[0][720]
             mk = (mk[0] * level, mk[1] * level, mk[2] * level) + mk[3:]
-            prm = (world["term"], world["rho"], world["eta"])
+            yield y, k, mk, (world["term"], world["rho"], world["eta"]), (t0.weekday(), t0.hour)
+
+
+def run_all(strategies, noise_seeds=0):
+    rows = []
+    for y, k, mk, prm, (wd, hh) in year_markets(noise_seeds):
+        if True:
             v1, _ = se.simulate_path(*mk, *prm)
             m = dict(zip(rs.METRICS, v1))
             base = {"year": y, "noise_draw": k, "btc_start": mk[0][720], "btc_end": mk[0][-1], "btc_return": mk[0][-1] / mk[0][720] - 1}
             rows.append({**base, "strategy": "V1 (sandbox, unchanged)", "pnl": m["end_nav"] - m["holding_benchmark_nav"],
                          "option_pnl": m["option_pnl_including_terminal_liability"], "trades": m["opened_legs"], "maxdd": m["max_drawdown"]})
             for s in strategies:
-                out = e2.run(e2.params(**s["cfg"]), *mk[:7], *prm)
+                out = e2.run(e2.params(**s["cfg"]), *mk[:7], *prm, 1000.0, 720, wd, hh)
                 rows.append({**base, "strategy": s["name"], "pnl": out[0] - 1000, "option_pnl": out[0] - 1000, "trades": out[3],
                              "maxdd": out[2], "worst_trade": out[8], "itm": out[10], "liq": out[7]})
     return pd.DataFrame(rows)

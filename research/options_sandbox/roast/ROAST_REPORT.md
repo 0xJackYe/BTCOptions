@@ -17,12 +17,15 @@ and hold to expiry). Everything here is offline research. It uses no account acc
    leg is a donation under the real put skew. Its spot conversions are a hidden BTC bet worth −230 to +5 a year.
    Even in your own generator its option legs lose money in all four base/zero-drift cases.
 3. **Your original idea** (45-day 25%-OTM put after a −5% day) averages +42–51 USDT/yr. Within your own
-   "20–30% OTM, 1–2 months" range, though, March 2020 ranges from +178 to −568 USDT (force-liquidated).
+   "20–30% OTM, 1–2 months" range, though, March 2020 ranges from +126 to −564 USDT (force-liquidated).
 4. **Best strategy found ("C"):** every day sell one 0.01 BTC weekly put at ~0.08Δ (≈ 8% OTM), hold at most 4,
    take profit at 90%, **stop at 2× premium**, never sell calls, never trade spot. **Expected +153 / +187 / +195 USDT
    per year on 1,000 USDT** in the three base worlds. Its mean is never negative in any of 57 stress worlds
-   (worst +65). On the real 2020–2026 path it makes **+1,022 USDT with no losing year**. The main risk is a single-hour
-   gap; the number of lots is the dial (section 5).
+   (worst +65). On the real 2020–2026 path, with expiries on real Fridays 08:00 UTC, it makes **+1,409 USDT with no
+   losing year**. The main risk is a single-hour gap; the number of lots is the dial (section 5).
+5. **It follows Binance's option rules** (section 5b). Everything is USDT: premium, margin, buy-backs and cash
+   settlement. No BTC is ever delivered or needed. Sparse real strike grids cost it only 2–7% of its profit. The 2×
+   stop needs your own bot, because I couldn't confirm that Binance options support stop orders.
 
 ---
 
@@ -160,20 +163,20 @@ What this says:
   regime, painful in the turbulent ones. Across all
   27 drift × VRP worlds the mean ranges from +12 to +84. It beats V1 everywhere, mostly because it never sells calls
   and never converts to spot.
-- **Replay on the real BTC path** (fresh 1,000 USDT each year, modeled option prices): 2020 **+171**,
-  2021 +132, 2022 +27, 2023 +51, 2024 +97, 2025 +34, 2026 YTD +20.
+- **Replay on the real BTC path** (fresh 1,000 USDT each year, modeled option prices, expiries on real Fridays
+  08:00 UTC): 2020 **+133**, 2021 +148, 2022 −2, 2023 +54, 2024 +100, 2025 +39, 2026 YTD +19 (+491 in total).
 - **But 2020 was luck.** In March 2020 the position was 13 lots of the 7,000 put (BTC ≈ 9.6k; a 1,000 USDT account
-  secures 13 lots at that price). The margin ratio fell to **1.08 on hourly lows**, 8% from forced liquidation, and the
-  trade ended about flat only because BTC was back at ~6,860 when the 7,000 put expired on Apr 3. Your rule says
+  secures 13 lots at that price). The margin ratio fell to **1.10 on hourly lows**, 10% from forced liquidation. The
+  trade lost only ~12 USDT because BTC was back at ~6,930 when the 7,000 put expired on Fri 3 Apr 2020, 08:00 UTC. Your rule says
   "about 20–30% below spot, 1–2 months". Within that range the same March gives:
 
-  | 2020 replay, marked on hourly lows | 20% OTM | 25% OTM | 30% OTM |
+  | 2020 replay, marked on hourly lows, real Friday expiries | 20% OTM | 25% OTM | 30% OTM |
   |---|---:|---:|---:|
-  | 30-day | **−568 (liquidated)** | −52 | −72 |
-  | 45-day | **−537 (liquidated)** | +178 | +148 |
-  | 60-day | **−545 (liquidated)** | +134 (margin ratio 1.02) | +110 |
+  | 30-day | **−564 (liquidated)** | +42 | +9 |
+  | 45-day | **−544 (liquidated)** | +114 (margin ratio 1.10) | +91 |
+  | 60-day | **−535 (liquidated)** | +126 (margin ratio 1.04) | +106 |
 
-  One loosely specified parameter decides between "+18%" and "lost 54–57% of the account in a week".
+  One loosely specified parameter decides between "+13%" and "lost 53–56% of the account in a week".
   That is the steamroller the premium was paying you to stand in front of.
 
 ### 3.5 Structural problems no parameter fixes
@@ -278,9 +281,9 @@ A makes more on average but goes negative in the harshest world. C has the best 
 
 - **All 57 stress worlds:** average +171, worst **+65** (turbulent world, bear drift, *no* VRP, neutral smile).
   No world has a negative mean; no liquidations; P(loss > 300) ≤ 0.7%.
-- **Replay on the real BTC path** (fresh 1,000 USDT each year, modeled quotes): 2020 **+114**, 2021 +33,
-  2022 +87, 2023 +247, 2024 +235, 2025 +169, 2026 YTD +138 → **+1,022 USDT in total, no losing year**
-  (+1,100 averaged over 20 IV-noise draws). For comparison: original idea +531, V1 +234 vs holding with
+- **Replay on the real BTC path** (fresh 1,000 USDT each year, modeled quotes, expiries on real Fridays 08:00 UTC):
+  2020 **+190**, 2021 +141, 2022 +191, 2023 +253, 2024 +306, 2025 +166, 2026 YTD +162 → **+1,409 USDT in total, no
+  losing year** (+1,443 averaged over 20 IV-noise draws). For comparison: original idea +491, V1 +234 vs holding with
   −184 and −113 years.
 - **Spreads 3× / 6× wider than today's book:** still +132…+169 / +111…+150 per year (`results/cost-sensitivity.csv`).
 
@@ -288,20 +291,22 @@ A makes more on average but goes negative in the harshest world. C has the best 
 
 | change to C | means | boot_all 5% CVaR | replay 2020–26 (worst year) |
 |---|---|---:|---:|
-| as chosen | +156 / +178 / +190 | −99 | +1,022 (+33) |
-| **no stop-loss** | −19 / +175 / +26 | **−859** | +1,372 (**−568**) |
-| stop at 3× instead of 2× | +133 / +201 / +191 | −299 | +1,080 (+26) |
-| no take-profit | +119 / +144 / +142 | −94 | +851 (+41) |
-| take-profit at 50% | +59 / +76 / +94 | −118 | +492 (−34) |
-| 0.05Δ | +93 / +108 / +116 | −67 | +584 (+29) |
-| 0.12Δ | +212 / +257 / +268 | −101 | +1,301 (**−36**) |
-| 14-day expiry | +125 / +164 / +167 | −212 | +1,543 (+123) |
-| add IV/RV20 ≥ 1.1 gate | +44 / +82 / +64 | −120 | +240 (−40) |
-| enter only after a −3% day | −10 / +74 / +24 | −509 | +566 (−34) |
-| 1 lot only (1× notional) | +41 / +54 / +51 | −91 | +314 (−7) |
+| as chosen | +156 / +178 / +190 | −99 | +1,409 (+141) |
+| **no stop-loss** | −19 / +175 / +26 | **−859** | **−444 (−650)** |
+| stop at 3× instead of 2× | +133 / +201 / +191 | −299 | +1,499 (**−20**) |
+| no take-profit | +119 / +144 / +142 | −94 | +901 (+16) |
+| take-profit at 50% | +59 / +76 / +94 | −118 | +630 (+10) |
+| 0.05Δ | +93 / +108 / +116 | −67 | +715 (+6) |
+| 0.12Δ | +212 / +257 / +268 | −101 | +1,953 (+55) |
+| 14-day expiry | +125 / +164 / +167 | −212 | +964 (+42) |
+| add IV/RV20 ≥ 1.1 gate | +44 / +82 / +64 | −120 | +218 (−33) |
+| enter only after a −3% day | −10 / +74 / +24 | −509 | +476 (−65) |
+| 1 lot only (1× notional) | +41 / +54 / +51 | −91 | +362 (+4) |
 
-The stop does the risk management. Selling into dips and waiting for "rich" IV (the core of both of your
-strategies) make it **worse**: you collect premium less often and sell exactly when realized vol is about to cluster.
+The stop does the risk management: without it, even the real 2020–26 path ends in a loss. Selling into dips and
+waiting for "rich" IV (the core of both of your strategies) make it **worse**: you collect premium less often and
+sell exactly when realized vol is about to cluster. A 0.10–0.12Δ version earns more but has slightly fatter tails.
+C keeps 0.08Δ because it has the best worst case across the 57 worlds.
 
 **The risk you're taking: one-hour gaps.** A stop can't help inside a gap. Deterministic injections with the full
 ladder open, IV ×3 afterwards (`results/tail-gaps.json`):
@@ -319,8 +324,27 @@ more than about half the account.
 
 **Bottom line.** In every calibrated world, C beats V1, your original idea, and V1 with any one rule removed. It
 expects **≈ +150 to +195 USDT per year on 1,000 USDT (15–19%)**, never averages a loss in any of 57 stress worlds,
-and would have made **+1,022 USDT** on the real 2020–2026 path. The price is about 4–5 trades a week, ~60 stop-outs
+and would have made **+1,409 USDT** on the real 2020–2026 path. The price is about 4–5 trades a week, ~60 stop-outs
 a year (automate it), and gap risk you have to size for.
+
+## 5b. Does C follow Binance's option rules?
+
+Yes. Binance BTC options are European and **cash-settled in USDT**: exercise never delivers BTC
+([contract specifications](https://www.binance.com/en-ZA/support/faq/cdee5d43b70d4d2386980d41786a8533),
+[listing rules](https://www.binance.com/en-ae/support/faq/28b922eef0ce41189583dc184cdbd48f)). C is built entirely
+around that (`roast/binance_rules_check.py`, `results/binance-rules-check.csv`):
+
+| Binance rule | How C and the engine handle it |
+|---|---|
+| European, cash-settled in USDT; no BTC changes hands on exercise | The account holds USDT only. An ITM put at expiry debits `lots × 0.01 × (strike − settlement price)` plus the exercise fee in USDT. It rarely gets that far: **0.01–0.04 ITM settlements per year** in the Monte Carlo and 0–3 per year in the replay, because winners are bought back at the 90% take-profit and losers at the 2× stop first. |
+| Settlement price = average spot index 07:30–08:00 UTC; ITM options exercise automatically | The engine uses the 08:00 UTC price (a small approximation). |
+| Weeklies expire Fridays 08:00 UTC (dailies, monthlies and quarterlies also exist) | C sells Friday expiries only. The replay now uses the real Fridays, which gives +1,409 vs +1,022 on the old synthetic calendar. |
+| Puts are listed between Δ −0.05 and −0.95. Strikes can be sparse: the 2026-10-15 chain had only 70k / 74k / 76k between 5% and 15% OTM on the next non-monthly weekly | C's 0.08Δ target is inside the band. Re-tested with 2,000- and 4,000-USDT grids: Monte Carlo **+148 / +181 / +190** and **+140 / +170 / +180** USDT/yr (vs +151 / +184 / +194 at 1,000); replay +1,378 and +1,123, still no losing year. |
+| Contract unit 1 BTC, minimum order 0.01, 5-USDT price tick | Used throughout. |
+| Trading fee `min(0.024% × index, 10% × premium)`; exercise fee `min(0.015% × settlement, 10% × intrinsic)` | Charged on every trade and settlement. |
+| Short options need USDT margin; liquidation when margin balance < maintenance margin | Mark-price margin check every hour. C at 4 lots uses ≈ 320 USDT of initial margin. No liquidations in any of the 57 worlds. |
+| Selling to open needs the option-writer permission on your account | Check this first. |
+| Orders are limit orders; I could not confirm native stop orders for Binance options | The 2× stop has to come from your own bot or alerts: when a put's ask reaches 2× the premium received, send a limit buy at the ask. The engine assumes exactly that, checked hourly. |
 
 ## 6. Caveats: what these numbers are and are not
 
@@ -330,9 +354,9 @@ a year (automate it), and gap risk you have to size for.
 - **No real option history for 2020–22 and 2024–26 offline.** Deribit/Binance option archives are blocked by this
   session's network policy, so the historical replay prices options with the v2 model on the *real* price path.
   Prices are real; option quotes are modeled.
-- **Hourly resolution.** Stops, touches and liquidations are checked on hourly closes, and settlement uses the hourly
-  close instead of Binance's 30-minute average. Strikes sit on a $1,000 grid with Friday expiries only; Binance lists
-  more strikes and dailies.
+- **Hourly resolution.** Stops, touches and liquidations are checked on hourly closes, and settlement uses the 08:00 UTC
+  price instead of Binance's 07:30–08:00 average. The Monte Carlo uses a synthetic calendar and a $1,000 strike grid;
+  section 5b re-tests C with Binance-like 2k/4k grids, and the replay uses real Friday 08:00 UTC expiries.
 - **Margin model.** The engine uses the Binance standard-account formula as documented in this repo, checked on
   mark-price equity. The real liquidation engine (partial liquidation, insurance fund) may differ.
 - **Selection bias.** ~1,200 configurations were searched on training seeds. Every number reported for the chosen
@@ -356,7 +380,7 @@ python roast_v1.py 300 && python v1_ablation.py 300 && python edge_decomposition
 python optimize.py stage1 1200 150 && python optimize.py refine 5 150 && python optimize.py stage2 40 300
 python robustness.py results/finalists.json 300   # finalists.json = one config per stage-2 family + references
 python replay_real.py "$(python -c 'import json;print(json.dumps([f for f in json.load(open("results/finalists.json")) if f["cfg"]!="V1" and not f["name"].startswith("Original")]))')"
-python sensitivity_best.py && python tail_gaps.py
+python sensitivity_best.py && python tail_gaps.py && python binance_rules_check.py
 python make_figures.py '[["V1 (vs hold)","V1 (sandbox, unchanged)"],["Original idea","Original idea (45d 25%OTM put after -5% day, hold)"],["Best: C","C: weekly puts 0.08d, TP 90%, stop 2x, 4 lots (3x notional)"]]'
 python -m unittest test_engine2
 ```
@@ -373,5 +397,8 @@ All runs are seeded; on 4 cores the whole chain takes about an hour, mostly stag
   <https://www.cmegroup.com/articles/2026/bitcoin-options-volatility-spikes-and-recovery-signals.html>; Deribit insights,
   <https://insights.deribit.com/industry/crypto-derivatives-analytics-report-week-25-2026/>
 - Stationary bootstrap (wrap-around): Politis & Romano (1994), <https://doi.org/10.1080/01621459.1994.10476870>
+- Binance options contract specifications (USDT cash settlement, settlement price = 30-minute average index):
+  <https://www.binance.com/en-ZA/support/faq/cdee5d43b70d4d2386980d41786a8533>; listing rules (Friday 08:00 UTC weeklies,
+  listed delta band): <https://www.binance.com/en-ae/support/faq/28b922eef0ce41189583dc184cdbd48f>
 - Everything else in this report is computed from the repository's own data plus the public Binance klines mirror
   described in section 0.

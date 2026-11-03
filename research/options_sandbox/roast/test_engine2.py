@@ -39,7 +39,7 @@ class EngineTests(unittest.TestCase):
         hour = elapsed % 24
         nearest = i + ((4 - weekday) % 7) * 24 + 8 - hour
         expiry = min((nearest + w * 168 for w in range(-1, 14) if nearest + w * 168 - i >= 24), key=lambda e: abs(e - i - 168))
-        K = e2._strike_for_delta(-1, 80000., expiry - i, .5, TERM, RHO, ETA, .01, .10, False)
+        K = e2._strike_for_delta(-1, 80000., expiry - i, .5, TERM, RHO, ETA, .01, .10, False, 1000.0)
         bid = quote(-1, 80000., K, expiry - i, .5, TERM, RHO, ETA, .01)[1]
         credit = .01 * bid - fee(bid, 80000.)
         ins = K - 60000.
@@ -68,6 +68,34 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(std[7], 1)                  # naked-margin rules force-liquidate the "defined-risk" spread
         self.assertEqual(pm[7], 0)                   # with portfolio margin the same trade just pays its max loss
         self.assertGreater(pm[0], std[0])
+
+    def test_real_calendar_expires_on_friday_0800(self):
+        """Binance weeklies expire Friday 08:00 UTC. Clock starts Friday 06:00, first fill Friday 08:00 -> settles next Friday 08:00."""
+        close = np.full(720 + 24 * 9 + 1, 80000.)
+        p = e2.params(side=0, dte=7, delta=.10, maxpos=1, entry_hour=8, slot_gap=10 ** 6)
+        out = e2.run(p, *market(close), TERM, RHO, ETA, 1000.0, 720, 4, 6)
+        self.assertEqual(out[3], 1)
+        self.assertEqual(out[11], 168 + 1)   # 168h held; hours_in_market also counts the settlement hour
+        # starting one hour later, the first 08:00 fill is Saturday -> nearest Friday is 144h away
+        out = e2.run(p, *market(close), TERM, RHO, ETA, 1000.0, 720, 4, 7)
+        self.assertEqual(out[11], 144 + 1)
+
+    def test_sparse_strike_grid_is_respected(self):
+        close = np.full(720 + 24 * 3 + 1, 80000.)
+        for step in (1000., 2000., 4000.):
+            K = e2._strike_for_delta(-1, 80000., 168., .5, TERM, RHO, ETA, .01, .08, False, step)
+            self.assertEqual(K % step, 0)
+            self.assertLess(K, 80000.)
+
+    def test_settlement_is_usdt_cash_only(self):
+        """Binance BTC options are cash-settled in USDT: an ITM short put debits intrinsic + exercise fee, no BTC moves."""
+        n = 720 + 24 * 12 + 1
+        close = np.full(n, 80000.)
+        close[760:] = 60000.
+        out = e2.run(e2.params(side=0, dte=7, delta=.10, entry_hour=-1, slot_gap=10 ** 6), *market(close), TERM, RHO, ETA)
+        self.assertEqual(out[10], 1)                      # settled in the money
+        self.assertNotIn("btc", " ".join(e2.OUT_NAMES))   # the account holds USDT only
+        self.assertLess(out[0], 1000)                     # paid out in USDT
 
     def test_future_cannot_change_past(self):
         n = 720 + 24 * 20 + 1

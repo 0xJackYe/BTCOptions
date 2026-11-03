@@ -18,7 +18,7 @@ from strategy_engine import quote, fee, margin_leg, bs
 
 Q = .01
 NAMES = ["side", "dte", "delta", "wing", "tp", "sl", "dstop", "texit", "entry", "entry_param", "maxpos",
-         "risk", "lever", "min_credit", "cooldown", "entry_hour", "ivgate", "slot_gap", "pm"]
+         "risk", "lever", "min_credit", "cooldown", "entry_hour", "ivgate", "slot_gap", "pm", "kstep"]
 IDX = {n: i for i, n in enumerate(NAMES)}
 # side: 0 put, 1 call, 2 both sides (two independent single-side trades, same expiry)
 # dte: target days; delta: short |delta| target (<0 => OTM fraction); wing: long |delta| (0 naked, <0 => width as fraction of S)
@@ -30,22 +30,25 @@ IDX = {n: i for i, n in enumerate(NAMES)}
 # entry_hour: UTC hour for scheduled entries (-1 any); ivgate: extra atm/rv20 floor (0 off); slot_gap: min hours between entries
 # pm: 0 = Binance STANDARD account (no spread margin offset: size every short leg cash-secured on its strike,
 #     liquidate when equity < sum of naked maintenance margins); 1 = portfolio margin (spread risk = max loss)
+# kstep: listed strike spacing in USDT (1000 = every $1k; real Binance non-monthly weeklies near 5-15% OTM were 2k-4k apart)
+# run(..., start_weekday, start_hour): calendar of the first traded hour (Mon=0). Default Tue 00:00 like the sandbox;
+#     the historical replay passes the REAL weekday/hour so expiries land on real Fridays 08:00 UTC.
 N_OUT = 18
 OUT_NAMES = ["end_nav", "return", "max_drawdown", "trades", "wins", "fees", "premium", "liquidations", "worst_trade",
              "stopouts", "settled_itm", "hours_in_market", "min_nav", "skipped_size", "avg_contracts", "bankrupt", "end_liability", "min_margin_ratio"]
 
 
 @njit(cache=True)
-def _strike_for_delta(side, S, hours, atm, term, rho, eta, sp, target, otm_mode):
-    """Short strike on a $1000 grid: |delta| closest to target among OTM strikes (or fixed OTM %)."""
+def _strike_for_delta(side, S, hours, atm, term, rho, eta, sp, target, otm_mode, kstep):
+    """Short strike on a kstep grid: |delta| closest to target among OTM strikes (or fixed OTM %)."""
     if otm_mode:
         k = S * (1 - target) if side < 0 else S * (1 + target)
-        return max(1000.0, round(k / 1000.0) * 1000.0)
+        return max(kstep, round(k / kstep) * kstep)
     best, bestd = 0.0, 1e9
-    lo = int(S * .40 / 1000)
-    hi = int(S * 1.80 / 1000) + 1
+    lo = max(1, int(S * .40 / kstep))  # strikes are positive (a deep crash with a coarse grid can push this to 0)
+    hi = int(S * 1.80 / kstep) + 1
     for kk in range(lo, hi):
-        K = kk * 1000.0
+        K = kk * kstep
         if (side < 0 and K >= S) or (side > 0 and K <= S):
             continue
         d = abs(quote(side, S, K, hours, atm, term, rho, eta, sp)[3])
@@ -55,10 +58,10 @@ def _strike_for_delta(side, S, hours, atm, term, rho, eta, sp, target, otm_mode)
 
 
 @njit(cache=True)
-def run(P, close, high, low, atm, rv20, spread, available, term, rho, eta, equity0=1000.0, warmup=720):
+def run(P, close, high, low, atm, rv20, spread, available, term, rho, eta, equity0=1000.0, warmup=720, start_weekday=1, start_hour=0):
     side_mode = int(P[0]); dte = P[1]; dtarget = P[2]; wing = P[3]; tp = P[4]; sl = P[5]; dstop = P[6]
     texit = P[7]; entry = int(P[8]); eparam = P[9]; maxpos = int(P[10]); risk = P[11]; lever = P[12]
-    min_credit = P[13]; cooldown_h = P[14]; entry_hour = int(P[15]); ivgate = P[16]; slot_gap = P[17]; pm = P[18] > .5
+    min_credit = P[13]; cooldown_h = P[14]; entry_hour = int(P[15]); ivgate = P[16]; slot_gap = P[17]; pm = P[18] > .5; kstep = P[19]
     MAXT = 8
     t_side = np.zeros(MAXT, np.int64); t_ks = np.zeros(MAXT); t_kl = np.zeros(MAXT); t_exp = np.zeros(MAXT, np.int64)
     t_n = np.zeros(MAXT); t_credit = np.zeros(MAXT); t_open = np.zeros(MAXT, np.bool_)
@@ -80,8 +83,8 @@ def run(P, close, high, low, atm, rv20, spread, available, term, rho, eta, equit
         if pending and av and bankrupt == 0:
             pending = False
             elapsed = i - warmup
-            weekday = (1 + elapsed // 24) % 7
-            hour = elapsed % 24
+            weekday = (start_weekday + (start_hour + elapsed) // 24) % 7
+            hour = (start_hour + elapsed) % 24
             # expiry: Friday 08:00 UTC with remaining hours closest to target (>= 24h)
             nearest = i + ((4 - weekday) % 7) * 24 + 8 - hour
             best_e, best_gap = -1, 1e18
@@ -120,7 +123,7 @@ def run(P, close, high, low, atm, rv20, spread, available, term, rho, eta, equit
                 sd = -1 if s_ == 0 else 1
                 rem = best_e - i
                 otm_mode = dtarget < 0
-                Ks = _strike_for_delta(sd, S, rem, sig, term, rho, eta, sp, abs(dtarget), otm_mode)
+                Ks = _strike_for_delta(sd, S, rem, sig, term, rho, eta, sp, abs(dtarget), otm_mode, kstep)
                 if Ks <= 0:
                     continue
                 qs = quote(sd, S, Ks, rem, sig, term, rho, eta, sp)
@@ -130,13 +133,13 @@ def run(P, close, high, low, atm, rv20, spread, available, term, rho, eta, equit
                 if wing != 0:
                     if wing < 0:
                         Kl = Ks * (1 + wing) if sd < 0 else Ks * (1 - wing)
-                        Kl = round(Kl / 1000.0) * 1000.0
+                        Kl = round(Kl / kstep) * kstep
                     else:
                         # wing by delta, strictly further OTM than the short strike
                         bestd = 1e9
                         kk = Ks
                         for step in range(1, 60):
-                            K2 = Ks - 1000.0 * step if sd < 0 else Ks + 1000.0 * step
+                            K2 = Ks - kstep * step if sd < 0 else Ks + kstep * step
                             if K2 <= 0:
                                 break
                             d2 = abs(quote(sd, S, K2, rem, sig, term, rho, eta, sp)[3])
@@ -283,7 +286,7 @@ def run(P, close, high, low, atm, rv20, spread, available, term, rho, eta, equit
         # ---------- entry decision at the close of hour i (executes at i+1) ----------
         if bankrupt == 0 and i < n - 1 and i >= cool_until and i - last_entry >= slot_gap:
             elapsed = i + 1 - warmup
-            hour_next = elapsed % 24
+            hour_next = (start_hour + elapsed) % 24
             ok = True
             if entry_hour >= 0 and hour_next != entry_hour:
                 ok = False
@@ -324,7 +327,7 @@ def run(P, close, high, low, atm, rv20, spread, available, term, rho, eta, equit
 def params(**kw):
     base = {"side": 0, "dte": 14, "delta": .10, "wing": 0, "tp": 1.0, "sl": 0, "dstop": 0, "texit": 0, "entry": 0,
             "entry_param": 0, "maxpos": 1, "risk": 1.0, "lever": 1.0, "min_credit": .5, "cooldown": 0, "entry_hour": 8,
-            "ivgate": 0, "slot_gap": 0, "pm": 0}
+            "ivgate": 0, "slot_gap": 0, "pm": 0, "kstep": 1000}
     for k in kw:
         if k not in base:
             raise KeyError(k)
