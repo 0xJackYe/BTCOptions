@@ -1,0 +1,413 @@
+{
+  "status": "current_public_market_only_SSVI_fit_not_future_or_execution_validation",
+  "data_asof": "2026-11-02T20:15:46.966000+00:00",
+  "spot_index": 76998.59043478,
+  "atm14": 0.3865091197551227,
+  "surface_model": {
+    "term_coef": -0.06367651317215262,
+    "rho": -0.22408470314482842,
+    "eta": 0.90792666633608,
+    "formula": "w=theta/2*(1+rho*phi*k+sqrt((phi*k+rho)^2+1-rho^2)); phi=eta/sqrt(theta*(1+theta)); theta=atm14^2*T*(DTE/14)^(2*term_coef); k=ln(K/(S*exp(r*T)))"
+  },
+  "fit_scope": {
+    "dte": [
+      10,
+      20
+    ],
+    "mark_iv": [
+      0.05,
+      2
+    ],
+    "max_abs_log_moneyness_spot": 0.35,
+    "rows": 60,
+    "groups": 30,
+    "expiries": [
+      "261113",
+      "261120"
+    ],
+    "actual_dte": [
+      10.48903974537037,
+      17.48903974537037
+    ],
+    "target": "equal-weight expiry/strike mean log markIV; soft_l1 f_scale=.02; no strategy inputs or PnL",
+    "bounds": {
+      "atm14": [
+        0.05,
+        2
+      ],
+      "term_coef": [
+        -0.489999,
+        0.5
+      ],
+      "rho": [
+        -0.95,
+        0.95
+      ],
+      "eta": [
+        0.001,
+        1.35
+      ]
+    }
+  },
+  "train_test_grouping": {
+    "method": "5-fold deterministic strike-interleaved within each expiry",
+    "group": "expiry+strike, paired Call/Put always same fold",
+    "fold_assignment": "rank strike ascending within each expiry modulo 5",
+    "time_holdout": false,
+    "leaves_expiry_out": false,
+    "folds": [
+      {
+        "fold": 0,
+        "train_groups": 23,
+        "test_groups": 7,
+        "parameters": {
+          "atm14": 0.3865689451234017,
+          "term_coef": -0.06144164393767387,
+          "rho": -0.2337174624814406,
+          "eta": 0.9297202785905158
+        },
+        "groups": 23,
+        "success": true,
+        "robust_log_iv_loss": 0.0024145337237765144,
+        "nfev": 10
+      },
+      {
+        "fold": 1,
+        "train_groups": 23,
+        "test_groups": 7,
+        "parameters": {
+          "atm14": 0.3873496538142831,
+          "term_coef": -0.06609351453753211,
+          "rho": -0.2330334748653417,
+          "eta": 0.8934978790852924
+        },
+        "groups": 23,
+        "success": true,
+        "robust_log_iv_loss": 0.0024594168722803615,
+        "nfev": 13
+      },
+      {
+        "fold": 2,
+        "train_groups": 24,
+        "test_groups": 6,
+        "parameters": {
+          "atm14": 0.38669129587332784,
+          "term_coef": -0.06895550898369891,
+          "rho": -0.22157850535124635,
+          "eta": 0.8997931246852748
+        },
+        "groups": 24,
+        "success": true,
+        "robust_log_iv_loss": 0.0035429832538951375,
+        "nfev": 11
+      },
+      {
+        "fold": 3,
+        "train_groups": 25,
+        "test_groups": 5,
+        "parameters": {
+          "atm14": 0.38595212522432826,
+          "term_coef": -0.06424050991657339,
+          "rho": -0.21526452344526273,
+          "eta": 0.9153407100672178
+        },
+        "groups": 25,
+        "success": true,
+        "robust_log_iv_loss": 0.003487004676926321,
+        "nfev": 12
+      },
+      {
+        "fold": 4,
+        "train_groups": 25,
+        "test_groups": 5,
+        "parameters": {
+          "atm14": 0.3861032176222289,
+          "term_coef": -0.06036098204569042,
+          "rho": -0.2201372625941423,
+          "eta": 0.9091822303770665
+        },
+        "groups": 25,
+        "success": true,
+        "robust_log_iv_loss": 0.003452440574769066,
+        "nfev": 14
+      }
+    ]
+  },
+  "errors": {
+    "out_of_group": {
+      "all_fit_scope": {
+        "rows": 60,
+        "groups": 30,
+        "log_iv_rmse": 0.022179557833992454,
+        "median_abs_relative_iv_error": 0.014504440668936192,
+        "abs_relative_iv_error_p90": 0.02393253313473243,
+        "price_abs_relative_mid_error_p50": 0.011079806678564622,
+        "price_abs_relative_mid_error_p90": 0.12537670752011582,
+        "price_abs_relative_mid_error_p95": 0.18620277028529483,
+        "price_signed_relative_mid_error_p50": -0.0025802035229587905,
+        "price_inside_recorded_bidask_fraction": 0.4166666666666667,
+        "price_abs_relative_mark_error_p50": 0.008296482804560074,
+        "actual_mark_inside_recorded_bidask_fraction": 0.6166666666666667
+      },
+      "abs_delta005_095": {
+        "rows": 46,
+        "groups": 23,
+        "log_iv_rmse": 0.014606571521520536,
+        "median_abs_relative_iv_error": 0.010488953783022614,
+        "abs_relative_iv_error_p90": 0.02222196520214581,
+        "price_abs_relative_mid_error_p50": 0.01138435343221754,
+        "price_abs_relative_mid_error_p90": 0.07787053700748467,
+        "price_abs_relative_mid_error_p95": 0.11704964060501938,
+        "price_signed_relative_mid_error_p50": -0.0005792577057991966,
+        "price_inside_recorded_bidask_fraction": 0.3695652173913043,
+        "price_abs_relative_mark_error_p50": 0.008296482804560074,
+        "actual_mark_inside_recorded_bidask_fraction": 0.6521739130434783
+      },
+      "otm_delta005_020": {
+        "rows": 9,
+        "groups": 9,
+        "log_iv_rmse": 0.019943907297103068,
+        "median_abs_relative_iv_error": 0.0203331579566155,
+        "abs_relative_iv_error_p90": 0.023430174271873883,
+        "price_abs_relative_mid_error_p50": 0.09811969506503643,
+        "price_abs_relative_mid_error_p90": 0.15614836369244536,
+        "price_abs_relative_mid_error_p95": 0.17096584784068883,
+        "price_signed_relative_mid_error_p50": 0.09811969506503648,
+        "price_inside_recorded_bidask_fraction": 0.0,
+        "price_abs_relative_mark_error_p50": 0.0759072885591224,
+        "actual_mark_inside_recorded_bidask_fraction": 0.0
+      },
+      "original_v1_delta_distance": {
+        "rows": 4,
+        "groups": 4,
+        "log_iv_rmse": 0.022321655524214428,
+        "median_abs_relative_iv_error": 0.02242423891306977,
+        "abs_relative_iv_error_p90": 0.025061208049685813,
+        "price_abs_relative_mid_error_p50": 0.13576022489709705,
+        "price_abs_relative_mid_error_p90": 0.17467021887774972,
+        "price_abs_relative_mid_error_p95": 0.180226775433341,
+        "price_signed_relative_mid_error_p50": 0.13576022489709705,
+        "price_inside_recorded_bidask_fraction": 0.0,
+        "price_abs_relative_mark_error_p50": 0.09286386201941621,
+        "actual_mark_inside_recorded_bidask_fraction": 0.0
+      }
+    },
+    "full_snapshot_in_sample": {
+      "all_fit_scope": {
+        "rows": 60,
+        "groups": 30,
+        "log_iv_rmse": 0.020344282437789303,
+        "median_abs_relative_iv_error": 0.012535927844052663,
+        "abs_relative_iv_error_p90": 0.024985230977348175,
+        "price_abs_relative_mid_error_p50": 0.009839258704864965,
+        "price_abs_relative_mid_error_p90": 0.12051535904004969,
+        "price_abs_relative_mid_error_p95": 0.17112762008471485,
+        "price_signed_relative_mid_error_p50": -0.0026912032426433807,
+        "price_inside_recorded_bidask_fraction": 0.45,
+        "price_abs_relative_mark_error_p50": 0.007837839371413545,
+        "actual_mark_inside_recorded_bidask_fraction": 0.6166666666666667
+      },
+      "abs_delta005_095": {
+        "rows": 46,
+        "groups": 23,
+        "log_iv_rmse": 0.013359526766863063,
+        "median_abs_relative_iv_error": 0.010385865872705846,
+        "abs_relative_iv_error_p90": 0.02211301183293468,
+        "price_abs_relative_mid_error_p50": 0.01051655787990572,
+        "price_abs_relative_mid_error_p90": 0.06956636659661963,
+        "price_abs_relative_mid_error_p95": 0.11123538397986049,
+        "price_signed_relative_mid_error_p50": -0.0014170173469510439,
+        "price_inside_recorded_bidask_fraction": 0.391304347826087,
+        "price_abs_relative_mark_error_p50": 0.007837839371413545,
+        "actual_mark_inside_recorded_bidask_fraction": 0.6521739130434783
+      },
+      "otm_delta005_020": {
+        "rows": 9,
+        "groups": 9,
+        "log_iv_rmse": 0.018353919804642738,
+        "median_abs_relative_iv_error": 0.01674939169292755,
+        "abs_relative_iv_error_p90": 0.02526927853203098,
+        "price_abs_relative_mid_error_p50": 0.08409701301512312,
+        "price_abs_relative_mid_error_p90": 0.17233703543407472,
+        "price_abs_relative_mid_error_p95": 0.1755621430323676,
+        "price_signed_relative_mid_error_p50": 0.08409701301512307,
+        "price_inside_recorded_bidask_fraction": 0.1111111111111111,
+        "price_abs_relative_mark_error_p50": 0.06872753296622934,
+        "actual_mark_inside_recorded_bidask_fraction": 0.0
+      },
+      "original_v1_delta_distance": {
+        "rows": 4,
+        "groups": 4,
+        "log_iv_rmse": 0.021955822971017374,
+        "median_abs_relative_iv_error": 0.021357420417088102,
+        "abs_relative_iv_error_p90": 0.026689516305445027,
+        "price_abs_relative_mid_error_p50": 0.1417525170263309,
+        "price_abs_relative_mid_error_p90": 0.17636841993194083,
+        "price_abs_relative_mid_error_p95": 0.17757783528130067,
+        "price_signed_relative_mid_error_p50": 0.14175251702633096,
+        "price_inside_recorded_bidask_fraction": 0.0,
+        "price_abs_relative_mark_error_p50": 0.09854244717978242,
+        "actual_mark_inside_recorded_bidask_fraction": 0.0
+      }
+    },
+    "actual_mark_iv_repricing_baseline": {
+      "all_fit_scope": {
+        "rows": 60,
+        "groups": 30,
+        "log_iv_rmse": 0.0,
+        "median_abs_relative_iv_error": 0.0,
+        "abs_relative_iv_error_p90": 0.0,
+        "price_abs_relative_mid_error_p50": 0.005704142365260604,
+        "price_abs_relative_mid_error_p90": 0.05393166676465831,
+        "price_abs_relative_mid_error_p95": 0.08445891827382117,
+        "price_signed_relative_mid_error_p50": -0.001517087043577392,
+        "price_inside_recorded_bidask_fraction": 0.5833333333333334,
+        "price_abs_relative_mark_error_p50": 0.0006036838491630115,
+        "actual_mark_inside_recorded_bidask_fraction": 0.6166666666666667
+      },
+      "abs_delta005_095": {
+        "rows": 46,
+        "groups": 23,
+        "log_iv_rmse": 0.0,
+        "median_abs_relative_iv_error": 0.0,
+        "abs_relative_iv_error_p90": 0.0,
+        "price_abs_relative_mid_error_p50": 0.0050934014956807855,
+        "price_abs_relative_mid_error_p90": 0.01900811557676512,
+        "price_abs_relative_mid_error_p95": 0.033755823529975984,
+        "price_signed_relative_mid_error_p50": -0.001293104196827044,
+        "price_inside_recorded_bidask_fraction": 0.6086956521739131,
+        "price_abs_relative_mark_error_p50": 0.0006036838491630115,
+        "actual_mark_inside_recorded_bidask_fraction": 0.6521739130434783
+      },
+      "otm_delta005_020": {
+        "rows": 9,
+        "groups": 9,
+        "log_iv_rmse": 0.0,
+        "median_abs_relative_iv_error": 0.0,
+        "abs_relative_iv_error_p90": 0.0,
+        "price_abs_relative_mid_error_p50": 0.020156454733115278,
+        "price_abs_relative_mid_error_p90": 0.04783908060948509,
+        "price_abs_relative_mid_error_p95": 0.05070068337182401,
+        "price_signed_relative_mid_error_p50": 0.015329999322601484,
+        "price_inside_recorded_bidask_fraction": 0.0,
+        "price_abs_relative_mark_error_p50": 0.0009684455839247167,
+        "actual_mark_inside_recorded_bidask_fraction": 0.0
+      },
+      "original_v1_delta_distance": {
+        "rows": 4,
+        "groups": 4,
+        "log_iv_rmse": 0.0,
+        "median_abs_relative_iv_error": 0.0,
+        "abs_relative_iv_error_p90": 0.0,
+        "price_abs_relative_mid_error_p50": 0.04035005235476395,
+        "price_abs_relative_mid_error_p90": 0.051416084062408746,
+        "price_abs_relative_mid_error_p95": 0.05248918509828583,
+        "price_signed_relative_mid_error_p50": 0.040350052354763966,
+        "price_inside_recorded_bidask_fraction": 0.0,
+        "price_abs_relative_mark_error_p50": 0.001089219646700354,
+        "actual_mark_inside_recorded_bidask_fraction": 0.0
+      }
+    }
+  },
+  "static_checks": {
+    "theta_increasing_exponent": 0.8726469736556948,
+    "eta_times_one_plus_absrho": 1.1113791438392742,
+    "eta_squared_times_one_plus_absrho": 1.009050761101439,
+    "sufficient_butterfly_bounds_under_4": true,
+    "finite_grid_checks": [
+      {
+        "dte": 1,
+        "increasing_call_edges": 0,
+        "slope_below_discounted_minus1": 0,
+        "negative_convexity_points": 0,
+        "calendar_total_variance_decrease_points": 0
+      },
+      {
+        "dte": 3,
+        "increasing_call_edges": 0,
+        "slope_below_discounted_minus1": 0,
+        "negative_convexity_points": 0,
+        "calendar_total_variance_decrease_points": 0
+      },
+      {
+        "dte": 7,
+        "increasing_call_edges": 0,
+        "slope_below_discounted_minus1": 0,
+        "negative_convexity_points": 0,
+        "calendar_total_variance_decrease_points": 0
+      },
+      {
+        "dte": 10,
+        "increasing_call_edges": 0,
+        "slope_below_discounted_minus1": 0,
+        "negative_convexity_points": 0,
+        "calendar_total_variance_decrease_points": 0
+      },
+      {
+        "dte": 14,
+        "increasing_call_edges": 0,
+        "slope_below_discounted_minus1": 0,
+        "negative_convexity_points": 0,
+        "calendar_total_variance_decrease_points": 0
+      },
+      {
+        "dte": 20,
+        "increasing_call_edges": 0,
+        "slope_below_discounted_minus1": 0,
+        "negative_convexity_points": 0,
+        "calendar_total_variance_decrease_points": 0
+      },
+      {
+        "dte": 30,
+        "increasing_call_edges": 0,
+        "slope_below_discounted_minus1": 0,
+        "negative_convexity_points": 0,
+        "calendar_total_variance_decrease_points": 0
+      },
+      {
+        "dte": 60,
+        "increasing_call_edges": 0,
+        "slope_below_discounted_minus1": 0,
+        "negative_convexity_points": 0,
+        "calendar_total_variance_decrease_points": 0
+      },
+      {
+        "dte": 90,
+        "increasing_call_edges": 0,
+        "slope_below_discounted_minus1": 0,
+        "negative_convexity_points": 0,
+        "calendar_total_variance_decrease_points": 0
+      }
+    ],
+    "limitations": "Static sufficient conditions and grid checks do not validate dynamic P/Q consistency or market fit outside observed DTE."
+  },
+  "fit_metadata": {
+    "groups": 30,
+    "success": true,
+    "robust_log_iv_loss": 0.003913066649528611,
+    "nfev": 14
+  },
+  "sourceSHA": {
+    "current-cross-section.csv": "c921f20a305730ab4bfba6ad6b370f6c3ab3eaf82f92e3b526e52aa7a061a362",
+    "current-cross-section-check.json": "e64c3ad100186d758473304b66dd9ef448e92e3b5e728e4336aee1522873812c",
+    "fit_current_ssvi.py": "b4d88c2f5ddd4ebdcef9da3b94ce4eff974caac1bd3fa91365fef61afffdf833"
+  },
+  "raw_public_input_sha256": {
+    "research/options_sandbox/calibration/ssvi-calibration.json": "67d7a4af1c4870e3ea41cec739818e8ce97986e72df46bd166821707f3eb1c57",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/exchange.json": "e4c2df054a6134752b21b2164850227b320dcd306c6a02e8ff5cdbd4d10d5447",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/index.json": "f7a70d3ca37a5995227542613503498c96713018b8022425c6e006b6264c6ffb",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/mark.json": "68825d75515eb0db21f1791c7e6ca44e82eae1476640bd3f9733827d96d229d9",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/spot.json": "1a9293e383352b3770a398d4478599f62a44ce498e86282716466fb8d5ab9574",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/ticker.json": "b709c6485173450c8e1da848a2f0ae5583d90eac7e442ba2798f6f9934988b59",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/time.json": "701ec138a6ec15cfadb88401cafe3e333455e36b4a218fbc2d744ad71f3de5c7"
+  },
+  "limitations": [
+    "One current cross-section, not future temporal validation; two observed maturities only.",
+    "Grouped CV tests interpolation to missing strikes; it does not test held-out expiry, future smile dynamics or tails.",
+    "Ticker requests are asynchronous to mark/index; only about65% of actual mark prices lie in the recorded broad-scope bid/ask.",
+    "Fit target is markIV, not traded fills; bid/ask diagnostics are descriptive, not liquidity guarantees.",
+    "No strategy imported, no profit objective, no fees/fills/risk limits optimized here.",
+    "Historical 2023 SSVI is retained separately as a misspecified-model diagnostic."
+  ],
+  "full_fit_atm_over_frozen_2023_forecast": 1.1269714381587521
+}

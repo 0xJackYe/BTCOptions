@@ -1,0 +1,87 @@
+{
+  "conditional_selected_policy": "cash",
+  "leading_active_diagnostic": {
+    "id": "put_d7_delta05_tp70_sl2_entry4",
+    "config": {
+      "side": 0,
+      "dte": 7,
+      "delta": 0.05,
+      "tp": 0.7,
+      "sl": 2.0,
+      "entry": 4,
+      "entry_param": 0.03,
+      "maxpos": 4,
+      "lever": 3.0,
+      "min_credit": 0.5,
+      "entry_hour": 8,
+      "kstep": 2000.0,
+      "risk": 1.0,
+      "wing": 0.0,
+      "pm": 0.0,
+      "slot_gap": 24,
+      "limit_ticks": 1
+    }
+  },
+  "conditional_qualified_count": 0,
+  "live_promotion": false,
+  "real_market_adequacy": "unproven execution and futureIV calibration",
+  "smoke_only": false,
+  "test_ranked": [
+    {
+      "policy": "put_d7_delta05_tp70_sl2_entry4",
+      "score": -0.018393365700376457,
+      "risk_eligible": true,
+      "risk_failures": []
+    },
+    {
+      "policy": "both_d7_delta20_tp70_sl2_entry4",
+      "score": -0.029932092053397148,
+      "risk_eligible": true,
+      "risk_failures": []
+    },
+    {
+      "policy": "call_d14_delta05_tp70_sl2_entry4",
+      "score": -0.03676094015982516,
+      "risk_eligible": true,
+      "risk_failures": []
+    },
+    {
+      "policy": "C_fixed_quantity",
+      "score": -0.26979119069762536,
+      "risk_eligible": false,
+      "risk_failures": [
+        "regime_jump/base:cvar",
+        "regime_jump/base:loss_tail",
+        "regime_jump/bear:cvar",
+        "regime_jump/bear:loss_tail",
+        "regime_jump/bull:cvar",
+        "regime_jump/bull:loss_tail",
+        "regime_jump/execution_thin_iv:cvar",
+        "regime_jump/execution_thin_iv:loss_tail",
+        "regime_jump/execution_thin_iv:drawdown",
+        "regime_jump/opposite_skew:cvar",
+        "regime_jump/opposite_skew:loss_tail",
+        "regime_jump/opposite_skew:drawdown",
+        "sv_jump/base:cvar",
+        "sv_jump/base:loss_tail",
+        "sv_jump/base:drawdown",
+        "sv_jump/bear:cvar",
+        "sv_jump/bear:loss_tail",
+        "sv_jump/bear:drawdown",
+        "sv_jump/bull:cvar",
+        "sv_jump/bull:loss_tail",
+        "sv_jump/bull:drawdown",
+        "sv_jump/execution_thin_iv:cvar",
+        "sv_jump/execution_thin_iv:loss_tail",
+        "sv_jump/execution_thin_iv:drawdown",
+        "sv_jump/opposite_skew:cvar",
+        "sv_jump/opposite_skew:loss_tail",
+        "sv_jump/opposite_skew:drawdown",
+        "sv_jump/passive_fill:cvar",
+        "sv_jump/passive_fill:loss_tail"
+      ]
+    }
+  ],
+  "validation_passed_ids": [],
+  "interpretation": "Finite-grid model-conditional result, not a global optimum or a future return forecast"
+}

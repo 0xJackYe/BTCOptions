@@ -1,0 +1,117 @@
+{
+ "status": "v2 research calibration on real data; not an exchange pricing model",
+ "har": {
+  "beta": [
+   -0.2147882250587046,
+   0.12953097870448566,
+   0.2441399164919701,
+   0.28764510133855825
+  ],
+  "resid_var": 0.09613661727549093,
+  "samples": 2444,
+  "r2": 0.4089032954038545,
+  "features": [
+   "const",
+   "log RV24h",
+   "log RV7d",
+   "log RV30d"
+  ],
+  "target": "log RV next 336h"
+ },
+ "iv_level": {
+  "log_m0": -0.10910682564802707,
+  "m0": 0.8966346288067162,
+  "source": "real 2023-05..10 Binance ATM~14d IV reconstructed from sandbox residuals",
+  "u_phi": 0.9160687422317987,
+  "u_intercept": 0.00037286099920439276,
+  "u_innovation_std": 0.052415737883182476,
+  "u_std": 0.1314259543149627,
+  "hours": 2711,
+  "two_component": {
+   "w_slow": 0.5264063068489878,
+   "phi_slow": 0.9975118266597065,
+   "phi_fast": 0.9287915594529448,
+   "slow_std": 0.09535460713236804,
+   "fast_std": 0.09044490237835637,
+   "acf_fit_rmse": 0.01483924136782298,
+   "real_acf": {
+    "1": 0.9167174085944036,
+    "6": 0.8141370104091598,
+    "24": 0.5714529519210872,
+    "72": 0.4506691780034391,
+    "168": 0.3482987127700659
+   },
+   "note": "slow part = persistent, tradable IV richness/cheapness; fast part mostly ATM-contract-switch noise in marks (not tradable), off by default"
+  }
+ },
+ "real_2023_vrp": {
+  "iv_mean": 0.38041595186170163,
+  "fwd_rv_mean": 0.35825231777245237,
+  "iv_minus_fwd_rv_mean": 0.02216363408924928,
+  "median_iv_over_fwd_rv": 1.0372102744392193,
+  "mean_iv2_minus_rv2": 0.01448893700387564,
+  "model_iv_mean_u0": 0.3792262621435954,
+  "model_minus_real_iv_mean": -0.001189689718106205,
+  "corr_log_model_real": 0.6299427278957647
+ },
+ "smile_snapshot_2026_10_15": {
+  "rho": -0.244667044107151,
+  "eta": 1.0017925139517674,
+  "term_coef": 0.05755418497681013,
+  "atm14_at_snapshot": 0.3432113549287866,
+  "fit_rows": 135,
+  "iv_rmse_vol_pts": 1.4236935697501274,
+  "gatheral_jacquier_sufficient_conditions": true,
+  "atm_by_expiry_days": {
+   "8.6": 0.334,
+   "15.6": 0.344,
+   "43.6": 0.3695,
+   "71.6": 0.375
+  },
+  "spot": 81805.12652174
+ },
+ "snapshot_2026_10_15_vrp": {
+  "atm_iv_15_6d": 0.344,
+  "realized_vol_after": 0.3147691464048577,
+  "hours_after": 246,
+  "rv30_before": 0.33638890561859464
+ },
+ "crash_response_u0": {
+  "2020-03-12 covid": {
+   "btc_24h_move_max_drop": -0.3950484717412017,
+   "model_atm_iv_before": 0.5849007455299068,
+   "model_atm_iv_peak": 1.2386313401475706,
+   "peak_ratio": 2.1176778275866255
+  },
+  "2021-05-19": {
+   "btc_24h_move_max_drop": -0.19840192813317659,
+   "model_atm_iv_before": 0.871416859561015,
+   "model_atm_iv_peak": 1.0547395657258487,
+   "peak_ratio": 1.210373145932917
+  },
+  "2022-06-13 3AC": {
+   "btc_24h_move_max_drop": -0.18013230271436276,
+   "model_atm_iv_before": 0.5675750234231315,
+   "model_atm_iv_peak": 0.7068708523049031,
+   "peak_ratio": 1.245422760222353
+  },
+  "2022-11-09 FTX": {
+   "btc_24h_move_max_drop": -0.16131413878315626,
+   "model_atm_iv_before": 0.4264229394877438,
+   "model_atm_iv_peak": 0.6845176012297343,
+   "peak_ratio": 1.605255106707055
+  },
+  "2024-08-05 yen carry": {
+   "btc_24h_move_max_drop": -0.18436998460581044,
+   "model_atm_iv_before": 0.5103316813929714,
+   "model_atm_iv_peak": 0.7368267784298878,
+   "peak_ratio": 1.4438193929459537
+  },
+  "2025-10-10 liquidations": {
+   "btc_24h_move_max_drop": -0.07305379476321361,
+   "model_atm_iv_before": 0.36438355806049433,
+   "model_atm_iv_peak": 0.4229360885739745,
+   "peak_ratio": 1.1606892770495407
+  }
+ }
+}

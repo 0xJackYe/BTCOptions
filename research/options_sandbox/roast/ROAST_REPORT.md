@@ -1,3 +1,5 @@
+> 2026-11-05 review notice: this is a historical, pre-fix research report. Its margin equity/threshold, fixed-lot wording, no-liquidation claim and hourly risk implementation require correction. The displayed returns are model-conditional and do not establish an executable optimal strategy. See the [corrected stochastic-market study](../frontier/README.md) and its [frozen results](../frontier/examples/2026-11-05/RESULT.md).
+
 # Roasting the BTC option-selling strategy and its Monte Carlo generator
 
 Date: 2026-11-02. Scope: `research/options_sandbox` (V1 "covered-inventory" strategy and its Monte Carlo
@@ -402,3 +404,4 @@ All runs are seeded; on 4 cores the whole chain takes about an hour, mostly stag
   listed delta band): <https://www.binance.com/en-ae/support/faq/28b922eef0ce41189583dc184cdbd48f>
 - Everything else in this report is computed from the repository's own data plus the public Binance klines mirror
   described in section 0.
+

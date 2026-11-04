@@ -1,0 +1,9 @@
+cohort,model,mean_normalized_median_distance,observed_nonoverlap_90d_windows
+validation_2024,block24,0.3585416144971851,4
+validation_2024,block72,0.26269300497327913,4
+validation_2024,block168,0.21899521165853425,4
+validation_2024,gjr_fhs,0.2490106819136599,4
+legacy_test_2025_2026,block24,0.4377153628026861,7
+legacy_test_2025_2026,block72,0.32681366502099113,7
+legacy_test_2025_2026,block168,0.25722386385537627,7
+legacy_test_2025_2026,gjr_fhs,0.26031206447797206,7

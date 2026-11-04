@@ -1,0 +1,156 @@
+{
+  "status": "new_2026_public_cross_section_diagnostic_not_refit",
+  "snapshot_utc": "2026-11-02T20:15:46.966000+00:00",
+  "spot_index": 76998.59043478,
+  "RV20": 0.32666353383774177,
+  "EWMA_approx_last1000h": 0.3223735866019278,
+  "R24_last_closed_hour": -0.009036072180093169,
+  "frozen_2023_atm14_prediction": 0.3429626578528041,
+  "current_atm14_anchor": 0.3941947837986117,
+  "current_10_20d_contracts_with_marks": 60,
+  "comparison": [
+    {
+      "model": "frozen_level",
+      "contracts": 46,
+      "log_iv_rmse": 0.0991721478774906,
+      "median_abs_relative_iv_error": 0.08492995913497914,
+      "recorded_ticker_price_inside_bidask_fraction": 0.2608695652173913,
+      "median_abs_price_error_over_mark": 0.08895099118617729,
+      "price_abs_relative_mid_error_p50": 0.09160697678239205,
+      "price_abs_relative_mid_error_p90": 0.2617580760007605,
+      "price_abs_relative_mid_error_p95": 0.3106157714693669,
+      "price_signed_relative_mid_error_p05": -0.2511317234674292,
+      "price_signed_relative_mid_error_p50": -0.061307298472009664,
+      "price_signed_relative_mid_error_p95": 0.2501527585913237
+    },
+    {
+      "model": "current_atm_anchor",
+      "contracts": 46,
+      "log_iv_rmse": 0.08412894081765257,
+      "median_abs_relative_iv_error": 0.040237418142404335,
+      "recorded_ticker_price_inside_bidask_fraction": 0.30434782608695654,
+      "median_abs_price_error_over_mark": 0.030373923858171704,
+      "price_abs_relative_mid_error_p50": 0.028848622096068335,
+      "price_abs_relative_mid_error_p90": 0.3805356012364022,
+      "price_abs_relative_mid_error_p95": 0.8200371396161028,
+      "price_signed_relative_mid_error_p05": -0.04178016877051638,
+      "price_signed_relative_mid_error_p50": 0.019679597606533705,
+      "price_signed_relative_mid_error_p95": 0.8200371396161028
+    }
+  ],
+  "actual_mark_price_inside_same_ticker_bid_ask_fraction": 0.6521739130434783,
+  "median_quote_mid_over_mark": 1.0011623424333436,
+  "sell_otm_delta005_020_comparison": [
+    {
+      "model": "frozen_level",
+      "contracts": 9,
+      "log_iv_rmse": 0.06968105780213615,
+      "median_abs_relative_iv_error": 0.06113648576609476,
+      "recorded_ticker_price_inside_bidask_fraction": 0.0,
+      "median_abs_price_error_over_mark": 0.23874643684273214,
+      "price_abs_relative_mid_error_p50": 0.25656097615178375,
+      "price_abs_relative_mid_error_p90": 0.3378344182051767,
+      "price_abs_relative_mid_error_p95": 0.3859519082489183,
+      "price_signed_relative_mid_error_p05": -0.30894303439901605,
+      "price_signed_relative_mid_error_p50": 0.042874332697241835,
+      "price_signed_relative_mid_error_p95": 0.38595190824891834
+    },
+    {
+      "model": "current_atm_anchor",
+      "contracts": 9,
+      "log_iv_rmse": 0.11903603745801247,
+      "median_abs_relative_iv_error": 0.12201312750522297,
+      "recorded_ticker_price_inside_bidask_fraction": 0.0,
+      "median_abs_price_error_over_mark": 0.4220318893283557,
+      "price_abs_relative_mid_error_p50": 0.46610013090016394,
+      "price_abs_relative_mid_error_p90": 1.0278318486350855,
+      "price_abs_relative_mid_error_p95": 1.0819072710233824,
+      "price_signed_relative_mid_error_p05": -0.03344261351023667,
+      "price_signed_relative_mid_error_p50": 0.466100130900164,
+      "price_signed_relative_mid_error_p95": 1.0819072710233824
+    }
+  ],
+  "original_v1_delta_distance_scope_comparison": [
+    {
+      "model": "frozen_level",
+      "contracts": 4,
+      "log_iv_rmse": 0.05777996598698877,
+      "median_abs_relative_iv_error": 0.055492366059387344,
+      "recorded_ticker_price_inside_bidask_fraction": 0.0,
+      "median_abs_price_error_over_mark": 0.24363456572919467,
+      "price_abs_relative_mid_error_p50": 0.2851683246675448,
+      "price_abs_relative_mid_error_p90": 0.39798128075985373,
+      "price_abs_relative_mid_error_p95": 0.4160253395262568,
+      "price_signed_relative_mid_error_p05": 0.23477303644621955,
+      "price_signed_relative_mid_error_p50": 0.2851683246675448,
+      "price_signed_relative_mid_error_p95": 0.41602533952625687
+    },
+    {
+      "model": "current_atm_anchor",
+      "contracts": 4,
+      "log_iv_rmse": 0.16115027181854363,
+      "median_abs_relative_iv_error": 0.1723533940356745,
+      "recorded_ticker_price_inside_bidask_fraction": 0.0,
+      "median_abs_price_error_over_mark": 0.8378539537560572,
+      "price_abs_relative_mid_error_p50": 0.9137874922557037,
+      "price_abs_relative_mid_error_p90": 1.0954261266204566,
+      "price_abs_relative_mid_error_p95": 1.115704410016068,
+      "price_signed_relative_mid_error_p05": 0.8038522417256202,
+      "price_signed_relative_mid_error_p50": 0.9137874922557037,
+      "price_signed_relative_mid_error_p95": 1.115704410016068
+    }
+  ],
+  "current_otm_lowdelta_spread_median": 0.014814814814814815,
+  "current_otm_lowdelta_spread_p90": 0.03008238107892639,
+  "current_otm_lowdelta_quote_rows": 9,
+  "limitations": [
+    "One contemporaneous cross-section, not temporal out-of-sample validation.",
+    "Source requests complete over seconds, not a coherent millisecond market snapshot.",
+    "Ticker bid/ask lacks independent quote freshness proof; containment is descriptive, not fillability.",
+    "Current-ATM anchored case uses current observed data only for level; shape coefficients remain frozen 2023.",
+    "EWMA initialized from available last1000h; not identical to a full-history filter.",
+    "No strategy PnL or parameter selected from this check."
+  ],
+  "current_atm_anchor_over_frozen_level": 1.1493810616775542,
+  "input_sha256": {
+    "research/options_sandbox/calibration/ssvi-calibration.json": "67d7a4af1c4870e3ea41cec739818e8ce97986e72df46bd166821707f3eb1c57",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/exchange.json": "e4c2df054a6134752b21b2164850227b320dcd306c6a02e8ff5cdbd4d10d5447",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/index.json": "f7a70d3ca37a5995227542613503498c96713018b8022425c6e006b6264c6ffb",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/mark.json": "68825d75515eb0db21f1791c7e6ca44e82eae1476640bd3f9733827d96d229d9",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/spot.json": "1a9293e383352b3770a398d4478599f62a44ce498e86282716466fb8d5ab9574",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/ticker.json": "b709c6485173450c8e1da848a2f0ae5583d90eac7e442ba2798f6f9934988b59",
+    "analysis/sell-optimization-20261103/market-validation/current-public-snapshot/time.json": "701ec138a6ec15cfadb88401cafe3e333455e36b4a218fbc2d744ad71f3de5c7"
+  },
+  "request_envelopes": {
+    "time": {
+      "url": "https://eapi.binance.com/eapi/v1/time",
+      "requested_at_utc": "2026-11-02T20:15:26.950183+00:00",
+      "received_at_utc": "2026-11-02T20:15:27.661734+00:00"
+    },
+    "exchange": {
+      "url": "https://eapi.binance.com/eapi/v1/exchangeInfo",
+      "requested_at_utc": "2026-11-02T20:15:26.950183+00:00",
+      "received_at_utc": "2026-11-02T20:15:28.038986+00:00"
+    },
+    "index": {
+      "url": "https://eapi.binance.com/eapi/v1/index?underlying=BTCUSDT",
+      "requested_at_utc": "2026-11-02T20:15:26.951633+00:00",
+      "received_at_utc": "2026-11-02T20:15:27.603362+00:00"
+    },
+    "ticker": {
+      "url": "https://eapi.binance.com/eapi/v1/ticker",
+      "requested_at_utc": "2026-11-02T20:15:26.951633+00:00",
+      "received_at_utc": "2026-11-02T20:15:27.932106+00:00"
+    },
+    "mark": {
+      "url": "https://eapi.binance.com/eapi/v1/mark",
+      "requested_at_utc": "2026-11-02T20:15:27.606872+00:00",
+      "received_at_utc": "2026-11-02T20:15:28.429340+00:00"
+    },
+    "spot": {
+      "url": "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=1000",
+      "requested_at_utc": "2026-11-02T20:15:27.662378+00:00",
+      "received_at_utc": "2026-11-02T20:15:28.310449+00:00"
+    }
+  }
+}

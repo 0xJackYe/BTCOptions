@@ -1,0 +1,134 @@
+[
+  {
+    "id": "put_d7_delta05_tp90_sl2_entry4",
+    "config": {
+      "side": 0,
+      "dte": 7,
+      "delta": 0.05,
+      "tp": 0.9,
+      "sl": 2.0,
+      "entry": 4,
+      "entry_param": 0.03,
+      "maxpos": 4,
+      "lever": 3.0,
+      "min_credit": 0.5,
+      "entry_hour": 8,
+      "kstep": 2000.0,
+      "risk": 1.0,
+      "wing": 0.0,
+      "pm": 0.0,
+      "slot_gap": 24,
+      "limit_ticks": 1
+    }
+  },
+  {
+    "id": "put_d7_delta05_tp70_sl2_entry4",
+    "config": {
+      "side": 0,
+      "dte": 7,
+      "delta": 0.05,
+      "tp": 0.7,
+      "sl": 2.0,
+      "entry": 4,
+      "entry_param": 0.03,
+      "maxpos": 4,
+      "lever": 3.0,
+      "min_credit": 0.5,
+      "entry_hour": 8,
+      "kstep": 2000.0,
+      "risk": 1.0,
+      "wing": 0.0,
+      "pm": 0.0,
+      "slot_gap": 24,
+      "limit_ticks": 1
+    }
+  },
+  {
+    "id": "call_d7_delta10_tp70_sl2_entry4",
+    "config": {
+      "side": 1,
+      "dte": 7,
+      "delta": 0.1,
+      "tp": 0.7,
+      "sl": 2.0,
+      "entry": 4,
+      "entry_param": 0.03,
+      "maxpos": 4,
+      "lever": 3.0,
+      "min_credit": 0.5,
+      "entry_hour": 8,
+      "kstep": 2000.0,
+      "risk": 1.0,
+      "wing": 0.0,
+      "pm": 0.0,
+      "slot_gap": 24,
+      "limit_ticks": 1
+    }
+  },
+  {
+    "id": "call_d14_delta05_tp70_sl2_entry4",
+    "config": {
+      "side": 1,
+      "dte": 14,
+      "delta": 0.05,
+      "tp": 0.7,
+      "sl": 2.0,
+      "entry": 4,
+      "entry_param": 0.03,
+      "maxpos": 4,
+      "lever": 3.0,
+      "min_credit": 0.5,
+      "entry_hour": 8,
+      "kstep": 2000.0,
+      "risk": 1.0,
+      "wing": 0.0,
+      "pm": 0.0,
+      "slot_gap": 24,
+      "limit_ticks": 1
+    }
+  },
+  {
+    "id": "both_d7_delta20_tp70_sl2_entry4",
+    "config": {
+      "side": 2,
+      "dte": 7,
+      "delta": 0.2,
+      "tp": 0.7,
+      "sl": 2.0,
+      "entry": 4,
+      "entry_param": 0.03,
+      "maxpos": 4,
+      "lever": 3.0,
+      "min_credit": 0.5,
+      "entry_hour": 8,
+      "kstep": 2000.0,
+      "risk": 1.0,
+      "wing": 0.0,
+      "pm": 0.0,
+      "slot_gap": 24,
+      "limit_ticks": 1
+    }
+  },
+  {
+    "id": "both_d7_delta20_tp90_sl3_entry4",
+    "config": {
+      "side": 2,
+      "dte": 7,
+      "delta": 0.2,
+      "tp": 0.9,
+      "sl": 3.0,
+      "entry": 4,
+      "entry_param": 0.03,
+      "maxpos": 4,
+      "lever": 3.0,
+      "min_credit": 0.5,
+      "entry_hour": 8,
+      "kstep": 2000.0,
+      "risk": 1.0,
+      "wing": 0.0,
+      "pm": 0.0,
+      "slot_gap": 24,
+      "limit_ticks": 1
+    }
+  }
+]

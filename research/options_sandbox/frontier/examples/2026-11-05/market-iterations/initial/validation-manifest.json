@@ -1,0 +1,15 @@
+{
+  "source_sha256": {
+    "D:\\Users\\yxh\\Desktop\\options\\research\\options_sandbox\\frontier\\validate.py": "85b8dfa290d68c3f04f2b19f6aed8e5a595974d65293c442cb4b4a1412809a04",
+    "D:\\Users\\yxh\\Desktop\\options\\research\\options_sandbox\\frontier\\generators.py": "8a3aed7e472a5fd42830b52603420fabdc6730d51a0e768227d1f34bb9badabc",
+    "D:\\Users\\yxh\\Desktop\\options\\research\\options_sandbox\\data\\btc_spot_1h.csv": "f24b780116976ea366fb7138e0c48c30ed3b50081793c0bbd27c1a976ef8ce40"
+  },
+  "artifact_sha256": {
+    "generator-config-used.json": "051e1ae537d50f7f91cc7d3096140da57b073dfff69eee030c1febba92e5e9bb",
+    "market-validation.csv": "a8f9a67869eccca835b2c3fdd6e76190f4f7ec3cf05781386187e8a78be64d00",
+    "market-validation.json": "9cfe77f0b3c0c3331cb886adfb67addf4bcde9af90125247f528f9ca29696c71",
+    "observed-market-windows.json": "bb5659107a12edbfa7a31bcefe6f26795fdb67b8bd503a141eaabf0a5b674273",
+    "simulated-market-metrics.csv": "7b0caf06d164db493284d8700643af8553cb00cb700a6870387e605f0a9f7740",
+    "validation-protocol.json": "b0377742c92b7e6c025367973dd9688c07ed71de7a06bb949535990e2611fd14"
+  }
+}

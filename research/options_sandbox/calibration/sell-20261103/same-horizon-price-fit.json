@@ -1,0 +1,68 @@
+{
+  "kind": "same-horizon descriptive price fit; no strategy profits",
+  "fit": "2020-2023",
+  "validation": "2024",
+  "legacy_test": "2025-2026 already inspected in previous work; not virgin holdout",
+  "observed_windows": {
+    "validation_2024": 4,
+    "legacy_test_2025_2026": 7
+  },
+  "simulation_paths_each_model": 128,
+  "selected_by_2024_only": "block168",
+  "summary": [
+    {
+      "cohort": "validation_2024",
+      "model": "block24",
+      "mean_normalized_median_distance": 0.3585416144971851,
+      "observed_nonoverlap_90d_windows": 4
+    },
+    {
+      "cohort": "validation_2024",
+      "model": "block72",
+      "mean_normalized_median_distance": 0.26269300497327913,
+      "observed_nonoverlap_90d_windows": 4
+    },
+    {
+      "cohort": "validation_2024",
+      "model": "block168",
+      "mean_normalized_median_distance": 0.21899521165853425,
+      "observed_nonoverlap_90d_windows": 4
+    },
+    {
+      "cohort": "validation_2024",
+      "model": "gjr_fhs",
+      "mean_normalized_median_distance": 0.2490106819136599,
+      "observed_nonoverlap_90d_windows": 4
+    },
+    {
+      "cohort": "legacy_test_2025_2026",
+      "model": "block24",
+      "mean_normalized_median_distance": 0.4377153628026861,
+      "observed_nonoverlap_90d_windows": 7
+    },
+    {
+      "cohort": "legacy_test_2025_2026",
+      "model": "block72",
+      "mean_normalized_median_distance": 0.32681366502099113,
+      "observed_nonoverlap_90d_windows": 7
+    },
+    {
+      "cohort": "legacy_test_2025_2026",
+      "model": "block168",
+      "mean_normalized_median_distance": 0.25722386385537627,
+      "observed_nonoverlap_90d_windows": 7
+    },
+    {
+      "cohort": "legacy_test_2025_2026",
+      "model": "gjr_fhs",
+      "mean_normalized_median_distance": 0.26031206447797206,
+      "observed_nonoverlap_90d_windows": 7
+    }
+  ],
+  "limitations": [
+    "Four validation and seven legacy-test windows, insufficient for precise tail calibration.",
+    "Model selection uses 2024 distributional distance only, never option PnL.",
+    "New seeds do not reset previously inspected real market test data.",
+    "No formal calibration claim from broad Monte Carlo envelopes."
+  ]
+}
