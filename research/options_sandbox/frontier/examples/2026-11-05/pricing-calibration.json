@@ -1,0 +1,53 @@
+{
+  "price_fit_period": "2020-2023, next14d targets end before2024; missing windows excluded",
+  "har_beta": [
+    -0.268050834553202,
+    0.12435666254011052,
+    0.23430826201338706,
+    0.24031843087228663
+  ],
+  "har_residual_variance": 0.08767240302051219,
+  "har_samples": 948,
+  "har_r2_in_sample": 0.3872862486957205,
+  "iv_source": "2023 public ATM IV reconstructed from stored residuals, known-price inputs lagged",
+  "iv_samples": 2711,
+  "log_iv_level": -0.11470668460894697,
+  "slow_phi": 0.997459601318681,
+  "slow_std": 0.09669436248635531,
+  "fast_phi": 0.924644361993112,
+  "fast_std": 0.08656769314576601,
+  "acf_lags": [
+    1,
+    6,
+    12,
+    24,
+    48,
+    72,
+    120,
+    168
+  ],
+  "observed_acf": [
+    0.9151310051218646,
+    0.8142032642083088,
+    0.7361732095665527,
+    0.5830467737884417,
+    0.4996245835000633,
+    0.4687062378911158,
+    0.39968518088582267,
+    0.3676707209289802
+  ],
+  "surface": {
+    "term_coef": -0.06367651317215262,
+    "rho": -0.22408470314482842,
+    "eta": 0.90792666633608,
+    "formula": "w=theta/2*(1+rho*phi*k+sqrt((phi*k+rho)^2+1-rho^2)); phi=eta/sqrt(theta*(1+theta)); theta=atm14^2*T*(DTE/14)^(2*term_coef); k=ln(K/(S*exp(r*T)))"
+  },
+  "surface_asof": "2026-11-02T20:15:46.966000+00:00",
+  "S0": 76998.59043478,
+  "assumptions": [
+    "Slow component is tradable IV state; fast measurement component off in base",
+    "Fresh normal IV innovations; independent of price except current realized-vol and fear coupling",
+    "Pricing-level multipliers, skew flip, spreads and fill failures are sensitivities, not empirical future probabilities",
+    "Only one current smile cross-section; no temporal certification or joint P/Q no-arbitrage proof"
+  ]
+}

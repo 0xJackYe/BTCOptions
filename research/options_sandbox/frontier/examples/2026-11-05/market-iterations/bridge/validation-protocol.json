@@ -1,0 +1,45 @@
+{
+  "fit_period": "2020-2023 only",
+  "selection_period": "2024 only",
+  "legacy_diagnostic": "2025-2026 already inspected; not untouched historical test",
+  "horizon_hours": 2160,
+  "paths_per_model": 128,
+  "seed": 7600000,
+  "models": [
+    "regime_jump",
+    "sv_jump",
+    "bootstrap_reference"
+  ],
+  "metrics": [
+    "hourly_p01",
+    "hourly_p99",
+    "daily_p01",
+    "daily_p99",
+    "annualized_vol",
+    "abs_acf1",
+    "abs_acf24",
+    "abs_acf168",
+    "squared_acf1",
+    "worst24h_return",
+    "max_drawdown90",
+    "jump_frequency_abs_hour_ge3pct"
+  ],
+  "gates": {
+    "mean_scaled_wasserstein_max": 1.0,
+    "any_metric_scaled_wasserstein_max": 2.5,
+    "numerical_failures_max": 0
+  },
+  "metric_scaling": "Training nonoverlapping90d IQR with predeclared floors",
+  "drift": "0 annual log-return drift in all simulated diagnostic paths; historical drift is not removed",
+  "no_profit_model_selection": true,
+  "source_sha256_before": {
+    "D:\\Users\\yxh\\Desktop\\options\\research\\options_sandbox\\frontier\\validate.py": "85b8dfa290d68c3f04f2b19f6aed8e5a595974d65293c442cb4b4a1412809a04",
+    "D:\\Users\\yxh\\Desktop\\options\\research\\options_sandbox\\frontier\\generators.py": "0047274bd7c6c07f952201bb5d82f1e2f1d80c0915c18fe6391f40bf464321ad",
+    "D:\\Users\\yxh\\Desktop\\options\\research\\options_sandbox\\data\\btc_spot_1h.csv": "f24b780116976ea366fb7138e0c48c30ed3b50081793c0bbd27c1a976ef8ce40"
+  },
+  "notes": [
+    "Four2024 windows imply very weak distribution evidence",
+    "Wasserstein distance penalizes overly broad distributions; no envelope-coverage pass count",
+    "Randomness is algorithmic, realism empirical, profitability a separate question"
+  ]
+}

@@ -1,0 +1,922 @@
+{
+  "models": {
+    "regime_jump": {
+      "validation": {
+        "mean_scaled_wasserstein": 1.2171907687898171,
+        "max_scaled_wasserstein": 3.823093900529449,
+        "observed_windows": 4,
+        "simulated_paths": 128,
+        "metrics": [
+          {
+            "metric": "hourly_p01",
+            "scaled_wasserstein": 0.14470895047721385,
+            "training_scale": 0.007368395316784869,
+            "observed_p05": -0.018462335825224264,
+            "observed_median": -0.017259437620646877,
+            "observed_p95": -0.015476861862277733,
+            "simulated_p05": -0.020662772791645554,
+            "simulated_median": -0.018052124010794514,
+            "simulated_p95": -0.015306915722728031
+          },
+          {
+            "metric": "hourly_p99",
+            "scaled_wasserstein": 0.22414607996045058,
+            "training_scale": 0.007949309554317571,
+            "observed_p05": 0.013656890563811296,
+            "observed_median": 0.016369964668859767,
+            "observed_p95": 0.01880694548019572,
+            "simulated_p05": 0.015499014765287401,
+            "simulated_median": 0.01811790267107717,
+            "simulated_p95": 0.020459261338736615
+          },
+          {
+            "metric": "daily_p01",
+            "scaled_wasserstein": 1.124886727283547,
+            "training_scale": 0.03269313481037785,
+            "observed_p05": -0.0762986063358429,
+            "observed_median": -0.06716495281699544,
+            "observed_p95": -0.05316907036172502,
+            "simulated_p05": -0.16293051663735475,
+            "simulated_median": -0.09297283238824089,
+            "simulated_p95": -0.0693253804349913
+          },
+          {
+            "metric": "daily_p99",
+            "scaled_wasserstein": 0.7574385902126437,
+            "training_scale": 0.034776544882563064,
+            "observed_p05": 0.06221423853999687,
+            "observed_median": 0.0700139073424238,
+            "observed_p95": 0.08017254541501585,
+            "simulated_p05": 0.06387050321905495,
+            "simulated_median": 0.09117682688818254,
+            "simulated_p95": 0.14905383355629445
+          },
+          {
+            "metric": "annualized_vol",
+            "scaled_wasserstein": 0.6229906380501563,
+            "training_scale": 0.22056613323858593,
+            "observed_p05": 0.4878358551742852,
+            "observed_median": 0.5296404619617434,
+            "observed_p95": 0.5589614472934172,
+            "simulated_p05": 0.5736417832874608,
+            "simulated_median": 0.6520048915892349,
+            "simulated_p95": 0.7923755072590538
+          },
+          {
+            "metric": "abs_acf1",
+            "scaled_wasserstein": 1.3268495384491252,
+            "training_scale": 0.06672334101520333,
+            "observed_p05": 0.22088123684340352,
+            "observed_median": 0.26807382338328956,
+            "observed_p95": 0.3022436935879452,
+            "simulated_p05": 0.08611626541114642,
+            "simulated_median": 0.1763830107496428,
+            "simulated_p95": 0.25984758450898093
+          },
+          {
+            "metric": "abs_acf24",
+            "scaled_wasserstein": 2.404023949649454,
+            "training_scale": 0.03697629781145678,
+            "observed_p05": 0.11739578862658925,
+            "observed_median": 0.12412031883139885,
+            "observed_p95": 0.13430564646126378,
+            "simulated_p05": -0.005867797056122234,
+            "simulated_median": 0.034483031747684634,
+            "simulated_p95": 0.09075753086149324
+          },
+          {
+            "metric": "abs_acf168",
+            "scaled_wasserstein": 3.823093900529449,
+            "training_scale": 0.036500989258824765,
+            "observed_p05": 0.10575366277388891,
+            "observed_median": 0.128271668682095,
+            "observed_p95": 0.16108015548119037,
+            "simulated_p05": -0.04528082722461024,
+            "simulated_median": -0.008342186956225586,
+            "simulated_p95": 0.03405759639059071
+          },
+          {
+            "metric": "squared_acf1",
+            "scaled_wasserstein": 1.9325091825855145,
+            "training_scale": 0.1144532054947863,
+            "observed_p05": 0.19375957699465818,
+            "observed_median": 0.2604782478300905,
+            "observed_p95": 0.29976911069331225,
+            "simulated_p05": -0.0012878565681351645,
+            "simulated_median": 0.01948274509042155,
+            "simulated_p95": 0.10960661980534211
+          },
+          {
+            "metric": "worst24h_return",
+            "scaled_wasserstein": 0.6458350832374751,
+            "training_scale": 0.038985805745265056,
+            "observed_p05": -0.17095462007649403,
+            "observed_median": -0.09219286436986843,
+            "observed_p95": -0.0890073463066455,
+            "simulated_p05": -0.19566144007854744,
+            "simulated_median": -0.12532430557059346,
+            "simulated_p95": -0.0887361542384585
+          },
+          {
+            "metric": "max_drawdown90",
+            "scaled_wasserstein": 1.0167708707570624,
+            "training_scale": 0.08693015248706243,
+            "observed_p05": 0.15224533051222922,
+            "observed_median": 0.20808119752930848,
+            "observed_p95": 0.27564768704601134,
+            "simulated_p05": 0.15861279408151502,
+            "simulated_median": 0.29060891707628234,
+            "simulated_p95": 0.46910957790455443
+          },
+          {
+            "metric": "jump_frequency_abs_hour_ge3pct",
+            "scaled_wasserstein": 0.5830357142857142,
+            "training_scale": 0.004050925925925927,
+            "observed_p05": 0.0010648148148148149,
+            "observed_median": 0.0025462962962962965,
+            "observed_p95": 0.004027777777777778,
+            "simulated_p05": 0.0023148148148148147,
+            "simulated_median": 0.004629629629629629,
+            "simulated_p95": 0.007407407407407408
+          }
+        ]
+      },
+      "legacy": {
+        "mean_scaled_wasserstein": 1.3230256724017833,
+        "max_scaled_wasserstein": 3.9451827037368443,
+        "observed_windows": 7,
+        "simulated_paths": 128,
+        "metrics": [
+          {
+            "metric": "hourly_p01",
+            "scaled_wasserstein": 0.6237954144651596,
+            "training_scale": 0.007368395316784869,
+            "observed_p05": -0.01726591569274801,
+            "observed_median": -0.013614235389722224,
+            "observed_p95": -0.009207867074019443,
+            "simulated_p05": -0.020662772791645554,
+            "simulated_median": -0.018052124010794514,
+            "simulated_p95": -0.015306915722728031
+          },
+          {
+            "metric": "hourly_p99",
+            "scaled_wasserstein": 0.6486208701593724,
+            "training_scale": 0.007949309554317571,
+            "observed_p05": 0.009332866086833041,
+            "observed_median": 0.013083076987199568,
+            "observed_p95": 0.015850292736320166,
+            "simulated_p05": 0.015499014765287401,
+            "simulated_median": 0.01811790267107717,
+            "simulated_p95": 0.020459261338736615
+          },
+          {
+            "metric": "daily_p01",
+            "scaled_wasserstein": 1.3073065900707985,
+            "training_scale": 0.03269313481037785,
+            "observed_p05": -0.08174058188051445,
+            "observed_median": -0.054882702615977476,
+            "observed_p95": -0.03445413371956872,
+            "simulated_p05": -0.16293051663735475,
+            "simulated_median": -0.09297283238824089,
+            "simulated_p95": -0.0693253804349913
+          },
+          {
+            "metric": "daily_p99",
+            "scaled_wasserstein": 1.0450368024454928,
+            "training_scale": 0.034776544882563064,
+            "observed_p05": 0.04245820991535785,
+            "observed_median": 0.060589519381779165,
+            "observed_p95": 0.07510875950954614,
+            "simulated_p05": 0.06387050321905495,
+            "simulated_median": 0.09117682688818254,
+            "simulated_p95": 0.14905383355629445
+          },
+          {
+            "metric": "annualized_vol",
+            "scaled_wasserstein": 1.044538199477369,
+            "training_scale": 0.22056613323858593,
+            "observed_p05": 0.32683176011472276,
+            "observed_median": 0.41638028425561896,
+            "observed_p95": 0.5457407765091105,
+            "simulated_p05": 0.5736417832874608,
+            "simulated_median": 0.6520048915892349,
+            "simulated_p95": 0.7923755072590538
+          },
+          {
+            "metric": "abs_acf1",
+            "scaled_wasserstein": 0.9201889544384477,
+            "training_scale": 0.06672334101520333,
+            "observed_p05": 0.18064172884739924,
+            "observed_median": 0.2293471881302977,
+            "observed_p95": 0.2973226235745383,
+            "simulated_p05": 0.08611626541114642,
+            "simulated_median": 0.1763830107496428,
+            "simulated_p95": 0.25984758450898093
+          },
+          {
+            "metric": "abs_acf24",
+            "scaled_wasserstein": 2.5495324512196884,
+            "training_scale": 0.03697629781145678,
+            "observed_p05": 0.08259914045877136,
+            "observed_median": 0.1227265481984586,
+            "observed_p95": 0.19686710676698832,
+            "simulated_p05": -0.005867797056122234,
+            "simulated_median": 0.034483031747684634,
+            "simulated_p95": 0.09075753086149324
+          },
+          {
+            "metric": "abs_acf168",
+            "scaled_wasserstein": 3.9451827037368443,
+            "training_scale": 0.036500989258824765,
+            "observed_p05": 0.07613915449218372,
+            "observed_median": 0.13267034926794868,
+            "observed_p95": 0.18689717646110493,
+            "simulated_p05": -0.04528082722461024,
+            "simulated_median": -0.008342186956225586,
+            "simulated_p95": 0.03405759639059071
+          },
+          {
+            "metric": "squared_acf1",
+            "scaled_wasserstein": 1.0610629571008638,
+            "training_scale": 0.1144532054947863,
+            "observed_p05": 0.07846859274255713,
+            "observed_median": 0.15685104023140853,
+            "observed_p95": 0.2154957253448643,
+            "simulated_p05": -0.0012878565681351645,
+            "simulated_median": 0.01948274509042155,
+            "simulated_p95": 0.10960661980534211
+          },
+          {
+            "metric": "worst24h_return",
+            "scaled_wasserstein": 1.0865715987653937,
+            "training_scale": 0.038985805745265056,
+            "observed_p05": -0.13268723559468226,
+            "observed_median": -0.09987012430718531,
+            "observed_p95": -0.04392611116632324,
+            "simulated_p05": -0.19566144007854744,
+            "simulated_median": -0.12532430557059346,
+            "simulated_p95": -0.0887361542384585
+          },
+          {
+            "metric": "max_drawdown90",
+            "scaled_wasserstein": 0.7920480575542127,
+            "training_scale": 0.08693015248706243,
+            "observed_p05": 0.09377472850054291,
+            "observed_median": 0.28024830444013604,
+            "observed_p95": 0.35341273507589516,
+            "simulated_p05": 0.15861279408151502,
+            "simulated_median": 0.29060891707628234,
+            "simulated_p95": 0.46910957790455443
+          },
+          {
+            "metric": "jump_frequency_abs_hour_ge3pct",
+            "scaled_wasserstein": 0.852423469387755,
+            "training_scale": 0.004050925925925927,
+            "observed_p05": 0.0,
+            "observed_median": 0.000925925925925926,
+            "observed_p95": 0.004120370370370368,
+            "simulated_p05": 0.0023148148148148147,
+            "simulated_median": 0.004629629629629629,
+            "simulated_p95": 0.007407407407407408
+          }
+        ]
+      },
+      "randomness": {
+        "same_seed_reproducible": true,
+        "different_seed_changes_path": true,
+        "prefix_invariant_to_requested_horizon": true,
+        "free_endpoint_logreturn_sd": 0.3928892161322397,
+        "no_fixed_endpoint": true,
+        "fraction_hourly_returns_not_in_training_or_centered_training": 1.0,
+        "conditional_nextday_variance_high_vs_low_ratio": 1.5706291645172816,
+        "volatility_clustering_detected": true,
+        "note": "Algorithm checks and eight-path descriptive clustering; not a market or probability calibration test",
+        "algorithm_checks_pass": true,
+        "novel_parametric_returns_pass": true
+      },
+      "numerical_failures": [],
+      "research_gate_pass": false,
+      "failures": [
+        "distribution_distance_mean",
+        "distribution_distance_single_metric"
+      ],
+      "real_world_adequacy_certified": false,
+      "meaning": "Predeclared descriptive research preferences; NOT a calibrated hypothesis test or profitability evidence"
+    },
+    "sv_jump": {
+      "validation": {
+        "mean_scaled_wasserstein": 1.6415253870139157,
+        "max_scaled_wasserstein": 3.0487102027432487,
+        "observed_windows": 4,
+        "simulated_paths": 128,
+        "metrics": [
+          {
+            "metric": "hourly_p01",
+            "scaled_wasserstein": 0.9821406639127537,
+            "training_scale": 0.007368395316784869,
+            "observed_p05": -0.018462335825224264,
+            "observed_median": -0.017259437620646877,
+            "observed_p95": -0.015476861862277733,
+            "simulated_p05": -0.04729803012571128,
+            "simulated_median": -0.019522301988214905,
+            "simulated_p95": -0.012439566533741188
+          },
+          {
+            "metric": "hourly_p99",
+            "scaled_wasserstein": 0.8715356500409793,
+            "training_scale": 0.007949309554317571,
+            "observed_p05": 0.013656890563811296,
+            "observed_median": 0.016369964668859767,
+            "observed_p95": 0.01880694548019572,
+            "simulated_p05": 0.0127743898315855,
+            "simulated_median": 0.0196932023916569,
+            "simulated_p95": 0.04449438833966115
+          },
+          {
+            "metric": "daily_p01",
+            "scaled_wasserstein": 1.9900885805987036,
+            "training_scale": 0.03269313481037785,
+            "observed_p05": -0.0762986063358429,
+            "observed_median": -0.06716495281699544,
+            "observed_p95": -0.05316907036172502,
+            "simulated_p05": -0.26187799537940665,
+            "simulated_median": -0.11156741214913496,
+            "simulated_p95": -0.06303837687508333
+          },
+          {
+            "metric": "daily_p99",
+            "scaled_wasserstein": 1.5249533328202025,
+            "training_scale": 0.034776544882563064,
+            "observed_p05": 0.06221423853999687,
+            "observed_median": 0.0700139073424238,
+            "observed_p95": 0.08017254541501585,
+            "simulated_p05": 0.06083473775569964,
+            "simulated_median": 0.09812665223996342,
+            "simulated_p95": 0.24333621352756704
+          },
+          {
+            "metric": "annualized_vol",
+            "scaled_wasserstein": 1.1931731963583232,
+            "training_scale": 0.22056613323858593,
+            "observed_p05": 0.4878358551742852,
+            "observed_median": 0.5296404619617434,
+            "observed_p95": 0.5589614472934172,
+            "simulated_p05": 0.4905269071363136,
+            "simulated_median": 0.6965273679628974,
+            "simulated_p95": 1.4125229010348799
+          },
+          {
+            "metric": "abs_acf1",
+            "scaled_wasserstein": 0.9461546048617514,
+            "training_scale": 0.06672334101520333,
+            "observed_p05": 0.22088123684340352,
+            "observed_median": 0.26807382338328956,
+            "observed_p95": 0.3022436935879452,
+            "simulated_p05": 0.12430260586120723,
+            "simulated_median": 0.2421170422366449,
+            "simulated_p95": 0.4879906945045865
+          },
+          {
+            "metric": "abs_acf24",
+            "scaled_wasserstein": 1.8820840122900526,
+            "training_scale": 0.03697629781145678,
+            "observed_p05": 0.11739578862658925,
+            "observed_median": 0.12412031883139885,
+            "observed_p95": 0.13430564646126378,
+            "simulated_p05": 0.0789037137539307,
+            "simulated_median": 0.16855320597557213,
+            "simulated_p95": 0.3448503518015356
+          },
+          {
+            "metric": "abs_acf168",
+            "scaled_wasserstein": 3.0487102027432487,
+            "training_scale": 0.036500989258824765,
+            "observed_p05": 0.10575366277388891,
+            "observed_median": 0.128271668682095,
+            "observed_p95": 0.16108015548119037,
+            "simulated_p05": -0.04445167109695812,
+            "simulated_median": 0.012703643455228363,
+            "simulated_p95": 0.10518349000885878
+          },
+          {
+            "metric": "squared_acf1",
+            "scaled_wasserstein": 1.533300277032769,
+            "training_scale": 0.1144532054947863,
+            "observed_p05": 0.19375957699465818,
+            "observed_median": 0.2604782478300905,
+            "observed_p95": 0.29976911069331225,
+            "simulated_p05": 0.0066688555520660175,
+            "simulated_median": 0.04850004721438511,
+            "simulated_p95": 0.33400227706156255
+          },
+          {
+            "metric": "worst24h_return",
+            "scaled_wasserstein": 1.878803628162453,
+            "training_scale": 0.038985805745265056,
+            "observed_p05": -0.17095462007649403,
+            "observed_median": -0.09219286436986843,
+            "observed_p95": -0.0890073463066455,
+            "simulated_p05": -0.4137259888150582,
+            "simulated_median": -0.15902196643735642,
+            "simulated_p95": -0.08624055860547704
+          },
+          {
+            "metric": "max_drawdown90",
+            "scaled_wasserstein": 1.5321819239171797,
+            "training_scale": 0.08693015248706243,
+            "observed_p05": 0.15224533051222922,
+            "observed_median": 0.20808119752930848,
+            "observed_p95": 0.27564768704601134,
+            "simulated_p05": 0.18075217363964813,
+            "simulated_median": 0.31777748460668226,
+            "simulated_p95": 0.5978671160539789
+          },
+          {
+            "metric": "jump_frequency_abs_hour_ge3pct",
+            "scaled_wasserstein": 2.315178571428571,
+            "training_scale": 0.004050925925925927,
+            "observed_p05": 0.0010648148148148149,
+            "observed_median": 0.0025462962962962965,
+            "observed_p95": 0.004027777777777778,
+            "simulated_p05": 0.0023148148148148147,
+            "simulated_median": 0.006712962962962962,
+            "simulated_p95": 0.03685185185185184
+          }
+        ]
+      },
+      "legacy": {
+        "mean_scaled_wasserstein": 1.720312608791959,
+        "max_scaled_wasserstein": 3.1636028960715166,
+        "observed_windows": 7,
+        "simulated_paths": 128,
+        "metrics": [
+          {
+            "metric": "hourly_p01",
+            "scaled_wasserstein": 1.348803412699611,
+            "training_scale": 0.007368395316784869,
+            "observed_p05": -0.01726591569274801,
+            "observed_median": -0.013614235389722224,
+            "observed_p95": -0.009207867074019443,
+            "simulated_p05": -0.04729803012571128,
+            "simulated_median": -0.019522301988214905,
+            "simulated_p95": -0.012439566533741188
+          },
+          {
+            "metric": "hourly_p99",
+            "scaled_wasserstein": 1.2677630274882654,
+            "training_scale": 0.007949309554317571,
+            "observed_p05": 0.009332866086833041,
+            "observed_median": 0.013083076987199568,
+            "observed_p95": 0.015850292736320166,
+            "simulated_p05": 0.0127743898315855,
+            "simulated_median": 0.0196932023916569,
+            "simulated_p95": 0.04449438833966115
+          },
+          {
+            "metric": "daily_p01",
+            "scaled_wasserstein": 2.168536301087821,
+            "training_scale": 0.03269313481037785,
+            "observed_p05": -0.08174058188051445,
+            "observed_median": -0.054882702615977476,
+            "observed_p95": -0.03445413371956872,
+            "simulated_p05": -0.26187799537940665,
+            "simulated_median": -0.11156741214913496,
+            "simulated_p95": -0.06303837687508333
+          },
+          {
+            "metric": "daily_p99",
+            "scaled_wasserstein": 1.7872524320586416,
+            "training_scale": 0.034776544882563064,
+            "observed_p05": 0.04245820991535785,
+            "observed_median": 0.060589519381779165,
+            "observed_p95": 0.07510875950954614,
+            "simulated_p05": 0.06083473775569964,
+            "simulated_median": 0.09812665223996342,
+            "simulated_p95": 0.24333621352756704
+          },
+          {
+            "metric": "annualized_vol",
+            "scaled_wasserstein": 1.5942106018500832,
+            "training_scale": 0.22056613323858593,
+            "observed_p05": 0.32683176011472276,
+            "observed_median": 0.41638028425561896,
+            "observed_p95": 0.5457407765091105,
+            "simulated_p05": 0.4905269071363136,
+            "simulated_median": 0.6965273679628974,
+            "simulated_p95": 1.4125229010348799
+          },
+          {
+            "metric": "abs_acf1",
+            "scaled_wasserstein": 0.7284290249382324,
+            "training_scale": 0.06672334101520333,
+            "observed_p05": 0.18064172884739924,
+            "observed_median": 0.2293471881302977,
+            "observed_p95": 0.2973226235745383,
+            "simulated_p05": 0.12430260586120723,
+            "simulated_median": 0.2421170422366449,
+            "simulated_p95": 0.4879906945045865
+          },
+          {
+            "metric": "abs_acf24",
+            "scaled_wasserstein": 1.425180695014012,
+            "training_scale": 0.03697629781145678,
+            "observed_p05": 0.08259914045877136,
+            "observed_median": 0.1227265481984586,
+            "observed_p95": 0.19686710676698832,
+            "simulated_p05": 0.0789037137539307,
+            "simulated_median": 0.16855320597557213,
+            "simulated_p95": 0.3448503518015356
+          },
+          {
+            "metric": "abs_acf168",
+            "scaled_wasserstein": 3.1636028960715166,
+            "training_scale": 0.036500989258824765,
+            "observed_p05": 0.07613915449218372,
+            "observed_median": 0.13267034926794868,
+            "observed_p95": 0.18689717646110493,
+            "simulated_p05": -0.04445167109695812,
+            "simulated_median": 0.012703643455228363,
+            "simulated_p95": 0.10518349000885878
+          },
+          {
+            "metric": "squared_acf1",
+            "scaled_wasserstein": 0.7795034826654587,
+            "training_scale": 0.1144532054947863,
+            "observed_p05": 0.07846859274255713,
+            "observed_median": 0.15685104023140853,
+            "observed_p95": 0.2154957253448643,
+            "simulated_p05": 0.0066688555520660175,
+            "simulated_median": 0.04850004721438511,
+            "simulated_p95": 0.33400227706156255
+          },
+          {
+            "metric": "worst24h_return",
+            "scaled_wasserstein": 2.4953620812070483,
+            "training_scale": 0.038985805745265056,
+            "observed_p05": -0.13268723559468226,
+            "observed_median": -0.09987012430718531,
+            "observed_p95": -0.04392611116632324,
+            "simulated_p05": -0.4137259888150582,
+            "simulated_median": -0.15902196643735642,
+            "simulated_p95": -0.08624055860547704
+          },
+          {
+            "metric": "max_drawdown90",
+            "scaled_wasserstein": 1.304112452463636,
+            "training_scale": 0.08693015248706243,
+            "observed_p05": 0.09377472850054291,
+            "observed_median": 0.28024830444013604,
+            "observed_p95": 0.35341273507589516,
+            "simulated_p05": 0.18075217363964813,
+            "simulated_median": 0.31777748460668226,
+            "simulated_p95": 0.5978671160539789
+          },
+          {
+            "metric": "jump_frequency_abs_hour_ge3pct",
+            "scaled_wasserstein": 2.580994897959183,
+            "training_scale": 0.004050925925925927,
+            "observed_p05": 0.0,
+            "observed_median": 0.000925925925925926,
+            "observed_p95": 0.004120370370370368,
+            "simulated_p05": 0.0023148148148148147,
+            "simulated_median": 0.006712962962962962,
+            "simulated_p95": 0.03685185185185184
+          }
+        ]
+      },
+      "randomness": {
+        "same_seed_reproducible": true,
+        "different_seed_changes_path": true,
+        "prefix_invariant_to_requested_horizon": true,
+        "free_endpoint_logreturn_sd": 0.42044045576135797,
+        "no_fixed_endpoint": true,
+        "fraction_hourly_returns_not_in_training_or_centered_training": 1.0,
+        "conditional_nextday_variance_high_vs_low_ratio": 14.01842644854882,
+        "volatility_clustering_detected": true,
+        "note": "Algorithm checks and eight-path descriptive clustering; not a market or probability calibration test",
+        "algorithm_checks_pass": true,
+        "novel_parametric_returns_pass": true
+      },
+      "numerical_failures": [],
+      "research_gate_pass": false,
+      "failures": [
+        "distribution_distance_mean",
+        "distribution_distance_single_metric"
+      ],
+      "real_world_adequacy_certified": false,
+      "meaning": "Predeclared descriptive research preferences; NOT a calibrated hypothesis test or profitability evidence"
+    },
+    "bootstrap_reference": {
+      "validation": {
+        "mean_scaled_wasserstein": 0.9970131693319545,
+        "max_scaled_wasserstein": 2.6013620549039236,
+        "observed_windows": 4,
+        "simulated_paths": 128,
+        "metrics": [
+          {
+            "metric": "hourly_p01",
+            "scaled_wasserstein": 0.5594954104554788,
+            "training_scale": 0.007368395316784869,
+            "observed_p05": -0.018462335825224264,
+            "observed_median": -0.017259437620646877,
+            "observed_p95": -0.015476861862277733,
+            "simulated_p05": -0.029307472316026716,
+            "simulated_median": -0.02082520417038588,
+            "simulated_p95": -0.015469490025647292
+          },
+          {
+            "metric": "hourly_p99",
+            "scaled_wasserstein": 0.5292262807129151,
+            "training_scale": 0.007949309554317571,
+            "observed_p05": 0.013656890563811296,
+            "observed_median": 0.016369964668859767,
+            "observed_p95": 0.01880694548019572,
+            "simulated_p05": 0.014451511679390822,
+            "simulated_median": 0.020282335780941355,
+            "simulated_p95": 0.026135799423691784
+          },
+          {
+            "metric": "daily_p01",
+            "scaled_wasserstein": 0.9984465739186399,
+            "training_scale": 0.03269313481037785,
+            "observed_p05": -0.0762986063358429,
+            "observed_median": -0.06716495281699544,
+            "observed_p95": -0.05316907036172502,
+            "simulated_p05": -0.1379083904244261,
+            "simulated_median": -0.0952945542138838,
+            "simulated_p95": -0.057073848924620085
+          },
+          {
+            "metric": "daily_p99",
+            "scaled_wasserstein": 0.7175120041798858,
+            "training_scale": 0.034776544882563064,
+            "observed_p05": 0.06221423853999687,
+            "observed_median": 0.0700139073424238,
+            "observed_p95": 0.08017254541501585,
+            "simulated_p05": 0.05960102918732632,
+            "simulated_median": 0.09388988164151874,
+            "simulated_p95": 0.13755655123460747
+          },
+          {
+            "metric": "annualized_vol",
+            "scaled_wasserstein": 0.6420918564011449,
+            "training_scale": 0.22056613323858593,
+            "observed_p05": 0.4878358551742852,
+            "observed_median": 0.5296404619617434,
+            "observed_p95": 0.5589614472934172,
+            "simulated_p05": 0.49028167200299977,
+            "simulated_median": 0.6402952279791307,
+            "simulated_p95": 0.9338472237702277
+          },
+          {
+            "metric": "abs_acf1",
+            "scaled_wasserstein": 0.4120991220250859,
+            "training_scale": 0.06672334101520333,
+            "observed_p05": 0.22088123684340352,
+            "observed_median": 0.26807382338328956,
+            "observed_p95": 0.3022436935879452,
+            "simulated_p05": 0.16153882216834836,
+            "simulated_median": 0.2454637164286606,
+            "simulated_p95": 0.3530789019142321
+          },
+          {
+            "metric": "abs_acf24",
+            "scaled_wasserstein": 1.113891115953123,
+            "training_scale": 0.03697629781145678,
+            "observed_p05": 0.11739578862658925,
+            "observed_median": 0.12412031883139885,
+            "observed_p95": 0.13430564646126378,
+            "simulated_p05": 0.04864854073025924,
+            "simulated_median": 0.126933766948719,
+            "simulated_p95": 0.24768866236328788
+          },
+          {
+            "metric": "abs_acf168",
+            "scaled_wasserstein": 2.6013620549039236,
+            "training_scale": 0.036500989258824765,
+            "observed_p05": 0.10575366277388891,
+            "observed_median": 0.128271668682095,
+            "observed_p95": 0.16108015548119037,
+            "simulated_p05": -0.022914704949354193,
+            "simulated_median": 0.029643682173592083,
+            "simulated_p95": 0.11320155261616724
+          },
+          {
+            "metric": "squared_acf1",
+            "scaled_wasserstein": 1.0439434436445978,
+            "training_scale": 0.1144532054947863,
+            "observed_p05": 0.19375957699465818,
+            "observed_median": 0.2604782478300905,
+            "observed_p95": 0.29976911069331225,
+            "simulated_p05": 0.03836184705159824,
+            "simulated_median": 0.12182439193571146,
+            "simulated_p95": 0.2968741079401719
+          },
+          {
+            "metric": "worst24h_return",
+            "scaled_wasserstein": 0.9838462728626997,
+            "training_scale": 0.038985805745265056,
+            "observed_p05": -0.17095462007649403,
+            "observed_median": -0.09219286436986843,
+            "observed_p95": -0.0890073463066455,
+            "simulated_p05": -0.20490976960412025,
+            "simulated_median": -0.13083186105607555,
+            "simulated_p95": -0.07861377983344985
+          },
+          {
+            "metric": "max_drawdown90",
+            "scaled_wasserstein": 1.194386754068818,
+            "training_scale": 0.08693015248706243,
+            "observed_p05": 0.15224533051222922,
+            "observed_median": 0.20808119752930848,
+            "observed_p95": 0.27564768704601134,
+            "simulated_p05": 0.14371648305947013,
+            "simulated_median": 0.30463862790333046,
+            "simulated_p95": 0.553496562743978
+          },
+          {
+            "metric": "jump_frequency_abs_hour_ge3pct",
+            "scaled_wasserstein": 1.1678571428571425,
+            "training_scale": 0.004050925925925927,
+            "observed_p05": 0.0010648148148148149,
+            "observed_median": 0.0025462962962962965,
+            "observed_p95": 0.004027777777777778,
+            "simulated_p05": 0.001851851851851852,
+            "simulated_median": 0.005555555555555556,
+            "simulated_p95": 0.016666666666666666
+          }
+        ]
+      },
+      "legacy": {
+        "mean_scaled_wasserstein": 1.08102092218064,
+        "max_scaled_wasserstein": 2.7061944805927487,
+        "observed_windows": 7,
+        "simulated_paths": 128,
+        "metrics": [
+          {
+            "metric": "hourly_p01",
+            "scaled_wasserstein": 1.0296985846195668,
+            "training_scale": 0.007368395316784869,
+            "observed_p05": -0.01726591569274801,
+            "observed_median": -0.013614235389722224,
+            "observed_p95": -0.009207867074019443,
+            "simulated_p05": -0.029307472316026716,
+            "simulated_median": -0.02082520417038588,
+            "simulated_p95": -0.015469490025647292
+          },
+          {
+            "metric": "hourly_p99",
+            "scaled_wasserstein": 0.9520444686246836,
+            "training_scale": 0.007949309554317571,
+            "observed_p05": 0.009332866086833041,
+            "observed_median": 0.013083076987199568,
+            "observed_p95": 0.015850292736320166,
+            "simulated_p05": 0.014451511679390822,
+            "simulated_median": 0.020282335780941355,
+            "simulated_p95": 0.026135799423691784
+          },
+          {
+            "metric": "daily_p01",
+            "scaled_wasserstein": 1.1776866145201834,
+            "training_scale": 0.03269313481037785,
+            "observed_p05": -0.08174058188051445,
+            "observed_median": -0.054882702615977476,
+            "observed_p95": -0.03445413371956872,
+            "simulated_p05": -0.1379083904244261,
+            "simulated_median": -0.0952945542138838,
+            "simulated_p95": -0.057073848924620085
+          },
+          {
+            "metric": "daily_p99",
+            "scaled_wasserstein": 0.988067882031736,
+            "training_scale": 0.034776544882563064,
+            "observed_p05": 0.04245820991535785,
+            "observed_median": 0.060589519381779165,
+            "observed_p95": 0.07510875950954614,
+            "simulated_p05": 0.05960102918732632,
+            "simulated_median": 0.09388988164151874,
+            "simulated_p95": 0.13755655123460747
+          },
+          {
+            "metric": "annualized_vol",
+            "scaled_wasserstein": 1.0536338354866772,
+            "training_scale": 0.22056613323858593,
+            "observed_p05": 0.32683176011472276,
+            "observed_median": 0.41638028425561896,
+            "observed_p95": 0.5457407765091105,
+            "simulated_p05": 0.49028167200299977,
+            "simulated_median": 0.6402952279791307,
+            "simulated_p95": 0.9338472237702277
+          },
+          {
+            "metric": "abs_acf1",
+            "scaled_wasserstein": 0.3115123971440827,
+            "training_scale": 0.06672334101520333,
+            "observed_p05": 0.18064172884739924,
+            "observed_median": 0.2293471881302977,
+            "observed_p95": 0.2973226235745383,
+            "simulated_p05": 0.16153882216834836,
+            "simulated_median": 0.2454637164286606,
+            "simulated_p95": 0.3530789019142321
+          },
+          {
+            "metric": "abs_acf24",
+            "scaled_wasserstein": 0.4963842736583119,
+            "training_scale": 0.03697629781145678,
+            "observed_p05": 0.08259914045877136,
+            "observed_median": 0.1227265481984586,
+            "observed_p95": 0.19686710676698832,
+            "simulated_p05": 0.04864854073025924,
+            "simulated_median": 0.126933766948719,
+            "simulated_p95": 0.24768866236328788
+          },
+          {
+            "metric": "abs_acf168",
+            "scaled_wasserstein": 2.7061944805927487,
+            "training_scale": 0.036500989258824765,
+            "observed_p05": 0.07613915449218372,
+            "observed_median": 0.13267034926794868,
+            "observed_p95": 0.18689717646110493,
+            "simulated_p05": -0.022914704949354193,
+            "simulated_median": 0.029643682173592083,
+            "simulated_p95": 0.11320155261616724
+          },
+          {
+            "metric": "squared_acf1",
+            "scaled_wasserstein": 0.2923723203631754,
+            "training_scale": 0.1144532054947863,
+            "observed_p05": 0.07846859274255713,
+            "observed_median": 0.15685104023140853,
+            "observed_p95": 0.2154957253448643,
+            "simulated_p05": 0.03836184705159824,
+            "simulated_median": 0.12182439193571146,
+            "simulated_p95": 0.2968741079401719
+          },
+          {
+            "metric": "worst24h_return",
+            "scaled_wasserstein": 1.5760106859938834,
+            "training_scale": 0.038985805745265056,
+            "observed_p05": -0.13268723559468226,
+            "observed_median": -0.09987012430718531,
+            "observed_p95": -0.04392611116632324,
+            "simulated_p05": -0.20490976960412025,
+            "simulated_median": -0.13083186105607555,
+            "simulated_p95": -0.07861377983344985
+          },
+          {
+            "metric": "max_drawdown90",
+            "scaled_wasserstein": 0.9514006251734474,
+            "training_scale": 0.08693015248706243,
+            "observed_p05": 0.09377472850054291,
+            "observed_median": 0.28024830444013604,
+            "observed_p95": 0.35341273507589516,
+            "simulated_p05": 0.14371648305947013,
+            "simulated_median": 0.30463862790333046,
+            "simulated_p95": 0.553496562743978
+          },
+          {
+            "metric": "jump_frequency_abs_hour_ge3pct",
+            "scaled_wasserstein": 1.4372448979591832,
+            "training_scale": 0.004050925925925927,
+            "observed_p05": 0.0,
+            "observed_median": 0.000925925925925926,
+            "observed_p95": 0.004120370370370368,
+            "simulated_p05": 0.001851851851851852,
+            "simulated_median": 0.005555555555555556,
+            "simulated_p95": 0.016666666666666666
+          }
+        ]
+      },
+      "randomness": {
+        "same_seed_reproducible": true,
+        "different_seed_changes_path": true,
+        "prefix_invariant_to_requested_horizon": true,
+        "free_endpoint_logreturn_sd": 0.2542748832392133,
+        "no_fixed_endpoint": true,
+        "fraction_hourly_returns_not_in_training_or_centered_training": 0.0,
+        "conditional_nextday_variance_high_vs_low_ratio": 3.0140242296283413,
+        "volatility_clustering_detected": true,
+        "note": "Algorithm checks and eight-path descriptive clustering; not a market or probability calibration test",
+        "algorithm_checks_pass": true,
+        "novel_parametric_returns_pass": null,
+        "reference_note": "Historical resampling reference is not required to generate novel innovations"
+      },
+      "numerical_failures": [],
+      "research_gate_pass": false,
+      "failures": [
+        "distribution_distance_single_metric"
+      ],
+      "real_world_adequacy_certified": false,
+      "meaning": "Predeclared descriptive research preferences; NOT a calibrated hypothesis test or profitability evidence"
+    }
+  },
+  "research_reference_selected": null,
+  "selection_uses": "Only2024 market distribution distance, never strategy returns",
+  "market_adequacy_guaranteed": false,
+  "limitations": [
+    "Few nonoverlapping validation windows and one historical realization",
+    "Marginal metric distances do not validate all joint dynamics or future regimes",
+    "Physical price validation does not validate option quotes, IV, fills or margin",
+    "No model silently discarded for losing strategies or failed numerical paths"
+  ]
+}

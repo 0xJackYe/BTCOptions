@@ -1,0 +1,12 @@
+{
+  "source_sha256": {
+    "report.py": "077c99038c442f66cc864c958ed319c1c4a29ab9e4c0cac309290fc31fcd49a3"
+  },
+  "artifact_sha256": {
+    "RESULT.md": "34bce082701ede926fd672dd117572e133ddddf6ac2441ff9dbd9202df5a7fc3",
+    "frontier-results.png": "c0e69f7141dc327abb87f884d0953f6e83b0b3bb9fd9f4fd821ac6d5e7be6d29",
+    "test-summary-controls.json": "da8f27ae693cf2d9f6a7c4532a9058620d62b371b3fbee9f7532a09df019fa3d",
+    "deterministic-gap-stress.csv": "4f590f0547abd646f3f1b5ab56b682c0e40f3878d093579441119d221dc05a33"
+  },
+  "market_validation_sha256": "b9b93d9cd47b8d19b0787d422fb1dd343dd6f47563147e0bbd85b3bb38ed587e"
+}

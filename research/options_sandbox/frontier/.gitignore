@@ -1,0 +1,11 @@
+/results/
+/results-final/
+/smoke-final/
+/smoke-results/
+/market-validation/
+/market-validation-bridge/
+/market-validation-final/
+__pycache__/
+*.py[cod]
+*.nbc
+*.nbi

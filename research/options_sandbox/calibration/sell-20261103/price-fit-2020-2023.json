@@ -1,0 +1,25 @@
+{
+  "training": "2020-2023 ONLY; 2024 validation and 2025-2026 legacy diagnostic are excluded from fit",
+  "rows": 35017,
+  "holdout_not_used_for_fit": "2025-2026-10",
+  "mu_log_return_hourly": 4.9284264124887154e-05,
+  "empirical_annual_log_drift_not_a_forecast": 0.43173015373401147,
+  "omega_log_variance": 5.410392862771372e-07,
+  "alpha": 0.05,
+  "gamma": 0.02,
+  "beta": 0.93,
+  "nu_student_t_for_likelihood_only": 5.0,
+  "persistence_symmetric_reference": 0.9900000000000001,
+  "residual_mean": -0.001432061174210715,
+  "residual_std": 1.0133073192918065,
+  "initial_log_variance": 5.410392862771372e-05,
+  "negative_log_likelihood_normalized_returns": 37208.30202411203,
+  "optimizer_success": true,
+  "optimizer_iterations": 5,
+  "notes": [
+    "FHS simulation resamples empirical standardized shocks, not Gaussian shocks.",
+    "Asymmetric persistence expression assumes symmetric residual signs; empirical sign-weighted persistence also checked.",
+    "No fit targets strategy returns."
+  ],
+  "persistence_empirical_reference": 0.9903092136232873
+}

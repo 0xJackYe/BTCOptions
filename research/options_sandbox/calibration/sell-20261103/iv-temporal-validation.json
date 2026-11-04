@@ -1,0 +1,60 @@
+{
+  "kind": "SSVI train-only parameters, temporal holdout diagnostics",
+  "source_archives_verified": 147,
+  "training": "2023-05 through 2023-08",
+  "validation": "2023-09 through 2023-10; no 2026 IV evidence",
+  "ATM_beta_reduced": [
+    -0.2532087767639096,
+    0.6790114584713696,
+    0.09181985613972903,
+    0.25007343371236046,
+    1.9640324983976336
+  ],
+  "ATM_features": [
+    "intercept",
+    "beta_log_rv",
+    "term_coef",
+    "negative_r24_coef",
+    "positive_r24_coef"
+  ],
+  "AR_intercept": 0.0002611671482403958,
+  "AR_phi": 0.9035958627765474,
+  "SSVI_rho": -0.035716990273624814,
+  "SSVI_eta": 1.015312495586464,
+  "SSVI_fit_success": true,
+  "summary": [
+    {
+      "cohort": "train_May_Aug",
+      "surface_rows": 80245,
+      "surface_hours": 1845,
+      "conditional_shape_log_total_variance_rmse_equal_hour": 0.31069688369115595,
+      "ATM_hours": 1845,
+      "ATM_conditional_mean_log_iv_rmse": 0.08073570111701553,
+      "ATM_one_step_log_iv_rmse_actual_prev_state": 0.0343781358537678,
+      "ATM_innovation_excess_kurtosis": 299.8647123879793,
+      "quote_rows_relevant": 12536,
+      "predicted_price_inside_recorded_bid_ask_fraction": 0.21378430121250797,
+      "median_abs_model_minus_mark_price_over_mid": 0.16233368854613373
+    },
+    {
+      "cohort": "validation_Sep_Oct",
+      "surface_rows": 42600,
+      "surface_hours": 866,
+      "conditional_shape_log_total_variance_rmse_equal_hour": 0.3887323323282427,
+      "ATM_hours": 866,
+      "ATM_conditional_mean_log_iv_rmse": 0.1816628827346321,
+      "ATM_one_step_log_iv_rmse_actual_prev_state": 0.0763497399206881,
+      "ATM_innovation_excess_kurtosis": 86.21113726422179,
+      "quote_rows_relevant": 5704,
+      "predicted_price_inside_recorded_bid_ask_fraction": 0.10729312762973352,
+      "median_abs_model_minus_mark_price_over_mid": 0.16936819098572403
+    }
+  ],
+  "limitations": [
+    "SSVI shape scores condition on observed nearest-ATM IV, isolating shape error; not a free-running IV forecast.",
+    "Bid/ask containment uses r=0 and next-hour spot as index proxy, so basis/timestamp/rate mismatch is included.",
+    "Quoted best_buy_iv missing; no true trade fills, order queues or subhour liquidation validation.",
+    "Current production SSVi calibration uses all 2023 and must not be presented as this train-only model.",
+    "Static-arbitrage constraints do not establish joint price/IV dynamic no-arbitrage."
+  ]
+}

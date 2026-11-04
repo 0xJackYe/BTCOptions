@@ -1,0 +1,33 @@
+{
+  "source_sha256": {
+    "frontier\\optimize.py": "50cc379cf020449500d73a13fb1be8f5ebf987951a5bf485f5f864f3cc9ac150",
+    "frontier\\generators.py": "8a7b85fab1a3ea4be481189244d5c66ef6242e2cb5c14130609a21d0bc91099b",
+    "frontier\\engine.py": "50ca7a01a55fe4f940ab0ed9b8c0957f16d5c1abed8b9d5c6f68aaac77c9bfec",
+    "frontier\\pricing.py": "cadb72e4fceb27b975fa4d1de5e259b7b4031d3a1b613975d300a4124bb27ecc",
+    "frontier\\validate.py": "85b8dfa290d68c3f04f2b19f6aed8e5a595974d65293c442cb4b4a1412809a04",
+    "sell_statistics.py": "57022ec04061b6d892b91c16870a96876c33623731b2cd1adec1b76170392725",
+    "strategy_engine.py": "8ce2e47ab150cff4d82ae54e7f2ecea51c9d1ef4be69cabfc5001e21a55c1a95",
+    "data\\btc_spot_1h.csv": "f24b780116976ea366fb7138e0c48c30ed3b50081793c0bbd27c1a976ef8ce40",
+    "calibration\\atm-joint-innovations.csv": "aa590d381479d64530b23b724ce9393a48ae5cd4877ecaac12a9a4cfe974ab02",
+    "calibration\\ssvi-calibration.json": "67d7a4af1c4870e3ea41cec739818e8ce97986e72df46bd166821707f3eb1c57",
+    "calibration\\sell-20261103\\current-ssvi-calibration.json": "4db648bdae38dc3e71b5b8f55b3badb4c44e9d84b9101ee15359719d68915cf8"
+  },
+  "python": "3.9.13",
+  "numpy": "1.24.3",
+  "artifact_sha256": {
+    "decision.json": "ce82d313c9e90f2c968e3fa4e5d26cc2a91a0e2d326427a186cdc43a2716b242",
+    "frozen-finalists.json": "4083d68b171e268cbcf98618d9b229940911cc111a24ea564e2312edd340888d",
+    "frozen-shortlist.json": "fe7e92cf9c002e6cd8f10da32b8d3ada52ceb1565cae3c892133319842e33ef6",
+    "price-calibration.json": "cef78366ac9d5a3cec05115cf914b6ce5e8a3c44104649dc0d478b382f95f4cf",
+    "pricing-calibration.json": "c879498e29293682adff1dc666a99edbab202a27305703ba6bc941924e7987a6",
+    "protocol.json": "fc267ef9d923f8026af4b9442a5ebbbfa0d9f34fd0c76cabf9fc0d198ece6538",
+    "search-paths.csv.gz": "8bc84138e56d6910e6483bb587af5ea84b2e16d500436d36c02afc5abcb43d8c",
+    "search-ranking.json": "d6b2e3a4416ac8ca1f94b083333af9b5dec837e7f5d43755f36bdf24449ad741",
+    "source-hashes-before.json": "9c6616bb3e2acfec6c3325559106318f19a245d9544cb4f1afa9545d7b649be3",
+    "test-paths.csv.gz": "cf3e2aa05103b6a595a090d1fb83048e789f19d83fc3b9fcdb31c3b503c4f083",
+    "test-ranking.json": "a716ffbf345a5fd95999f95a7360a3924b161356e59b2055149591dc8141d8d5",
+    "test-traces.csv": "51034c66fb5ef604107799e7a3b3edef24ba7af59088f85161b70a389fd02e4f",
+    "validation-paths.csv.gz": "8c29cdc43e364bb99a8a3d590aebe2d8bae59cc5a06256f1c8744979f1c30e28",
+    "validation-ranking.json": "bb23dd01258c8d001be0534be96ba90aa25bf77b7333137d9150d4a1948bae11"
+  }
+}
