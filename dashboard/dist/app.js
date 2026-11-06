@@ -1,6 +1,10 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
+const hostedSite = window.BTCOptionsHosted === true;
+const connectionRecent = () => hostedSite
+  ? !state.apiError && state.lastFetch > 0 && Date.now() - state.lastFetch < 25000
+  : state.streamConnected && Date.now() - state.streamLastAt < 25000;
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[char]));
 const number = (value) => value === null || value === undefined || value === "" || !Number.isFinite(Number(value)) ? null : Number(value);
 const numberFormatters = new Map();
@@ -84,9 +88,9 @@ function renderMarket() {
 }
 
 function isLiveSnapshot(snapshot) {
-  const localLive = state.streamConnected && Date.now() - state.streamLastAt < 25000;
+  const localLive = connectionRecent();
   const health = snapshot?.data_health;
-  if (["quote", "mark", "index"].every((group) => typeof health?.[group]?.status === "string")) return localLive && ["quote", "mark", "index"].every((group) => health[group].status === "live");
+  if (["quote", "mark", "index"].every((group) => typeof health?.[group]?.status === "string")) return localLive && ["quote", "mark", "index"].every((group) => (health[group].status === "live" || hostedSite && health[group].status === "fresh"));
   const realtime = snapshot?.realtime ?? {};
   const lastMessage = timeMs(realtime.last_message_at) ?? timeMs(realtime.last_event_at) ?? 0;
   return localLive && (realtime.connected === true || realtime.status === "connected") && lastMessage > 0 && Date.now() - lastMessage < 20000;
@@ -125,13 +129,13 @@ function statisticsDescription(health) {
 // The quote badge describes executable bid/ask data, not mark/Greeks or index.
 // Keep isLiveSnapshot's stricter all-core test for calculation previews above.
 function quotationHealth(snapshot = state.snapshot) {
-  const localLive = state.streamConnected && Date.now() - state.streamLastAt < 25000;
+  const localLive = connectionRecent();
   const upstream = snapshot?.data_health?.quote;
   const known = ["live", "fresh", "partial", "stale", "unavailable"].includes(upstream?.status);
   const total = number(upstream?.total_fields), fresh = number(upstream?.fresh_fields);
   const coverage = total > 0 && fresh !== null ? `${fresh}/${total} 字段新鲜` : "";
   if (state.currentSnapshotUnavailable) return {status: "stale", text: "报价缓存 · 最新快照不可用", localLive, coverage, upstream};
-  if (!localLive) return {status: "stale", text: "报价缓存 · 本地推送中断", localLive, coverage, upstream};
+  if (!localLive) return {status: "stale", text: hostedSite ? "报价缓存 · 等待更新" : "报价缓存 · 本地推送中断", localLive, coverage, upstream};
   const status = known ? upstream.status : isLiveSnapshot(snapshot) ? "live" : "stale";
   const label = {live: "报价实时", fresh: "报价近期快照", partial: "报价部分更新", stale: "报价旧缓存", unavailable: "报价暂无数据"}[status];
   return {status, text: label + (status === "partial" && coverage ? `（${coverage}）` : ""), localLive, coverage, upstream};
@@ -148,7 +152,7 @@ function renderConnection() {
   const realtime = snapshot?.realtime ?? {};
   const lastMessage = timeMs(realtime.last_message_at) ?? timeMs(realtime.last_event_at) ?? 0;
   const quote = quotationHealth(snapshot);
-  const live = quote.status === "live";
+  const live = quote.status === "live" || hostedSite && quote.status === "fresh";
   const stale = !live;
   const statistics = statisticsHealth(snapshot);
   const mark = snapshot?.data_health?.mark, index = snapshot?.data_health?.index;
@@ -164,11 +168,11 @@ function renderConnection() {
   const groupIssues = [];
   const warnings = [];
   if (!unavailable) {
-    if (!quote.localLive) warnings.push("本地实时推送中断，显示最近接收数据；正在恢复本地连接。");
+    if (!quote.localLive) warnings.push(hostedSite ? "暂时显示最近行情，正在重试连接。" : "本地实时推送中断，显示最近接收数据；正在恢复本地连接。");
     else if (state.currentSnapshotUnavailable) warnings.push("最新行情快照不可用，保留最近接收的报价。");
     else if (quote.status === "partial") warnings.push(`买卖报价部分更新${quote.coverage ? `：${quote.coverage}` : ""}；其余字段保留原数据，不能视为全部实时。`);
     else if (quote.status === "stale") warnings.push("买卖报价已是旧缓存，等待盘口数据恢复。");
-    else if (quote.status === "fresh") warnings.push("买卖报价为最近快照，尚未验证全部实时推送。");
+    else if (quote.status === "fresh" && !hostedSite) warnings.push("买卖报价为最近快照，尚未验证全部实时推送。");
     else if (quote.status === "unavailable") warnings.push("买卖报价暂无有效数据。");
     for (const [name, shortName, group] of [["标记价 / Greeks", "标记 / Greeks", mark], ["指数", "指数", index]]) {
       if (["partial", "stale", "unavailable"].includes(group?.status)) {
@@ -188,7 +192,7 @@ function renderConnection() {
   $("focusStatus").textContent = focusText;
   $("focusStatus").className = focusText ? "stale" : "live";
   const catalogText = catalog?.status === "fresh" ? "已核验" : catalog?.status === "stale" ? "旧缓存" : catalog?.status === "unavailable" ? "未核验" : "状态未知";
-  $("lastUpdate").textContent = snapshot?.fetched_at ? `服务推送 ${beijingTime(lastMessage)} · 快照 ${beijingTime(snapshot.fetched_at, true)}\n${groupHealthDescription("标记价 / Greeks", mark, quote.localLive)} · ${groupHealthDescription("指数", index, quote.localLive)}\n到期目录：${catalogText}${catalog?.rest_refresh_failed ? " · 刷新失败" : ""}` : "等待行情";
+  $("lastUpdate").textContent = snapshot?.fetched_at ? `${hostedSite ? "网站读取 " + beijingTime(state.lastFetch) : "服务推送 " + beijingTime(lastMessage)} · 快照 ${beijingTime(snapshot.site_fetched_at ?? snapshot.fetched_at, true)}\n${groupHealthDescription("标记价 / Greeks", mark, quote.localLive)} · ${groupHealthDescription("指数", index, quote.localLive)}\n到期目录：${catalogText}${catalog?.rest_refresh_failed ? " · 刷新失败" : ""}` : "等待行情";
   $("lastUpdate").style.whiteSpace = "pre-line";
   $("statisticsStatus").textContent = statisticsDescription(statistics);
   $("statisticsStatus").className = `statistics-status ${statistics.stale || statistics.status === "partial" || statistics.status === "unavailable" || statistics.restFailed ? "degraded" : ""}`;
@@ -201,7 +205,7 @@ function renderConnection() {
     const failed = Object.keys(snapshot.error.failed_endpoints ?? {});
     warnings.push(`${failed.length ? failed.map((name) => labels[name] ?? "其他公开数据").join("、") + "刷新失败" : "部分数据刷新失败"}${live ? "；报价实时。" : "。"}`);
   }
-  if (!unavailable && state.apiError) warnings.push(`本地行情读取失败：${state.apiError}`);
+  if (!unavailable && state.apiError) warnings.push(`${hostedSite ? "行情读取失败" : "本地行情读取失败"}：${state.apiError}`);
   if (!unavailable && catalogStale) warnings.push(`到期目录缓存 · 核验 ${beijingTime(catalog.last_verified_at ?? snapshot.catalog_updated_at ?? snapshot.fetched_at, true)}`);
   $("noticeBar").hidden = !warnings.length;
   $("noticeBar").textContent = warnings.join(" ");
@@ -654,18 +658,49 @@ function connectEvents() {
   stream.onerror = () => {state.streamConnected = false; renderConnection();};
 }
 
+// Exchange event times remain exchange times. Translate receipt timestamps into
+// the browser clock used by age checks, even if its system clock is offset.
+function alignHostedSnapshot(data, receivedAt) {
+  const servedAt = timeMs(data?.snapshot_served_at_ms);
+  if (!servedAt || !Array.isArray(data.options)) return data;
+  const shift = receivedAt - servedAt;
+  const receipt = value => {
+    const time = timeMs(value);
+    return time === null ? value : time + shift;
+  };
+  const fields = (row, names) => {
+    const translated = {...row};
+    for (const key of names) {
+      if (Object.hasOwn(row, key)) translated[key] = receipt(row[key]);
+    }
+    return translated;
+  };
+  return {
+    ...fields(data, ["fetched_at", "index_updated_at", "catalog_updated_at"]),
+    site_fetched_at: data.fetched_at,
+    exchange_clock_offset_ms: (number(data.exchange_clock_offset_ms) ?? 0) - shift,
+    options: data.options.map(row => ({
+      ...fields(row, ["quote_updated_at", "mark_updated_at", "ticker_updated_at"]),
+      field_updated_at: Object.fromEntries(Object.entries(row.field_updated_at ?? {})
+        .map(([name, value]) => [name, receipt(value)]))
+    }))
+  };
+}
+
 async function fetchMarket(refresh = false) {
   if (state.fetching) return;
   state.fetching = true; renderConnection();
   const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 10000);
   try {
     const response = await fetch(`/api/market${refresh ? "?refresh=1" : ""}`, {cache: "no-store", signal: controller.signal});
-    if (!response.ok) throw new Error(`本地服务返回 HTTP ${response.status}`);
+    if (!response.ok) throw new Error(`行情服务返回 HTTP ${response.status}`);
     const data = await response.json();
     state.lastFetch = Date.now();
-    acceptSnapshot(data);
+    acceptSnapshot(hostedSite ? alignHostedSnapshot(data, state.lastFetch) : data);
   } catch (error) {
-    state.apiError = error.name === "AbortError" ? "本地行情服务响应超时。" : "本地行情服务暂时不可用，请确认看板程序正在运行。";
+    state.apiError = hostedSite
+      ? (error.name === "AbortError" ? "行情服务响应超时。" : "行情暂时不可用，稍后会自动重试。")
+      : (error.name === "AbortError" ? "本地行情服务响应超时。" : "本地行情服务暂时不可用，请确认看板程序正在运行。");
 
     renderConnection();
     if (!state.snapshot) {$("tableLoading").innerHTML = `<strong>暂时无法连接行情服务</strong><span>${escapeHtml(state.apiError)}</span><button class="refresh-button" id="retryConnection">重新连接</button>`; $("retryConnection").addEventListener("click", () => fetchMarket());}
@@ -691,7 +726,7 @@ $("chainBody").addEventListener("click", (event) => {const cell = event.target.c
 $("chainBody").addEventListener("keydown", (event) => {if (event.key === "Enter" || event.key === " ") {const cell = event.target.closest("td[data-symbol]"); if (cell) {event.preventDefault(); activateQuoteCell(cell);}}});
 $("closeDrawer").addEventListener("click", closeDrawer); $("drawerBackdrop").addEventListener("click", closeDrawer);
 document.addEventListener("keydown", (event) => {
-  if ($("payoffDialog").open || $("portfolioDialog")?.open || $("helpDialog").open || $("riskDialog")?.open) return;
+  if ($("siteScreenDialog")?.open || $("payoffDialog").open || $("portfolioDialog")?.open || $("helpDialog").open || $("riskDialog")?.open) return;
   if (event.key === "Escape") {
     if (!$("detailDrawer").hidden) {event.preventDefault(); closeDrawer(); return;}
     if (document.body.classList.contains("quote-focus")) {event.preventDefault(); applyQuoteFocus(false);}
@@ -730,7 +765,22 @@ function applyQuoteFocus(enabled) {
 $("focusButton").addEventListener("click", () => applyQuoteFocus(true));
 $("exitFocus").addEventListener("click", () => applyQuoteFocus(false));
 window.OptionRiskUI?.initialize({getSnapshot: () => state.snapshot, getExpiry: () => state.expiry});
-window.OptionAIUI?.initialize({
+if (hostedSite) window.BTCOptionsScreener?.initialize({
+  getSnapshot: () => state.snapshot,
+  getExpiry: () => state.expiry,
+  openContract(row) {
+    combo.active = false;
+    Object.assign(state, {expiry: optionDate(row), side: row.side, search: "", atm: false, favoritesOnly: false});
+    $("searchInput").value = "";
+    closeDrawer();
+    render();
+    const cell = [...$("chainBody").querySelectorAll("td[data-symbol]")].find(
+      (item) => item.dataset.symbol === row.symbol && item.dataset.column === "bid"
+    );
+    if (cell) activateQuoteCell(cell);
+  }
+});
+else window.OptionAIUI?.initialize({
   getSnapshot: () => state.snapshot,
   getExpiry: () => state.expiry,
   onOpenCandidate: async (candidate, context) => {
@@ -764,8 +814,8 @@ window.OptionAIUI?.initialize({
     $("payoffQuantity").dispatchEvent(new Event("input", {bubbles: true}));
   }
 });
-connectEvents();
+if (!hostedSite) connectEvents();
 fetchMarket();
-setInterval(() => {if (!document.hidden && (!state.streamConnected || Date.now() - state.streamLastAt > 25000)) fetchMarket();}, 15000);
+setInterval(() => {if (!document.hidden && (hostedSite || !connectionRecent())) fetchMarket();}, hostedSite ? 12000 : 15000);
 setInterval(() => {if (!document.hidden) {renderConnection(); if (state.snapshot) updateChain();}}, 1000);
-document.addEventListener("visibilitychange", () => {if (!document.hidden) {if (state.snapshot) {renderMarket(); renderExpiries(); renderFilters(); updateChain(); renderOverview(); if (!$("detailDrawer").hidden) renderDrawer();} if (!state.streamConnected || Date.now() - state.streamLastAt > 25000) fetchMarket();}});
+document.addEventListener("visibilitychange", () => {if (!document.hidden) {if (state.snapshot) {renderMarket(); renderExpiries(); renderFilters(); updateChain(); renderOverview(); if (!$("detailDrawer").hidden) renderDrawer();} if (hostedSite || !connectionRecent()) fetchMarket();}});

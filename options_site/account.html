@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, noarchive">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>币安期权账户 · BTC 期权看板</title>
+  <link rel="stylesheet" href="./account.css">
+  <script src="./account.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="./" class="back">← 期权看板</a>
+    <span class="badge">Binance Options</span>
+  </header>
+  <main>
+    <div class="intro">
+      <p class="eyebrow">账户 · 只读快照</p>
+      <h1>币安期权账户</h1>
+      <p>按需查看保证金、可用余额、当前期权持仓与未实现盈亏。</p>
+    </div>
+    <section class="panel" aria-labelledby="connectHeading">
+      <h2 id="connectHeading">查询账户</h2>
+      <p id="privacyNote">请使用仅启用读取权限的 HMAC API Key。Secret 在此页面签名，提交后清空；本站的转发服务仅在查询时接收 API Key 与几秒内有效的签名。账户数据仅在当前页面显示。</p>
+      <form id="accountForm" aria-describedby="privacyNote" autocomplete="off">
+        <div class="inputs">
+          <label for="apiKey">API Key
+            <input id="apiKey" type="password" autocomplete="off" spellcheck="false" autocapitalize="off" required minlength="64" maxlength="64" pattern="[A-Za-z0-9]{64}">
+          </label>
+          <label for="apiSecret">Secret
+            <input id="apiSecret" type="password" autocomplete="off" spellcheck="false" autocapitalize="off" required minlength="64" maxlength="64" pattern="[A-Za-z0-9]{64}">
+          </label>
+        </div>
+        <div class="actions">
+          <button id="query" type="submit">读取账户快照</button>
+          <button id="clear" class="secondary" type="button">清除</button>
+        </div>
+      </form>
+      <p id="accountStatus" class="status" role="status" aria-live="polite"></p>
+    </section>
+    <section id="result" hidden aria-labelledby="resultHeading">
+      <div class="result-heading">
+        <h2 id="resultHeading">账户快照</h2>
+        <span id="asOf"></span>
+      </div>
+      <section class="panel table-panel" aria-labelledby="assetHeading">
+        <h3 id="assetHeading">保证金资产</h3>
+        <p id="assetEmpty" hidden>币安未返回保证金资产。</p>
+        <div class="table-scroll">
+          <table id="assetTable">
+            <thead><tr>
+              <th scope="col">资产</th><th scope="col">保证金余额</th><th scope="col">账户权益</th>
+              <th scope="col">可用余额</th><th scope="col">初始保证金</th><th scope="col">维持保证金</th>
+              <th scope="col">调整后权益</th><th scope="col">未实现盈亏</th>
+            </tr></thead>
+            <tbody id="assetRows"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="panel table-panel" aria-labelledby="positionHeading">
+        <h3 id="positionHeading">当前期权持仓</h3>
+        <p id="positionEmpty" hidden>币安未返回非零持仓。</p>
+        <div class="table-scroll">
+          <table id="positionTable">
+            <thead><tr>
+              <th scope="col">合约</th><th scope="col">方向</th><th scope="col">数量</th>
+              <th scope="col">开仓均价</th><th scope="col">标记价</th><th scope="col">未实现盈亏</th>
+              <th scope="col">到期（北京）</th>
+            </tr></thead>
+            <tbody id="positionRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

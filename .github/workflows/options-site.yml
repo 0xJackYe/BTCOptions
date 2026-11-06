@@ -1,0 +1,21 @@
+name: Options site checks
+on:
+  push:
+    branches: [main, "codex/standalone-options-site"]
+  pull_request:
+    paths:
+      - "dashboard/dist/**"
+      - "options_site/**"
+      - ".github/workflows/options-site.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
+        with:
+          node-version: "22"
+      - run: node options_site/check.mjs

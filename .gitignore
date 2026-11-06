@@ -13,3 +13,5 @@ windows_startup/config.json
 # Generated wallet exports embed private addresses and transaction history.
 /terminal/wallet/wallet.html
 *.protected.json
+/options_site/dist/
+/.wrangler/

@@ -1,4 +1,8 @@
-# Bitcoin Portfolio
+# BTCOptions
+
+[打开 BTC 期权独立看板](https://btcopt.pages.dev/) · [部署、测试与只读账户说明](options_site/README.md)
+
+## 本地比特币终端
 
 本地运行的比特币看板：价格警报、期权行情和盈亏模拟、钱包资产分布、BTC 定投成本与长期持仓浮盈。行情和账户统计只读，不提供下单功能。
 

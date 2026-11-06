@@ -1,0 +1,1 @@
+window.BTCOptionsHosted = true;

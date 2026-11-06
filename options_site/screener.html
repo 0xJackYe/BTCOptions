@@ -1,0 +1,14 @@
+<dialog id="siteScreenDialog" class="ai-dialog site-screener" aria-labelledby="siteScreenTitle">
+  <div class="ai-top"><div><h2 id="siteScreenTitle">卖方风险筛选</h2><p id="siteScreenStatus" role="status"></p></div>
+    <button id="siteScreenClose" class="icon-button" type="button" aria-label="关闭风险筛选">×</button></div>
+  <form id="siteScreenForm" class="risk-controls">
+    <label>类型<select id="siteScreenSide"><option value="PUT">卖 Put</option><option value="CALL">卖 Call</option></select></label>
+    <label>到期日<select id="siteScreenExpiry"></select></label>
+    <label>数量（BTC）<input id="siteScreenQty" type="number" min="0.01" max="100" step="0.01" value="0.01"></label>
+    <label>Delta 档<select id="siteScreenRisk"><option value="LOW">低 · 0–0.15</option><option value="MEDIUM">中 · 0.15–0.30</option><option value="HIGH">高 · 0.30–0.60</option></select></label>
+    <label>排序<select id="siteScreenMode"><option value="risk">低风险优先</option><option value="balance">风险收益平衡</option><option value="premium">权利金优先</option></select></label>
+  </form>
+  <p class="risk-caption">筛选剩余 2–60 天、价外、双边价差 ≤ 20% 的合约。低风险按 |Delta| 从小到大，平衡按日均净权利金 ÷ |Delta|，权利金优先按日均净权利金。</p>
+  <p class="risk-caption">日均按剩余天数分摊，扣估算开仓费。Delta 档用于比较敏感度，裸卖 Call 的理论最大亏损无上限。</p>
+  <div class="risk-table-scroll"><table class="risk-table"><thead><tr><th scope="col">合约</th><th scope="col">剩余天数</th><th scope="col">|Delta|</th><th scope="col">价差 %</th><th scope="col">净权利金 USDT</th><th scope="col">日均 USDT</th></tr></thead><tbody id="siteScreenRows"></tbody></table></div>
+</dialog>
