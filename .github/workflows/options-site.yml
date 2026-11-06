@@ -1,7 +1,7 @@
-name: Options site checks
+name: Options site checks and deployment
 on:
   push:
-    branches: [main, "codex/standalone-options-site"]
+    branches: [main]
   pull_request:
     paths:
       - "dashboard/dist/**"
@@ -9,6 +9,9 @@ on:
       - ".github/workflows/options-site.yml"
 permissions:
   contents: read
+concurrency:
+  group: options-site-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -19,3 +22,35 @@ jobs:
         with:
           node-version: "22"
       - run: node options_site/check.mjs
+  deploy:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Trigger and verify the Cloudflare production build
+        env:
+          CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_DEPLOY_HOOK"
+          latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
+          if [ "$latest" != "$GITHUB_SHA" ]; then
+            echo "A newer main commit superseded this run."
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 20 -X POST "$CLOUDFLARE_DEPLOY_HOOK" \
+            | jq -e '.success == true' >/dev/null
+          for attempt in $(seq 1 48); do
+            if curl --fail --silent --max-time 8 https://btcopt.pages.dev/version.json \
+                | jq -e --arg expected "$GITHUB_SHA" '.commit == $expected' >/dev/null; then
+              curl --fail --silent --show-error --max-time 8 https://btcopt.pages.dev/api/health \
+                | jq -e '.status == "ok"' >/dev/null
+              echo "Production serves $GITHUB_SHA."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Production did not serve $GITHUB_SHA before the deadline." >&2
+          exit 1

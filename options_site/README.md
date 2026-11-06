@@ -16,4 +16,4 @@
 node options_site/check.mjs
 ```
 
-构建输出为 `options_site/dist`，其中包括静态资产和 Cloudflare Pages Advanced Mode Worker。Cloudflare Pages 使用仓库根目录、构建命令 `node options_site/check.mjs`、输出目录 `options_site/dist`。推送到 `main` 会触发生产构建，测试失败时继续提供上一版。部署后 `/version.json` 显示实际部署的 Git commit，`/api/health` 检查路由可用，`/api/market` 独立报告币安数据状态。
+构建输出为 `options_site/dist`，其中包括静态资产和 Cloudflare Pages Advanced Mode Worker。Cloudflare Pages 使用仓库根目录、构建命令 `node options_site/check.mjs`、输出目录 `options_site/dist`。推送到 `main` 后，GitHub Actions 先运行测试，再通过受限的 Cloudflare Deploy Hook 触发生产构建并验证线上 commit。测试失败时继续提供上一版。部署后 `/version.json` 显示实际部署的 Git commit，`/api/health` 检查路由可用，`/api/market` 独立报告币安数据状态。
