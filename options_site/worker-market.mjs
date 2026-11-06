@@ -345,7 +345,7 @@ export function createMarketHandler({
     if (began < embargo) throw new MarketError("rate_limited", null, embargo - began);
     if (attempts.reduce((sum, [, used]) => sum + used, 0) + weight > 280) throw new MarketError("busy");
     attempts.push([began, weight]);
-    const response = await fetcher(API + path, {method: "GET", redirect: "error",
+    const response = await fetcher(API + path, {method: "GET", redirect: "manual",
       headers: {Accept: "application/json"}, signal: AbortSignal.timeout(2700)});
     if (response.status === 429 || response.status === 418) {
       const wait = retryDelay(response.headers.get("retry-after"), response.status, now());

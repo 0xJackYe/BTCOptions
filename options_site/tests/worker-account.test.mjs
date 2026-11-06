@@ -45,7 +45,7 @@ function upstream(result = {}) {
     const url = new URL(raw);
     assert.equal(url.origin, "https://eapi.binance.com");
     assert.equal(settings.method, "GET");
-    assert.equal(settings.redirect, "error");
+    assert.equal(settings.redirect, "manual");
     calls.push({ url, settings });
     if (url.pathname === "/eapi/v1/time") {
       assert.equal(settings.headers["X-MBX-APIKEY"], undefined);

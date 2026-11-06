@@ -42,7 +42,7 @@ function fixture({
     const url = new URL(raw);
     assert.equal(url.origin, "https://eapi.binance.com");
     assert.equal(options.method, "GET");
-    assert.equal(options.redirect, "error");
+    assert.equal(options.redirect, "manual");
     assert.equal(new Headers(options.headers).has("X-MBX-APIKEY"), false);
     const key = url.pathname.split("/").at(-1);
     calls.push([key, url.search]);

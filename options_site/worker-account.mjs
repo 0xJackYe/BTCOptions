@@ -116,7 +116,7 @@ async function binanceJson(fetcher, path, query = "", apiKey = null) {
     if (apiKey) headers["X-MBX-APIKEY"] = apiKey;
     response = await fetcher(BINANCE + path + query, {
       method: "GET",
-      redirect: "error",
+      redirect: "manual",
       headers,
       cf: { cacheTtl: 0, cacheEverything: false },
       signal: AbortSignal.timeout(6000),
@@ -206,7 +206,7 @@ function normalizePositions(data) {
   });
 }
 
-export async function handleAccount(request, { fetcher = fetch, now = Date.now } = {}) {
+export async function handleAccount(request, { fetcher = (...args) => fetch(...args), now = Date.now } = {}) {
   const { pathname, search, origin } = new URL(request.url);
   const isClock = pathname === "/api/account/time";
   if (!isClock && pathname !== "/api/account") return reply({ error: "not_found" }, 404);
