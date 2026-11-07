@@ -208,7 +208,7 @@ test("browser clears credentials, HMAC-signs locally and renders then clears pri
       assert.equal(inputs.get("apiKey").value, "");
       assert.equal(inputs.get("apiSecret").value, "");
       assert.equal(settings.cache, "no-store");
-      const url = path.slice(1);
+      const url = path;
       messages.push(settings.body || "");
       const request = settings.method === "POST"
         ? post(settings.body, { url })

@@ -12,6 +12,7 @@ const dateFormat = new Intl.DateTimeFormat("zh-CN", {
 });
 const encoder = new TextEncoder();
 const errors = {
+  local_unavailable: "无法访问本机连接器。请确认已启动并允许本地网络访问，或打开本机账户页。",
   invalid_input: "请输入币安签发的 64 位 HMAC API Key 和 Secret。",
   timestamp: "签名已超时，请重新输入凭据并查询。",
   throttled: "请求过于频繁，请稍后重试。",
@@ -74,16 +75,21 @@ function render(data) {
   result.hidden = false;
 }
 
+const localBridge = window.BTCOptionsBridge;
+if (localBridge) {
+  byId("localRelayNote").hidden = false;
+  byId("privacyNote").textContent = "请使用只读 HMAC API Key。Secret 在浏览器内签名后清空。API Key 和短时签名通过本机连接器转发给币安。";
+}
+
 async function fetchJson(path, settings = {}) {
   let response;
   let data;
   try {
-    response = await fetch(path, {
-      cache: "no-store", credentials: "same-origin", redirect: "error", ...settings,
-    });
+    const options = {cache: "no-store", credentials: "same-origin", redirect: "error", ...settings};
+    response = await (localBridge ? localBridge.fetch(path, options) : fetch(path, options));
     data = await response.json();
   } catch {
-    throw new Error("unavailable");
+    throw new Error(localBridge ? "local_unavailable" : "unavailable");
   }
   if (!response.ok) throw new Error(data?.error ?? "unavailable");
   return data;
@@ -94,7 +100,7 @@ async function signedQuery(apiKey, secretBytes, signal) {
   const key = await crypto.subtle.importKey("raw", secretBytes,
     { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   secretBytes.fill(0);
-  const clock = await fetchJson("./api/account/time", { signal });
+  const clock = await fetchJson("/api/account/time", { signal });
   if (!Number.isSafeInteger(clock.serverTime)) throw new Error("invalid_response");
   // Start from the exchange clock. Avoid projecting browser round-trip delay into Binance's
   // tighter future-time check. If transport exceeds the window, the query fails safely.
@@ -105,7 +111,7 @@ async function signedQuery(apiKey, secretBytes, signal) {
     return Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, "0")).join("");
   };
   const [account, positions] = await Promise.all([sign(5000), sign(4900)]);
-  return fetchJson("./api/account", {
+  return fetchJson("/api/account", {
     method: "POST", headers: { "Content-Type": "application/json" }, signal,
     body: JSON.stringify({ apiKey, timestamp, signatures: { account, positions } }),
   });

@@ -2,6 +2,9 @@
 
 const $ = (id) => document.getElementById(id);
 const hostedSite = window.BTCOptionsHosted === true;
+const siteBridge = window.BTCOptionsBridge;
+const browserMarket = window.BTCOptionsBrowserMarket;
+let useSiteBridge = false, browserMarketConnection = null, directRetryAt = 0;
 const connectionRecent = () => hostedSite
   ? !state.apiError && state.lastFetch > 0 && Date.now() - state.lastFetch < 25000
   : state.streamConnected && Date.now() - state.streamLastAt < 25000;
@@ -18,6 +21,7 @@ const beijingTime = (value, date = false) => timeMs(value) === null ? "—" : ti
 const loadStorage = (key, fallback) => {try {return JSON.parse(localStorage.getItem(key)) ?? fallback;} catch {return fallback;}};
 const saveStorage = (key, value) => {try {localStorage.setItem(key, JSON.stringify(value));} catch {}};
 const storedFavorites = loadStorage("btc-options-favorites", []);
+useSiteBridge = Boolean(siteBridge && loadStorage("btc-options-use-local-bridge", false));
 const state = {snapshot: null, expiry: null, side: "ALL", search: "", atm: false, favoritesOnly: false, greeks: false, selected: null, favorites: new Set(Array.isArray(storedFavorites) ? storedFavorites.filter((item) => typeof item === "string") : []), fetching: false, initial: true, apiError: null, lastFetch: 0, streamConnected: false, streamLastAt: 0, stream: null, chainKey: "", expiryKey: "", lastOverview: 0, pendingSnapshot: null, scheduledRender: false};
 const basicLeft = ["volume", "delta", "ask", "mark", "bid"];
 const basicRight = ["bid", "mark", "ask", "delta", "volume"];
@@ -137,7 +141,7 @@ function quotationHealth(snapshot = state.snapshot) {
   if (state.currentSnapshotUnavailable) return {status: "stale", text: "报价缓存 · 最新快照不可用", localLive, coverage, upstream};
   if (!localLive) return {status: "stale", text: hostedSite ? "报价缓存 · 等待更新" : "报价缓存 · 本地推送中断", localLive, coverage, upstream};
   const status = known ? upstream.status : isLiveSnapshot(snapshot) ? "live" : "stale";
-  const label = {live: "报价实时", fresh: "报价近期快照", partial: "报价部分更新", stale: "报价旧缓存", unavailable: "报价暂无数据"}[status];
+  const label = {live: snapshot?.browser_direct ? "报价实时 · 网页直连" : "报价实时", fresh: "报价近期快照", partial: "报价部分更新", stale: "报价旧缓存", unavailable: "报价暂无数据"}[status];
   return {status, text: label + (status === "partial" && coverage ? `（${coverage}）` : ""), localLive, coverage, upstream};
 }
 
@@ -145,6 +149,21 @@ function groupHealthDescription(name, group, localLive) {
   const status = group?.status;
   const label = {live: localLive && !state.currentSnapshotUnavailable ? "实时" : "最近快照", fresh: "近期快照", partial: "部分更新", stale: "旧缓存", unavailable: "暂无数据"}[status] ?? "状态未知";
   return `${name}：${label}${group?.rest_refresh_failed ? " · REST 刷新失败" : ""}`;
+}
+
+function renderSiteBridge() {
+  if (!siteBridge) return;
+  const banner = $("siteBridgeBanner"), button = $("siteBridgeToggle");
+  const hasMarket = state.snapshot?.options?.length && !state.apiError && !state.currentSnapshotUnavailable;
+  banner.hidden = !useSiteBridge && !state.snapshot?.browser_direct &&
+    (hasMarket || !state.apiError && !state.snapshot?.error);
+  $("siteBridgeStatus").textContent = useSiteBridge
+    ? (hasMarket ? "行情来自本机连接器" : "请启动本机连接器，并允许浏览器访问本地网络。")
+    : state.snapshot?.browser_direct
+      ? "网页直连行情。核验合约规则、风险筛选与账户查询可使用本机连接器。"
+      : "网站线路暂时无法读取币安行情，正在尝试网页直连。";
+  button.textContent = useSiteBridge ? "停用本机连接" : "连接本机行情";
+  button.disabled = state.fetching;
 }
 
 function renderConnection() {
@@ -191,7 +210,7 @@ function renderConnection() {
   const focusText = unavailable ? "等待行情" : [!live ? quote.status === "partial" ? quote.text : quote.status === "fresh" ? "报价近期快照" : "报价缓存" : "", ...groupIssues, statisticsIssue].filter(Boolean).join(" · ");
   $("focusStatus").textContent = focusText;
   $("focusStatus").className = focusText ? "stale" : "live";
-  const catalogText = catalog?.status === "fresh" ? "已核验" : catalog?.status === "stale" ? "旧缓存" : catalog?.status === "unavailable" ? "未核验" : "状态未知";
+  const catalogText = snapshot?.browser_direct ? "网页直连未核验" : catalog?.status === "fresh" ? "已核验" : catalog?.status === "stale" ? "旧缓存" : catalog?.status === "unavailable" ? "未核验" : "状态未知";
   $("lastUpdate").textContent = snapshot?.fetched_at ? `${hostedSite ? "网站读取 " + beijingTime(state.lastFetch) : "服务推送 " + beijingTime(lastMessage)} · 快照 ${beijingTime(snapshot.site_fetched_at ?? snapshot.fetched_at, true)}\n${groupHealthDescription("标记价 / Greeks", mark, quote.localLive)} · ${groupHealthDescription("指数", index, quote.localLive)}\n到期目录：${catalogText}${catalog?.rest_refresh_failed ? " · 刷新失败" : ""}` : "等待行情";
   $("lastUpdate").style.whiteSpace = "pre-line";
   $("statisticsStatus").textContent = statisticsDescription(statistics);
@@ -206,11 +225,12 @@ function renderConnection() {
     warnings.push(`${failed.length ? failed.map((name) => labels[name] ?? "其他公开数据").join("、") + "刷新失败" : "部分数据刷新失败"}${live ? "；报价实时。" : "。"}`);
   }
   if (!unavailable && state.apiError) warnings.push(`${hostedSite ? "行情读取失败" : "本地行情读取失败"}：${state.apiError}`);
-  if (!unavailable && catalogStale) warnings.push(`到期目录缓存 · 核验 ${beijingTime(catalog.last_verified_at ?? snapshot.catalog_updated_at ?? snapshot.fetched_at, true)}`);
+  if (!unavailable && catalogStale && !snapshot?.browser_direct) warnings.push(`到期目录缓存 · 核验 ${beijingTime(catalog.last_verified_at ?? snapshot.catalog_updated_at ?? snapshot.fetched_at, true)}`);
   $("noticeBar").hidden = !warnings.length;
   $("noticeBar").textContent = warnings.join(" ");
   $("refreshButton").classList.toggle("busy", !!refreshing);
   $("refreshButton").disabled = state.fetching;
+  renderSiteBridge();
   renderCombo();
 }
 
@@ -687,19 +707,51 @@ function alignHostedSnapshot(data, receivedAt) {
   };
 }
 
+function startBrowserMarket() {
+  if (!browserMarket || useSiteBridge || browserMarketConnection || Date.now() < directRetryAt) return;
+  browserMarketConnection = browserMarket.connect((snapshot) => {
+    if (useSiteBridge) return;
+    state.lastFetch = Date.now();
+    queueSnapshot(snapshot);
+  }, () => {
+    stopBrowserMarket();
+    directRetryAt = Date.now() + 5000;
+    if (!useSiteBridge) {
+      state.apiError = "币安网页直连暂时中断，正在重试。";
+      renderConnection();
+    }
+  });
+}
+
+function stopBrowserMarket() {
+  browserMarketConnection?.close();
+  browserMarketConnection = null;
+}
+
 async function fetchMarket(refresh = false) {
   if (state.fetching) return;
   state.fetching = true; renderConnection();
   const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch(`/api/market${refresh ? "?refresh=1" : ""}`, {cache: "no-store", signal: controller.signal});
+    const path = "/api/market" + (refresh ? "?refresh=1" : "");
+    const settings = {cache: "no-store", signal: controller.signal};
+    const response = await (useSiteBridge ? siteBridge.fetch(path, settings) : fetch(path, settings));
     if (!response.ok) throw new Error(`行情服务返回 HTTP ${response.status}`);
     const data = await response.json();
+    if (browserMarket && !useSiteBridge && !data.options?.length) {
+      startBrowserMarket();
+      if (state.snapshot?.browser_direct) return;
+    } else if (browserMarket) stopBrowserMarket();
     state.lastFetch = Date.now();
     acceptSnapshot(hostedSite ? alignHostedSnapshot(data, state.lastFetch) : data);
   } catch (error) {
+    if (browserMarket && !useSiteBridge) {
+      startBrowserMarket();
+      if (state.snapshot?.browser_direct && connectionRecent()) return;
+    }
     state.apiError = hostedSite
-      ? (error.name === "AbortError" ? "行情服务响应超时。" : "行情暂时不可用，稍后会自动重试。")
+      ? (useSiteBridge ? "无法连接本机行情，请启动连接器并检查浏览器本地网络权限。"
+        : error.name === "AbortError" ? "行情服务响应超时。" : "行情暂时不可用，稍后会自动重试。")
       : (error.name === "AbortError" ? "本地行情服务响应超时。" : "本地行情服务暂时不可用，请确认看板程序正在运行。");
 
     renderConnection();
@@ -714,6 +766,12 @@ $("atmButton").addEventListener("click", () => {state.atm = !state.atm; render(t
 $("favoritesButton").addEventListener("click", () => {state.favoritesOnly = !state.favoritesOnly; if (state.favoritesOnly) {state.expiry = "ALL"; combo.active = false;} render();});
 $("greeksButton").addEventListener("click", () => {state.greeks = !state.greeks; renderFilters(); renderChain();});
 $("refreshButton").addEventListener("click", () => fetchMarket(true));
+if (siteBridge) $("siteBridgeToggle").addEventListener("click", () => {
+  useSiteBridge = !useSiteBridge;
+  if (useSiteBridge) stopBrowserMarket();
+  saveStorage("btc-options-use-local-bridge", useSiteBridge);
+  fetchMarket(true);
+});
 $("resetButton").addEventListener("click", () => {
   Object.assign(state, {side: "ALL", search: "", atm: false, favoritesOnly: false});
   const dates = expiryDates();

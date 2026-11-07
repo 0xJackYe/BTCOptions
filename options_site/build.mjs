@@ -9,7 +9,7 @@ const assets = [
   "styles.css", "anthropic.css", "payoff.css", "portfolio.css", "combo.css", "risk.css", "option-ai.css",
   "payoff.js", "portfolio.js", "payoff-ui.js", "portfolio-ui.js", "risk-metrics.js", "risk-ui.js", "app.js"
 ];
-const standalone = ["hosted.css", "hosted.js", "screener.js", "account.html", "account.js", "account.css", "_headers", "_routes.json"];
+const standalone = ["hosted.css", "hosted.js", "browser-market.js", "screener.js", "account.html", "account.js", "account.css", "_headers", "_routes.json"];
 await rm(out, {recursive: true, force: true});
 await mkdir(worker, {recursive: true});
 await Promise.all([
@@ -29,10 +29,19 @@ let html = await readFile(new URL("index.html", original), "utf8");
 html = replace(html, /<script src="\/option-ai-ui\.js" defer><\/script>/, [
   '<link rel="stylesheet" href="/hosted.css">',
   '<script src="/hosted.js" defer></script>',
+  '<script src="/browser-market.js" defer></script>',
   '<script src="/screener.js" defer></script>'
 ].join("\n  "));
 html = replace(html, /<dialog id="aiDialog"[\s\S]*?<\/dialog>/, screen.trim());
 html = replace(html, /<div class="topbar-right">/, '<div class="topbar-right"><a class="help-button site-account-link" href="./account.html">币安账户</a>');
+html = replace(html, /<div class="notice-bar" id="noticeBar" hidden role="status"><\/div>/, [
+  '<aside id="siteBridgeBanner" class="notice-bar site-bridge-banner" hidden>',
+  '  <span id="siteBridgeStatus" role="status"></span>',
+  '  <button type="button" id="siteBridgeToggle" class="filter-button">连接本机行情</button>',
+  '  <a href="http://127.0.0.1:8767/" target="_blank" rel="noopener noreferrer">打开本机看板</a>',
+  '</aside>',
+  '<div class="notice-bar" id="noticeBar" hidden role="status"></div>'
+].join("\n"));
 html = html.replaceAll("AI 选期权", "卖方筛选");
 html = html.replace(/\b(href|src)="\/([^"/][^"]*)?"/g, (_, attr, path = "") => attr + '="./' + path + '"');
 await writeFile(new URL("index.html", out), html);
