@@ -15,7 +15,7 @@ await mkdir(worker, {recursive: true});
 await Promise.all([
   ...assets.map(name => copyFile(new URL(name, original), new URL(name, out))),
   ...standalone.map(name => copyFile(new URL(name, import.meta.url), new URL(name, out))),
-  ...["worker-market.mjs", "worker-account.mjs"].map(name => copyFile(new URL(name, import.meta.url), new URL(name, worker))),
+  ...["worker-market.mjs", "worker-account.mjs", "worker-relay.mjs"].map(name => copyFile(new URL(name, import.meta.url), new URL(name, worker))),
   copyFile(new URL("worker-entry.mjs", import.meta.url), new URL("index.js", worker))
 ]);
 

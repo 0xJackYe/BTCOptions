@@ -180,11 +180,13 @@ test("limits valid requests per address and resets after the rate window", async
   assert.equal(last.status, 200);
 });
 
-test("browser clears credentials, HMAC-signs locally and renders then clears private results", async () => {
+
+async function browserHarness({bridge = true, preference = null, storageThrows = false, onClock,
+  failPost = false} = {}) {
   const inputs = new Map();
   const listeners = {};
   const makeElement = () => ({
-    listeners: {}, children: [], value: "", hidden: false, disabled: false, textContent: "",
+    listeners: {}, children: [], value: "", checked: false, hidden: false, disabled: false, textContent: "",
     classList: { add() {}, remove() {} },
     addEventListener(name, handler) { this.listeners[name] = handler; },
     setAttribute() {}, removeAttribute() {},
@@ -200,33 +202,123 @@ test("browser clears credentials, HMAC-signs locally and renders then clears pri
     createElement: makeElement, createDocumentFragment: makeElement,
   };
   const messages = [];
+  const saved = new Map([["btc-options-account-local-bridge", preference]]);
   const options = upstream();
+  const routeFetch = async (transport, path, settings) => {
+    assert.equal(inputs.get("apiKey").value, "");
+    assert.equal(inputs.get("apiSecret").value, "");
+    assert.equal(settings.cache, "no-store");
+    messages.push({transport, path, body: settings.body || ""});
+    if (path === "/api/account/time") await onClock?.({inputs, messages, saved});
+    if (failPost && path === "/api/account") return Response.json({error: "credentials"}, {status: 403});
+    const request = settings.method === "POST"
+      ? post(settings.body, {url: path})
+      : post(null, {method: "GET", url: path});
+    return handleAccount(request, options);
+  };
+  const window = {
+    isSecureContext: true,
+    addEventListener: (name, handler) => { listeners[name] = handler; },
+    localStorage: {
+      getItem(name) {
+        if (storageThrows) throw new Error("storage unavailable");
+        return saved.get(name) ?? null;
+      },
+      setItem(name, value) {
+        if (storageThrows) throw new Error("storage unavailable");
+        saved.set(name, value);
+      },
+    },
+  };
+  if (bridge) window.BTCOptionsBridge = Object.freeze({
+    fetch: (path, settings) => routeFetch("local", path, settings),
+  });
   const context = vm.createContext({
     document, crypto: webcrypto, TextEncoder, TextDecoder, AbortController, setTimeout, clearTimeout,
-    window: { isSecureContext: true, addEventListener: (name, handler) => { listeners[name] = handler; } },
-    async fetch(path, settings) {
-      assert.equal(inputs.get("apiKey").value, "");
-      assert.equal(inputs.get("apiSecret").value, "");
-      assert.equal(settings.cache, "no-store");
-      const url = path;
-      messages.push(settings.body || "");
-      const request = settings.method === "POST"
-        ? post(settings.body, { url })
-        : post(null, { method: "GET", url });
-      return handleAccount(request, options);
-    },
+    window,
+    fetch: (path, settings) => routeFetch("cloud", path, settings),
   });
   const source = await readFile(new URL("../account.js", import.meta.url), "utf-8");
   vm.runInContext(source, context);
-  inputs.get("apiKey").value = apiKey;
-  inputs.get("apiSecret").value = secret;
-  await inputs.get("accountForm").listeners.submit({ preventDefault() {} });
-  assert.equal(inputs.get("accountStatus").textContent, "账户快照已读取。");
-  assert.equal(inputs.get("result").hidden, false);
-  assert.deepEqual(JSON.parse(messages[1]), payload());
-  assert.ok(!messages.join("").includes(secret));
-  listeners.pagehide();
-  assert.equal(inputs.get("result").hidden, true);
-  assert.equal(inputs.get("positionRows").children.length, 0);
-  assert.equal(inputs.get("assetRows").children.length, 0);
+  const submit = async () => {
+    inputs.get("apiKey").value = apiKey;
+    inputs.get("apiSecret").value = secret;
+    await inputs.get("accountForm").listeners.submit({preventDefault() {}});
+  };
+  return {inputs, listeners, messages, saved, submit};
+}
+
+test("browser prefers cloud when a local bridge exists, signs and clears private data", async () => {
+  const page = await browserHarness();
+  assert.equal(page.inputs.get("useLocalConnector").checked, false);
+  assert.match(page.inputs.get("privacyNote").textContent, /云端/);
+  await page.submit();
+  assert.equal(page.inputs.get("accountStatus").textContent, "账户快照已读取。");
+  assert.equal(page.inputs.get("result").hidden, false);
+  assert.deepEqual(page.messages.map(({transport, path}) => [transport, path]), [
+    ["cloud", "/api/account/time"], ["cloud", "/api/account"],
+  ]);
+  assert.deepEqual(JSON.parse(page.messages[1].body), payload());
+  assert.ok(!JSON.stringify(page.messages).includes(secret));
+  page.listeners.pagehide();
+  assert.equal(page.inputs.get("result").hidden, true);
+  assert.equal(page.inputs.get("positionRows").children.length, 0);
+  assert.equal(page.inputs.get("assetRows").children.length, 0);
+  assert.equal(page.inputs.get("useLocalConnector").disabled, false);
+});
+
+test("explicit local selection routes both clock and signed query only to local connector", async () => {
+  const page = await browserHarness();
+  const choice = page.inputs.get("useLocalConnector");
+  choice.checked = true;
+  choice.listeners.change();
+  assert.equal(page.saved.get("btc-options-account-local-bridge"), "true");
+  assert.equal(page.inputs.get("localRelayNote").hidden, false);
+  assert.match(page.inputs.get("privacyNote").textContent, /本机连接器/);
+  await page.submit();
+  assert.equal(page.inputs.get("accountStatus").textContent, "账户快照已读取。");
+  assert.deepEqual(page.messages.map(row => row.transport), ["local", "local"]);
+  assert.equal(choice.checked, true);
+});
+
+test("an in-flight route stays fixed when its checkbox is changed after the clock GET", async () => {
+  for (const initiallyLocal of [false, true]) {
+    const page = await browserHarness({
+      preference: JSON.stringify(initiallyLocal),
+      onClock({inputs, saved}) {
+        const choice = inputs.get("useLocalConnector");
+        assert.equal(choice.disabled, true);
+        choice.checked = !initiallyLocal;
+        choice.listeners.change();
+        assert.equal(saved.get("btc-options-account-local-bridge"), JSON.stringify(initiallyLocal));
+      },
+    });
+    await page.submit();
+    assert.equal(page.inputs.get("accountStatus").textContent, "账户快照已读取。");
+    assert.deepEqual(page.messages.map(row => row.transport),
+      initiallyLocal ? ["local", "local"] : ["cloud", "cloud"]);
+  }
+});
+
+test("blocked or malformed storage defaults to cloud and missing bridge ignores saved local choice", async () => {
+  for (const settings of [{preference: "{"}, {storageThrows: true}, {bridge: false, preference: "true"}]) {
+    const page = await browserHarness(settings);
+    assert.equal(page.inputs.get("useLocalConnector").checked, false);
+    await page.submit();
+    assert.deepEqual(page.messages.map(row => row.transport), ["cloud", "cloud"]);
+  }
+  const restored = await browserHarness({preference: "true"});
+  assert.equal(restored.inputs.get("useLocalConnector").checked, true);
+});
+
+test("failed signed queries stay on the selected route without retrying elsewhere", async () => {
+  for (const local of [false, true]) {
+    const page = await browserHarness({preference: JSON.stringify(local), failPost: true});
+    await page.submit();
+    assert.match(page.inputs.get("accountStatus").textContent, /币安拒绝读取/);
+    assert.equal(page.inputs.get("result").hidden, true);
+    assert.deepEqual(page.messages.map(row => row.transport), local ? ["local", "local"] : ["cloud", "cloud"]);
+    assert.equal(page.inputs.get("apiKey").value, "");
+    assert.equal(page.inputs.get("apiSecret").value, "");
+  }
 });

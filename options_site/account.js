@@ -19,7 +19,7 @@ const errors = {
   credentials: "币安拒绝读取。请核对 Key、Secret、读取权限及 IP 白名单。",
   region: "币安限制了本站服务器所在地的 API 访问。",
   account_unavailable: "币安未开放此期权账户的标准保证金查询。",
-  unavailable: "暂时无法连接币安期权账户接口，请稍后重试。",
+  unavailable: "云端服务可能正在唤醒或暂时不可用，请等待约一分钟后重试。",
   invalid_response: "币安响应缺少查询所需的数据。",
   upstream_error: "币安账户接口暂时无法完成查询。",
   insecure: "账户查询需要安全的 HTTPS 浏览器环境。",
@@ -41,6 +41,8 @@ function clear() {
   statusText.textContent = "";
   statusText.classList.remove("error");
   query.disabled = false;
+  localChoice.disabled = false;
+  updateRouteNote();
   form.removeAttribute("aria-busy");
 }
 
@@ -75,32 +77,51 @@ function render(data) {
   result.hidden = false;
 }
 
-const localBridge = window.BTCOptionsBridge;
-if (localBridge) {
-  byId("localRelayNote").hidden = false;
-  byId("privacyNote").textContent = "请使用只读 HMAC API Key。Secret 在浏览器内签名后清空。API Key 和短时签名通过本机连接器转发给币安。";
+const availableBridge = window.BTCOptionsBridge;
+const localChoice = byId("useLocalConnector");
+const routePreference = "btc-options-account-local-bridge";
+byId("accountTransport").hidden = !availableBridge;
+try {
+  localChoice.checked = Boolean(availableBridge && JSON.parse(window.localStorage.getItem(routePreference)) === true);
+} catch {
+  localChoice.checked = false;
 }
 
-async function fetchJson(path, settings = {}) {
+function updateRouteNote() {
+  const local = Boolean(availableBridge && localChoice.checked);
+  byId("localRelayNote").hidden = !local;
+  byId("privacyNote").textContent = local || window.location?.hostname === "127.0.0.1"
+    ? "请使用只读 HMAC API Key。Secret 在浏览器内签名后清空。API Key 和短时签名通过本机连接器转发给币安。账户数据仅在当前页面显示。"
+    : "请使用只读 HMAC API Key。Secret 在浏览器内签名后清空。本站云端转发服务在查询时接收 API Key 与几秒内有效的签名。账户数据仅在当前页面显示。";
+}
+
+localChoice.addEventListener("change", () => {
+  if (request) return;
+  try { window.localStorage.setItem(routePreference, JSON.stringify(localChoice.checked)); } catch {}
+  updateRouteNote();
+});
+updateRouteNote();
+
+async function fetchJson(path, settings, transport) {
   let response;
   let data;
   try {
     const options = {cache: "no-store", credentials: "same-origin", redirect: "error", ...settings};
-    response = await (localBridge ? localBridge.fetch(path, options) : fetch(path, options));
+    response = await (transport ? transport.fetch(path, options) : fetch(path, options));
     data = await response.json();
   } catch {
-    throw new Error(localBridge ? "local_unavailable" : "unavailable");
+    throw new Error(transport ? "local_unavailable" : "unavailable");
   }
   if (!response.ok) throw new Error(data?.error ?? "unavailable");
   return data;
 }
 
-async function signedQuery(apiKey, secretBytes, signal) {
+async function signedQuery(apiKey, secretBytes, signal, transport) {
   if (!window.isSecureContext || !globalThis.crypto?.subtle) throw new Error("insecure");
   const key = await crypto.subtle.importKey("raw", secretBytes,
     { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   secretBytes.fill(0);
-  const clock = await fetchJson("/api/account/time", { signal });
+  const clock = await fetchJson("/api/account/time", { signal }, transport);
   if (!Number.isSafeInteger(clock.serverTime)) throw new Error("invalid_response");
   // Start from the exchange clock. Avoid projecting browser round-trip delay into Binance's
   // tighter future-time check. If transport exceeds the window, the query fails safely.
@@ -114,7 +135,7 @@ async function signedQuery(apiKey, secretBytes, signal) {
   return fetchJson("/api/account", {
     method: "POST", headers: { "Content-Type": "application/json" }, signal,
     body: JSON.stringify({ apiKey, timestamp, signatures: { account, positions } }),
-  });
+  }, transport);
 }
 
 form.addEventListener("submit", async event => {
@@ -122,12 +143,14 @@ form.addEventListener("submit", async event => {
   if (request) return;
   const apiKey = keyInput.value.trim();
   const secret = encoder.encode(secretInput.value.trim());
+  const transport = availableBridge && localChoice.checked ? availableBridge : null;
   form.reset();
   clearResult();
   const controller = new AbortController();
   request = controller;
   const timeout = setTimeout(() => controller.abort(), 14_000);
   query.disabled = true;
+  localChoice.disabled = true;
   form.setAttribute("aria-busy", "true");
   statusText.classList.remove("error");
   statusText.textContent = "正在向币安读取账户快照…";
@@ -135,7 +158,7 @@ form.addEventListener("submit", async event => {
     if (!/^[A-Za-z0-9]{64}$/.test(apiKey) || !/^[A-Za-z0-9]{64}$/.test(new TextDecoder().decode(secret))) {
       throw new Error("invalid_input");
     }
-    const data = await signedQuery(apiKey, secret, controller.signal);
+    const data = await signedQuery(apiKey, secret, controller.signal, transport);
     if (request !== controller) return;
     if (!Array.isArray(data.assets) || !Array.isArray(data.positions) ||
         !Number.isSafeInteger(data.receivedAt)) throw new Error("invalid_response");
@@ -151,6 +174,8 @@ form.addEventListener("submit", async event => {
     if (request === controller) {
       request = null;
       query.disabled = false;
+      localChoice.disabled = false;
+      updateRouteNote();
       form.removeAttribute("aria-busy");
     }
   }

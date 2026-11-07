@@ -26,19 +26,38 @@ jobs:
     needs: verify
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 12
     steps:
-      - name: Trigger and verify the Cloudflare production build
+      - name: Deploy the cloud backend, then publish the website
         env:
           CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           test -n "$CLOUDFLARE_DEPLOY_HOOK"
+          test -n "$RENDER_DEPLOY_HOOK"
           latest="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
           if [ "$latest" != "$GITHUB_SHA" ]; then
             echo "A newer main commit superseded this run."
             exit 0
+          fi
+          curl --fail --silent --show-error --max-time 20 -X POST \
+            "$RENDER_DEPLOY_HOOK&ref=$GITHUB_SHA" --output /dev/null
+          backend_ready=false
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 8 https://btcoptions.onrender.com/version.json \
+                | jq -e --arg expected "$GITHUB_SHA" '.commit == $expected' >/dev/null; then
+              curl --fail --silent --show-error --max-time 8 https://btcoptions.onrender.com/api/health \
+                | jq -e '.status == "ok"' >/dev/null
+              backend_ready=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "$backend_ready" != true ]; then
+            echo "Cloud backend did not serve $GITHUB_SHA before the deadline." >&2
+            exit 1
           fi
           curl --fail --silent --show-error --max-time 20 -X POST "$CLOUDFLARE_DEPLOY_HOOK" \
             | jq -e '.success == true' >/dev/null

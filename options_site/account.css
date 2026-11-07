@@ -61,6 +61,9 @@ input, button {
   font: inherit;
 }
 input { min-width: 0; color: var(--text); background: var(--page); }
+#accountTransport { margin-block: .75rem; }
+#accountTransport label { display: flex; align-items: center; gap: .5rem; }
+#accountTransport input { min-height: 0; width: 1rem; height: 1rem; margin: 0; padding: 0; }
 .actions { display: flex; flex-wrap: wrap; gap: .55rem; }
 button { color: var(--accent-text); background: var(--accent); font-weight: 650; cursor: pointer; }
 button.secondary { background: var(--surface); color: var(--text); }

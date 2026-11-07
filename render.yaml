@@ -8,7 +8,7 @@ services:
     buildCommand: node options_site/check.mjs
     startCommand: node options_site/local_bridge.mjs
     healthCheckPath: /api/health
-    autoDeployTrigger: checksPass
+    autoDeployTrigger: off
     envVars:
       - key: NODE_VERSION
         value: "22"

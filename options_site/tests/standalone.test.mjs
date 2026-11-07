@@ -16,7 +16,7 @@ test("standalone build includes the original chain, portfolio, risk and account 
   assert.match(markup, /href="\.\/account.html"/);
   assert.doesNotMatch(markup, /terminal-embed|DeepSeek|apiKeyForm|option-ai-ui\.js/);
   for (const [, name] of markup.matchAll(/(?:href|src)="\.\/([^"]+)"/g)) await readFile(new URL(name, dist));
-  assert.deepEqual((await readdir(new URL("_worker.js/", dist))).sort(), ["index.js", "worker-account.mjs", "worker-market.mjs"]);
+  assert.deepEqual((await readdir(new URL("_worker.js/", dist))).sort(), ["index.js", "worker-account.mjs", "worker-market.mjs", "worker-relay.mjs"]);
   assert.match(JSON.parse(await readFile(new URL("version.json", dist), "utf8")).commit, /^[a-f\d]{40}$/);
 });
 

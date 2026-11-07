@@ -5,7 +5,7 @@
 独立站复用终端期权页的行情链、买卖方向、单腿与组合到期盈亏、风险比较、CSV 导出和自选。卖方筛选覆盖 Put 和 Call，支持低风险、风险收益平衡、权利金三种排序。原本机版的 DeepSeek 自然语言服务和本地凭据仍由原终端管理。
 
 - 行情优先使用网站线路。币安拒绝 Cloudflare 请求时，页面自动直连币安官方 WebSocket，显示真实报价、深度、IV、Greeks 和指数。直连行情缺少完整合约规则与 24 小时统计，风险筛选需通过本机连接器核验。
-- 「币安账户」按需读取保证金账户和持仓。请使用 HMAC 只读 Key。Secret 仅在浏览器内用于签名，页面提交后清空密钥输入。网站账户页通过本机连接器，将 API Key 和短时签名转发给币安。私有结果不进入服务端缓存、浏览器持久存储或 GitHub。Key 的 IP 白名单和地区权限由币安校验。
+- 「币安账户」默认由网站通过法兰克福云后端读取保证金账户和持仓。请使用 HMAC 只读 Key。Secret 仅在浏览器内用于签名，页面提交后清空密钥输入。API Key 和短时签名经网站及云后端转发给币安。私有结果不进入服务端缓存、浏览器持久存储或 GitHub。Key 的 IP 白名单和地区权限由币安校验。
 - 模拟计算和私有查询都不包含交易操作。组合和收益风险模型保留各自的计算口径。
 
 ## 完整看板与只读账户
@@ -15,9 +15,9 @@
     node options_site/build.mjs
     node options_site/local_bridge.mjs
 
-启动后可打开 <http://127.0.0.1:8767/>，也可在网站选择「连接本机行情」并允许浏览器访问本地网络。账户查询需要连接器持续运行。真实账户读取仍需用户输入只读 Key 验证。
+本机连接器为可选线路。启动后可打开 <http://127.0.0.1:8767/>，也可在网站选择「连接本机行情」并允许浏览器访问本地网络。账户页的本机线路需单独勾选，查询开始后固定该次请求的线路。真实账户读取仍需用户输入只读 Key 验证。
 
-Windows 可双击 `options_site/start-local.cmd` 启动。仓库中的 `render.yaml` 已准备好免费云后端配置，需要登录 Render 后创建服务并验证其币安连接，才能接入网站。首次启动或空闲唤醒所需时间由托管服务决定。
+Windows 可双击 `options_site/start-local.cmd` 启动可选连接器。云后端为 <https://btcoptions.onrender.com>，使用 Render 免费实例。空闲 15 分钟后可能休眠，唤醒约需一分钟。唤醒期间网页可显示公开直连行情，完整规则和风险筛选在云端恢复后自动更新。
 
 ## 构建和验证
 
@@ -27,4 +27,4 @@ Windows 可双击 `options_site/start-local.cmd` 启动。仓库中的 `render.y
 node options_site/check.mjs
 ```
 
-构建输出为 `options_site/dist`，其中包括静态资产和 Cloudflare Pages Advanced Mode Worker。Cloudflare Pages 使用仓库根目录、构建命令 `node options_site/check.mjs`、输出目录 `options_site/dist`。推送到 `main` 后，GitHub Actions 先运行测试，再通过受限的 Cloudflare Deploy Hook 触发生产构建并验证线上 commit。测试失败时继续提供上一版。部署后 `/version.json` 显示实际部署的 Git commit，`/api/health` 检查路由可用，`/api/market` 独立报告币安数据状态。
+构建输出为 `options_site/dist`，其中包括静态资产和 Cloudflare Pages Worker。Cloudflare 使用仓库根目录、构建命令 `node options_site/check.mjs`、输出目录 `options_site/dist`。Worker 的固定云后端地址在 `worker-entry.mjs` 中配置，部署凭据保存在 GitHub Actions Secrets。推送到 `main` 后，GitHub Actions 先测试，再通过受限 Deploy Hook 更新云后端，验证后端 commit 后发布网站并验证网站 commit。测试或后端部署失败时继续提供上一版网站。两个服务的 `/version.json` 均显示实际部署的 Git commit。

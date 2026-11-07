@@ -26,7 +26,10 @@
     <section class="panel" aria-labelledby="connectHeading">
       <h2 id="connectHeading">查询账户</h2>
       <p id="privacyNote">请使用仅启用读取权限的 HMAC API Key。Secret 在此页面签名，提交后清空；本站的转发服务仅在查询时接收 API Key 与几秒内有效的签名。账户数据仅在当前页面显示。</p>
-      <p id="localRelayNote" hidden>此网站的账户页使用本机连接器访问币安。请先启动连接器并允许本地网络访问，或<a href="http://127.0.0.1:8767/account.html" target="_blank" rel="noopener noreferrer">打开本机账户页</a>。</p>
+      <div id="accountTransport" hidden>
+        <label for="useLocalConnector"><input id="useLocalConnector" type="checkbox">使用本机连接器查询</label>
+      </div>
+      <p id="localRelayNote" hidden>请先启动连接器并允许本地网络访问，或<a href="http://127.0.0.1:8767/account.html" target="_blank" rel="noopener noreferrer">打开本机账户页</a>。</p>
       <form id="accountForm" aria-describedby="privacyNote" autocomplete="off">
         <div class="inputs">
           <label for="apiKey">API Key
