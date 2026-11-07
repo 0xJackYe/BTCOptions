@@ -6,11 +6,16 @@ import {pipeline} from "node:stream/promises";
 import {handleAccount} from "./dist/_worker.js/worker-account.mjs";
 import {handleMarket} from "./dist/_worker.js/worker-market.mjs";
 
-const HOST = "127.0.0.1";
-const PORT = Number(process.env.BTCOPT_BRIDGE_PORT ?? "8767");
+const CLOUD = process.env.BTCOPT_HOSTED === "1";
+const HOST = CLOUD ? "0.0.0.0" : "127.0.0.1";
+const PORT = Number(CLOUD ? process.env.PORT ?? "10000" : process.env.BTCOPT_BRIDGE_PORT ?? "8767");
 if (!Number.isInteger(PORT) || PORT < 1024 || PORT > 65535) throw new Error("无效的本地看板端口。");
-const HOST_HEADER = HOST + ":" + PORT;
-const LOCAL = "http://" + HOST_HEADER;
+const CLOUD_HOST = process.env.RENDER_EXTERNAL_HOSTNAME;
+if (CLOUD && (typeof CLOUD_HOST !== "string" || !/^[a-z0-9-]+\.onrender\.com$/.test(CLOUD_HOST))) {
+  throw new Error("Hosted mode requires the Render service hostname.");
+}
+const HOST_HEADER = CLOUD ? CLOUD_HOST : HOST + ":" + PORT;
+const LOCAL = (CLOUD ? "https://" : "http://") + HOST_HEADER;
 const HOSTED = "https://btcopt.pages.dev";
 const DIST = new URL("./dist/", import.meta.url);
 const LIMIT = 1024;
@@ -162,6 +167,11 @@ async function serveApi(req, res, url, origin) {
 }
 
 async function serve(req, res) {
+  if (CLOUD && req.method === "GET" && req.url === "/api/health" && noBody(req)) {
+    res.writeHead(200, {...SECURITY, "Content-Type": TYPES.json});
+    res.end(JSON.stringify({status: "ok", service: "btcoptions", transport: "cloud"}));
+    return;
+  }
   const h = req.headersDistinct;
   const origin = req.headers.origin;
   if (h.host?.length !== 1 || h.host[0] !== HOST_HEADER ||

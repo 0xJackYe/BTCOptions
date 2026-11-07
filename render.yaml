@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: btcoptions
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: node options_site/check.mjs
+    startCommand: node options_site/local_bridge.mjs
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: BTCOPT_HOSTED
+        value: "1"

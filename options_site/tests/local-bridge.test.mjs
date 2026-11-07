@@ -35,7 +35,7 @@ before(async () => {
   local = "http://127.0.0.1:" + port;
   bridge = spawn(process.execPath, [bridgeFile], {
     cwd: root,
-    env: {...process.env, BTCOPT_BRIDGE_PORT: String(port)},
+    env: {...process.env, BTCOPT_HOSTED: "0", BTCOPT_BRIDGE_PORT: String(port)},
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });
