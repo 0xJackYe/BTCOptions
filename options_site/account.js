@@ -183,3 +183,4 @@ form.addEventListener("submit", async event => {
 
 byId("clear").addEventListener("click", clear);
 window.addEventListener("pagehide", clear);
+query.disabled = false;
