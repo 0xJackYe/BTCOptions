@@ -1,4 +1,4 @@
-import {copyFile, mkdir, readFile, readdir, rm, writeFile} from "node:fs/promises";
+import {copyFile, cp, mkdir, readFile, readdir, rm, writeFile} from "node:fs/promises";
 import {execFileSync} from "node:child_process";
 
 const repo = new URL("../", import.meta.url);
@@ -9,14 +9,21 @@ const assets = [
   "styles.css", "anthropic.css", "payoff.css", "portfolio.css", "combo.css", "risk.css", "option-ai.css",
   "payoff.js", "portfolio.js", "payoff-ui.js", "portfolio-ui.js", "risk-metrics.js", "risk-ui.js", "app.js"
 ];
-const standalone = ["hosted.css", "hosted.js", "browser-market.js", "screener.js", "account.html", "account.js", "account.css", "_headers", "_routes.json"];
+const standalone = ["hosted.css", "hosted.js", "browser-market.js", "screener.js", "account.html", "account.js", "account.css",
+  "strategy.html", "_headers", "_routes.json"];
+const workerModules = ["worker-market.mjs", "worker-account.mjs", "worker-relay.mjs", "worker-strategy.mjs"];
 await rm(out, {recursive: true, force: true});
 await mkdir(worker, {recursive: true});
 await Promise.all([
   ...assets.map(name => copyFile(new URL(name, original), new URL(name, out))),
   ...standalone.map(name => copyFile(new URL(name, import.meta.url), new URL(name, out))),
-  ...["worker-market.mjs", "worker-account.mjs", "worker-relay.mjs"].map(name => copyFile(new URL(name, import.meta.url), new URL(name, worker))),
-  copyFile(new URL("worker-entry.mjs", import.meta.url), new URL("index.js", worker))
+  ...workerModules.map(name => copyFile(new URL(name, import.meta.url), new URL(name, worker))),
+  copyFile(new URL("worker-entry.mjs", import.meta.url), new URL("index.js", worker)),
+  // Strategy Desk: browser modules, the shared isomorphic library (served to
+  // browsers and bundled into the Worker) and self-hosted OFL fonts.
+  cp(new URL("strategy/", import.meta.url), new URL("strategy/", out), {recursive: true}),
+  cp(new URL("lib/", import.meta.url), new URL("lib/", out), {recursive: true}),
+  cp(new URL("lib/", import.meta.url), new URL("lib/", worker), {recursive: true}),
 ]);
 
 function replace(source, pattern, value) {
@@ -33,7 +40,7 @@ html = replace(html, /<script src="\/option-ai-ui\.js" defer><\/script>/, [
   '<script src="/screener.js" defer></script>'
 ].join("\n  "));
 html = replace(html, /<dialog id="aiDialog"[\s\S]*?<\/dialog>/, screen.trim());
-html = replace(html, /<div class="topbar-right">/, '<div class="topbar-right"><a class="help-button site-account-link" href="./account.html">币安账户</a>');
+html = replace(html, /<div class="topbar-right">/, '<div class="topbar-right"><a class="help-button site-account-link site-strategy-link" href="./strategy.html">策略看板</a><a class="help-button site-account-link" href="./account.html">币安账户</a>');
 html = replace(html, /<div class="notice-bar" id="noticeBar" hidden role="status"><\/div>/, [
   '<aside id="siteBridgeBanner" class="notice-bar site-bridge-banner" hidden>',
   '  <span id="siteBridgeStatus" role="status"></span>',

@@ -5,7 +5,11 @@ const SYMBOL = /^BTC-\d{6}-\d{1,12}(?:\.\d{1,4})?-[CP]$/;
 const METHODS = new Map([
   ["/api/market", "GET"], ["/api/focused-market", "GET"], ["/api/mark-watch", "GET"],
   ["/api/account/time", "GET"], ["/api/account", "POST"],
+  ["/api/strategy/catalog", "GET"], ["/api/strategy/signals", "GET"], ["/api/strategy/screen", "GET"],
+  ["/api/strategy/account", "GET"],
 ]);
+const STRATEGY_ACCOUNT = "/api/strategy/account";
+const STRATEGY_ACCOUNT_KEYS = ["configured", "authorized", "reason", "mode", "error", "assets", "positions", "time", "receivedAt"];
 const ACCOUNT_ERRORS = new Set(["invalid_input", "timestamp", "throttled", "credentials", "region",
   "account_unavailable", "unavailable", "invalid_response", "upstream_error", "invalid_source", "method"]);
 const HEADERS = {
@@ -82,8 +86,13 @@ async function boundedJson(message, limit, status, code) {
 function validateQuery(url) {
   if (url.pathname === "/api/market") {
     if (url.search && url.search !== "?refresh=1") throw new RelayError(400, "invalid_input");
-  } else if (url.pathname === "/api/account" || url.pathname === "/api/account/time") {
+  } else if (url.pathname === "/api/account" || url.pathname === "/api/account/time" ||
+      url.pathname === "/api/strategy/catalog" || url.pathname === "/api/strategy/signals" || url.pathname === STRATEGY_ACCOUNT) {
     if (url.search) throw new RelayError(400, "invalid_input");
+  } else if (url.pathname === "/api/strategy/screen") {
+    // Same grammar the backend enforces: short alphabetic keys, plain values.
+    if (url.search.length > 2048 || [...url.searchParams].some(([key, value]) =>
+      !/^[A-Za-z]{1,24}$/.test(key) || !/^[A-Za-z0-9.~_-]{0,64}$/.test(value))) throw new RelayError(400, "invalid_input");
   } else {
     const params = [...url.searchParams];
     const symbols = params.length === 1 && params[0][0] === "symbols" ? params[0][1].split(",") : [];
@@ -108,6 +117,10 @@ function accountBody(body) {
 
 function validResponse(data, path) {
   if (!object(data)) return false;
+  if (path === "/api/strategy/catalog") return Array.isArray(data.strategies) && data.strategies.length <= 100;
+  if (path === "/api/strategy/signals") return Number.isFinite(data.asOf) || data.asOf === null;
+  if (path === "/api/strategy/screen") return Array.isArray(data.candidates) && data.candidates.length <= 200;
+  if (path === STRATEGY_ACCOUNT) return typeof data.configured === "boolean";
   if (path === "/api/account/time") return Number.isSafeInteger(data.serverTime) && data.serverTime > 0;
   if (path === "/api/account") return Array.isArray(data.assets) && Array.isArray(data.positions);
   if (path === "/api/mark-watch") return Number.isInteger(data.accepted) && data.accepted >= 0 && data.accepted <= 8;
@@ -122,7 +135,7 @@ export async function relay(request, env, fetcher = fetch) {
   const url = new URL(request.url);
   const method = METHODS.get(url.pathname);
   if (!method || !env?.BINANCE_RELAY_URL) return null;
-  const isPrivate = url.pathname.startsWith("/api/account");
+  const isPrivate = url.pathname.startsWith("/api/account") || url.pathname === STRATEGY_ACCOUNT;
   if (request.method !== method) return failure(405, "method", isPrivate, {Allow: method});
   try {
     const target = relayOrigin(env.BINANCE_RELAY_URL);
@@ -136,6 +149,13 @@ export async function relay(request, env, fetcher = fetch) {
     if (request.headers.has("Transfer-Encoding")) throw new RelayError(400, "invalid_input");
     const headers = new Headers();
     if (source === url.origin) headers.set("Origin", source);
+    if (url.pathname === STRATEGY_ACCOUNT) {
+      const authorization = request.headers.get("Authorization");
+      if (authorization !== null) {
+        if (authorization.length > 300 || !/^Bearer [\x21-\x7e]{1,280}$/.test(authorization)) throw new RelayError(400, "invalid_input");
+        headers.set("Authorization", authorization);
+      }
+    }
     let body;
     if (method === "POST") {
       if (request.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase() !== "application/json") {
@@ -158,6 +178,14 @@ export async function relay(request, env, fetcher = fetch) {
       throw new RelayError(503, "unavailable");
     }
     const data = await boundedJson(upstream, isPrivate ? PRIVATE_LIMIT : PUBLIC_LIMIT, 502, "invalid_response");
+    if (url.pathname === STRATEGY_ACCOUNT) {
+      // Pass through the backend's explicit configuration state, field by field.
+      if (!validResponse(data, url.pathname)) throw new RelayError(502, "invalid_response");
+      const status = [200, 401, 403, 429, 502, 503].includes(upstream.status) ? upstream.status : 503;
+      const body = Object.fromEntries(STRATEGY_ACCOUNT_KEYS.filter(key => Object.hasOwn(data, key)).map(key => [key, data[key]]));
+      return Response.json(body, {status, headers: {...HEADERS, ...(status === 401 ? {"WWW-Authenticate": "Bearer"} : {}),
+        ...(status === 429 ? {"Retry-After": "60"} : {})}});
+    }
     if (!upstream.ok) {
       const code = isPrivate && ACCOUNT_ERRORS.has(data?.error) ? data.error
         : upstream.status === 429 ? "throttled" : "unavailable";

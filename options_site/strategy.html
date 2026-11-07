@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, noarchive">
+  <meta name="description" content="基于对话整理的 BTC 期权策略看板：点击策略，实时筛选币安期权中满足交易条件的合约。">
+  <title>策略看板 · BTC 期权</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f3b33d'/%3E%3Cpath d='M14 44 L27 28 L36 36 L50 18' fill='none' stroke='%231a1305' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="./strategy/fonts/inter-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./strategy/desk.css">
+  <script src="./hosted.js" defer></script>
+  <script src="./browser-market.js" defer></script>
+  <script type="module" src="./strategy/app.js"></script>
+</head>
+<body>
+  <svg width="0" height="0" class="sr-only" aria-hidden="true">
+    <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></g></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></g></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></g></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h12v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="16.5" cy="13.5" r="1.3" fill="currentColor"/></g></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5v14M15 5v14"/></g></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></g></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></g></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M4 4v4h4"/></g></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m6 15 6-6 6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"/></g></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></g></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9Z"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></g></symbol>
+    <symbol id="i-chain" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M12 4v16" opacity=".5"/></g></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3 5 6v6c0 4.5 3 7.7 7 9 4-1.3 7-4.5 7-9V6z"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></g></symbol>
+    <symbol id="i-empty" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 36 L18 22 L26 28 L42 10"/><path d="M6 42h36" opacity=".5"/><circle cx="42" cy="10" r="3"/></g></symbol>
+  </svg>
+
+  <div class="desk" id="desk">
+    <header class="topbar">
+      <a class="brand" href="./strategy.html" aria-label="BTC 期权策略看板">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17 L9 10 L13 14 L21 5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span>策略看板<small>BTC OPTIONS DESK</small></span>
+      </a>
+      <nav class="nav" aria-label="页面">
+        <a href="./">期权链</a>
+        <a href="./strategy.html" aria-current="page">策略看板</a>
+        <a href="./account.html">账户查询</a>
+      </nav>
+      <button class="omnibox" id="omnibox" type="button" aria-label="打开命令面板（Ctrl+K）">
+        <svg aria-hidden="true"><use href="#i-search"/></svg><span>搜索策略、合约或操作…</span><kbd id="omniKey">Ctrl K</kbd>
+      </button>
+      <div class="top-actions">
+        <span class="pill" id="livePill" role="status" aria-live="polite"><i></i><span>连接中</span></span>
+        <span class="clock" id="clock" aria-label="北京时间">--:--:--<small>UTC+8</small></span>
+        <button class="icon-btn" id="alertsButton" type="button" aria-pressed="false" aria-label="急跌触发提醒" data-tip="急跌触发提醒|开启后，当 BTC 满足急跌条件时弹出提醒（浏览器通知需授权）"><svg aria-hidden="true"><use href="#i-bell"/></svg></button>
+        <button class="icon-btn" id="themeButton" type="button" aria-label="切换明暗主题" data-tip="切换主题|快捷键 T"><svg aria-hidden="true"><use href="#i-sun"/></svg></button>
+        <button class="icon-btn" id="settingsButton" type="button" aria-label="我的资金与模型设置" data-tip="我的资金与模型|风险预算、现货持仓、纪律与模型波动率"><svg aria-hidden="true"><use href="#i-gear"/></svg></button>
+        <button class="account-chip" id="accountChip" type="button" aria-label="币安账户"><svg aria-hidden="true"><use href="#i-wallet"/></svg><span id="accountChipText">账户未连接</span></button>
+      </div>
+    </header>
+
+    <section class="regime" id="regime" aria-label="市场状态"></section>
+
+    <aside class="rail" aria-label="策略列表">
+      <div class="rail-search"><label class="field"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="railFilter" type="search" placeholder="筛选策略" autocomplete="off" aria-label="筛选策略"></label></div>
+      <div class="rail-scroll" id="rail" role="listbox" aria-label="策略"></div>
+      <div class="rail-foot">
+        <div class="legend" aria-label="参数来源图例">
+          <span><i class="origin-dot" data-origin="user"></i>你的规则</span>
+          <span><i class="origin-dot" data-origin="assistant"></i>对话建议</span>
+          <span><i class="origin-dot" data-origin="workbench"></i>工作台</span>
+          <span><i class="origin-dot" data-origin="system"></i>默认</span>
+        </div>
+        <div>只读：行情与账户读取，不含任何下单接口</div>
+      </div>
+    </aside>
+
+    <main class="main" id="main" aria-label="策略筛选结果">
+      <div id="banner"></div>
+      <div class="strategy-head" id="strategyHead"></div>
+      <div class="results-bar" id="resultsBar"></div>
+      <div class="table-wrap" id="tableWrap">
+        <table class="grid" id="grid" role="grid" aria-label="满足条件的期权">
+          <thead id="gridHead"></thead>
+          <tbody id="gridBody"></tbody>
+        </table>
+        <div class="card-list" id="cardList"></div>
+        <div id="emptyState" hidden></div>
+      </div>
+    </main>
+
+    <aside class="detail" id="detail" aria-label="候选详情"></aside>
+
+    <footer class="statusbar" id="statusbar"></footer>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <dialog id="paletteDialog" class="palette" aria-label="命令面板"></dialog>
+  <dialog id="settingsDialog" aria-labelledby="settingsTitle"></dialog>
+  <dialog id="accountDialog" aria-labelledby="accountTitle"></dialog>
+  <dialog id="helpDialog" aria-labelledby="helpTitle"></dialog>
+  <noscript><p class="empty">策略看板需要启用 JavaScript。</p></noscript>
+</body>
+</html>

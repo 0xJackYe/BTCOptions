@@ -2,6 +2,8 @@
 
 生产地址：[btcopt.pages.dev](https://btcopt.pages.dev/)。源代码仓库：[BTCOptions](https://github.com/0xJackYe/BTCOptions)。
 
+**策略看板**（`/strategy.html`）把对话中的期权策略做成实时筛选器：点击策略即按币安实时报价筛出满足条件的合约或组合，附到期损益、规则检查、压力测试与资金规划。见 [策略看板使用说明](../策略看板使用说明.md)；只读账户的 API Key 配置见该文第四节与仓库根目录的 `.env.example`。
+
 独立站复用终端期权页的行情链、买卖方向、单腿与组合到期盈亏、风险比较、CSV 导出和自选。卖方筛选覆盖 Put 和 Call，支持低风险、风险收益平衡、权利金三种排序。原本机版的 DeepSeek 自然语言服务和本地凭据仍由原终端管理。
 
 - 行情优先使用网站线路。币安拒绝 Cloudflare 请求时，页面自动直连币安官方 WebSocket，显示真实报价、深度、IV、Greeks 和指数。直连行情缺少完整合约规则与 24 小时统计，风险筛选需通过本机连接器核验。
@@ -25,6 +27,7 @@ Windows 可双击 `options_site/start-local.cmd` 启动可选连接器。云后�
 
 ```sh
 node options_site/check.mjs
+node options_site/e2e/strategy-desk.e2e.mjs   # 可选：浏览器端到端检查，需要 Playwright
 ```
 
 构建输出为 `options_site/dist`，其中包括静态资产和 Cloudflare Pages Worker。Cloudflare 使用仓库根目录、构建命令 `node options_site/check.mjs`、输出目录 `options_site/dist`。Worker 的固定云后端地址在 `worker-entry.mjs` 中配置，部署凭据保存在 GitHub Actions Secrets。推送到 `main` 后，GitHub Actions 先测试，再通过受限 Deploy Hook 更新云后端，验证后端 commit 后发布网站并验证网站 commit。测试或后端部署失败时继续提供上一版网站。两个服务的 `/version.json` 均显示实际部署的 Git commit。

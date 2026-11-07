@@ -16,7 +16,9 @@ test("standalone build includes the original chain, portfolio, risk and account 
   assert.match(markup, /href="\.\/account.html"/);
   assert.doesNotMatch(markup, /terminal-embed|DeepSeek|apiKeyForm|option-ai-ui\.js/);
   for (const [, name] of markup.matchAll(/(?:href|src)="\.\/([^"]+)"/g)) await readFile(new URL(name, dist));
-  assert.deepEqual((await readdir(new URL("_worker.js/", dist))).sort(), ["index.js", "worker-account.mjs", "worker-market.mjs", "worker-relay.mjs"]);
+  assert.deepEqual((await readdir(new URL("_worker.js/", dist))).sort(),
+    ["index.js", "lib", "worker-account.mjs", "worker-market.mjs", "worker-relay.mjs", "worker-strategy.mjs"]);
+  assert.match(markup, /href="\.\/strategy\.html"/);
   assert.match(JSON.parse(await readFile(new URL("version.json", dist), "utf8")).commit, /^[a-f\d]{40}$/);
 });
 
@@ -61,4 +63,29 @@ test("Worker routes health and rejects unknown endpoints without fetching Binanc
   assert.equal(missing.status, 404);
   assert.equal(missing.headers.get("Cache-Control"), "no-store");
   assert.equal((await worker.fetch(new Request(origin + "/api/account"), {})).status, 405);
+});
+
+test("strategy desk ships every module its import graph needs, with no inline script", async () => {
+  const page = await readFile(new URL("strategy.html", dist), "utf8");
+  assert.doesNotMatch(page, /<script(?![^>]*\bsrc=)[^>]*>/, "no inline scripts (CSP script-src 'self')");
+  assert.doesNotMatch(page, /\son[a-z]+=/i, "no inline event handlers");
+  for (const [, name] of page.matchAll(/(?:href|src)="\.\/([^"#]+)"/g)) await readFile(new URL(name, dist));
+  const seen = new Set();
+  const walk = async url => {
+    if (seen.has(url.href)) return;
+    seen.add(url.href);
+    const source = await readFile(url, "utf8");
+    for (const [, spec] of source.matchAll(/^\s*import\s[^"']*["'](\.{1,2}\/[^"']+)["']/gm)) await walk(new URL(spec, url));
+  };
+  await walk(new URL("strategy/app.js", dist));
+  assert.ok([...seen].some(href => href.endsWith("/lib/screener.mjs")) && seen.size >= 12, "app imports the shared library");
+  const workerSeen = new Set();
+  const walkWorker = async url => {
+    if (workerSeen.has(url.href)) return;
+    workerSeen.add(url.href);
+    const source = await readFile(url, "utf8");
+    for (const [, spec] of source.matchAll(/^\s*import\s[^"']*["'](\.{1,2}\/[^"']+)["']/gm)) await walkWorker(new URL(spec, url));
+  };
+  await walkWorker(new URL("_worker.js/index.js", dist));
+  assert.ok([...workerSeen].some(href => href.endsWith("_worker.js/lib/screener.mjs")), "Worker bundle resolves the shared library");
 });

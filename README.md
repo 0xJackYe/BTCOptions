@@ -1,6 +1,6 @@
 # BTCOptions
 
-[打开 BTC 期权独立看板](https://btcopt.pages.dev/) · [部署、测试与只读账户说明](options_site/README.md)
+[打开 BTC 期权独立看板](https://btcopt.pages.dev/) · [策略看板](https://btcopt.pages.dev/strategy.html)（[使用说明](策略看板使用说明.md)） · [部署、测试与只读账户说明](options_site/README.md)
 
 ## 本地比特币终端
 
@@ -26,6 +26,7 @@ python launch_btc_terminal.py
 - [终端使用说明](比特币终端使用说明.md)
 - [长期持仓成本与浮盈计算](BTC-PNL.md)
 - [期权收益风险比较](期权收益风险比较说明.md)
+- [策略看板：对话策略的实时筛选](策略看板使用说明.md)
 
 ```powershell
 python run_site_checks.py

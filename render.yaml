@@ -14,3 +14,11 @@ services:
         value: "22"
       - key: BTCOPT_HOSTED
         value: "1"
+      # Optional read-only account access. Values are set as secrets in the
+      # Render dashboard (sync: false keeps them out of this file).
+      - key: BINANCE_API_KEY
+        sync: false
+      - key: BINANCE_API_SECRET
+        sync: false
+      - key: BTCOPT_ACCESS_TOKEN
+        sync: false

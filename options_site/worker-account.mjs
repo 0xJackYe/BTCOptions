@@ -16,7 +16,7 @@ const routes = Object.freeze({
 const accountFields = ["marginBalance", "equity", "available", "initialMargin", "maintMargin", "unrealizedPNL", "adjustedEquity"];
 const positionFields = ["quantity", "entryPrice", "markPrice", "markValue", "unrealizedPNL", "strikePrice"];
 
-class QueryError extends Error {
+export class QueryError extends Error {
   constructor(status, code) {
     super(code);
     this.status = status;
@@ -109,7 +109,7 @@ function validateRequest(body, now) {
   return body;
 }
 
-async function binanceJson(fetcher, path, query = "", apiKey = null) {
+export async function binanceJson(fetcher, path, query = "", apiKey = null) {
   let response;
   try {
     const headers = { Accept: "application/json", "Cache-Control": "no-cache, no-store" };
@@ -162,7 +162,7 @@ function fields(row, names, required) {
   return result;
 }
 
-function normalizeAccount(data) {
+export function normalizeAccount(data) {
   if (!isObject(data) || !Array.isArray(data.asset) || data.asset.length > 100) {
     throw new QueryError(502, "invalid_response");
   }
@@ -182,7 +182,7 @@ function normalizeAccount(data) {
   return { assets, time: timestamp(data.time) ? data.time : null };
 }
 
-function normalizePositions(data) {
+export function normalizePositions(data) {
   if (!Array.isArray(data) || data.length > 2000) throw new QueryError(502, "invalid_response");
   return data.flatMap(row => {
     if (!isObject(row) || typeof row.symbol !== "string" ||

@@ -1,12 +1,22 @@
 // Run after node options_site/build.mjs. No dependencies beyond Node.js 22.
 import {createServer} from "node:http";
-import {readFile} from "node:fs/promises";
+import {existsSync} from "node:fs";
+import {readFile, readdir} from "node:fs/promises";
 import {Readable} from "node:stream";
 import {pipeline} from "node:stream/promises";
 import {handleAccount} from "./dist/_worker.js/worker-account.mjs";
-import {handleMarket} from "./dist/_worker.js/worker-market.mjs";
+import {handleMarket as liveMarket} from "./dist/_worker.js/worker-market.mjs";
+import {createStrategyHandler, readCredentials} from "./dist/_worker.js/worker-strategy.mjs";
+import {createReplayMarket} from "./replay.mjs";
 
 const CLOUD = process.env.BTCOPT_HOSTED === "1";
+// Local runs read optional secrets from a git-ignored .env file. On Render the
+// operator sets the same names as secret environment variables instead.
+if (!CLOUD && process.env.BTCOPT_NO_DOTENV !== "1") {
+  for (const candidate of [new URL("./.env", import.meta.url), new URL("../.env", import.meta.url)]) {
+    if (existsSync(candidate)) { process.loadEnvFile(candidate); break; }
+  }
+}
 const HOST = CLOUD ? "0.0.0.0" : "127.0.0.1";
 const PORT = Number(CLOUD ? process.env.PORT ?? "10000" : process.env.BTCOPT_BRIDGE_PORT ?? "8767");
 if (!Number.isInteger(PORT) || PORT < 1024 || PORT > 65535) throw new Error("无效的本地看板端口。");
@@ -22,19 +32,47 @@ const LIMIT = 1024;
 const API = new Map([
   ["/api/health", "GET"], ["/api/market", "GET"], ["/api/focused-market", "GET"],
   ["/api/mark-watch", "GET"], ["/api/account/time", "GET"], ["/api/account", "POST"],
-]);
-const ASSETS = new Set([
-  "index.html", "account.html", "version.json", "account.css", "browser-market.js", "anthropic.css",
-  "combo.css", "hosted.css", "option-ai.css", "payoff.css", "portfolio.css",
-  "risk.css", "styles.css", "account.js", "app.js", "hosted.js", "payoff-ui.js",
-  "payoff.js", "portfolio-ui.js", "portfolio.js", "risk-metrics.js", "risk-ui.js", "screener.js",
+  ["/api/strategy/catalog", "GET"], ["/api/strategy/signals", "GET"], ["/api/strategy/screen", "GET"],
+  ["/api/strategy/account", "GET"],
 ]);
 const TYPES = {
   html: "text/html; charset=utf-8",
   css: "text/css; charset=utf-8",
   js: "text/javascript; charset=utf-8",
+  mjs: "text/javascript; charset=utf-8",
   json: "application/json; charset=utf-8",
+  woff2: "font/woff2",
+  svg: "image/svg+xml",
+  txt: "text/plain; charset=utf-8",
 };
+// Every regular file the build emitted, except the Worker bundle and dotfiles.
+async function collectAssets(directory, prefix = "") {
+  const found = new Set();
+  for (const entry of await readdir(directory, {withFileTypes: true})) {
+    if (entry.name.startsWith(".") || entry.name.startsWith("_")) continue;
+    const path = prefix + entry.name;
+    if (entry.isDirectory()) for (const nested of await collectAssets(new URL(entry.name + "/", directory), path + "/")) found.add(nested);
+    else if (entry.isFile() && Object.hasOwn(TYPES, entry.name.split(".").at(-1))) found.add(path);
+  }
+  return found;
+}
+const ASSETS = await collectAssets(DIST);
+
+// Replay serves a recorded snapshot with a frozen clock. Never on a public host.
+const REPLAY = process.env.BTCOPT_REPLAY;
+if (REPLAY && CLOUD) throw new Error("Replay mode is local-only.");
+const replaySnapshot = REPLAY ? JSON.parse(await readFile(REPLAY, "utf8")) : null;
+const replayKlinesFile = process.env.BTCOPT_REPLAY_KLINES;
+const replayDaily = replayKlinesFile ? JSON.parse(await readFile(replayKlinesFile, "utf8")) : null;
+const handleMarket = replaySnapshot ? createReplayMarket(replaySnapshot) : liveMarket;
+const handleStrategy = createStrategyHandler({
+  getMarket: async () => (await handleMarket(new Request(LOCAL + "/api/market"))).json(),
+  credentials: readCredentials(process.env),
+  accessToken: typeof process.env.BTCOPT_ACCESS_TOKEN === "string" && process.env.BTCOPT_ACCESS_TOKEN.trim().length >= 24
+    ? process.env.BTCOPT_ACCESS_TOKEN.trim() : null,
+  hosted: CLOUD,
+  replayKlines: replaySnapshot ? {hourly: [], daily: Array.isArray(replayDaily?.klines) ? replayDaily.klines : Array.isArray(replayDaily) ? replayDaily : []} : null,
+});
 const SECURITY = {
   "Cache-Control": "private, no-store, max-age=0",
   "Referrer-Policy": "no-referrer",
@@ -42,7 +80,7 @@ const SECURITY = {
   "X-Frame-Options": "DENY",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 };
-const CSP = "default-src 'self'; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
+const CSP = "default-src 'self'; connect-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
 const CORS_VARY = "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network";
 let exchangeOffset = 0;
 let clockReadAt = 0;
@@ -66,18 +104,19 @@ function noBody(req) {
   return !req.headers["transfer-encoding"] && (!req.headers["content-length"] || req.headers["content-length"] === "0");
 }
 
-function preflight(req, res, origin, method, headers) {
+function preflight(req, res, origin, method, headers, path) {
   const requested = req.headers["access-control-request-headers"];
   const fields = requested ? requested.toLowerCase().split(",").map(field => field.trim()) : [];
   const privateNetwork = req.headers["access-control-request-private-network"];
+  const allowedField = field => field === "content-type" ? method === "POST" : field === "authorization" && path === "/api/strategy/account";
   if (!allowOrigin(origin) || !noBody(req) || req.headers["access-control-request-method"] !== method ||
-      fields.some(field => field !== "content-type" || method !== "POST") ||
+      fields.some(field => !allowedField(field)) ||
       (privateNetwork !== undefined && privateNetwork !== "true")) {
     fail(res, 403, "invalid_source");
     return;
   }
   res.writeHead(204, {...SECURITY, ...headers, "Access-Control-Allow-Methods": method,
-    ...(fields.length ? {"Access-Control-Allow-Headers": "Content-Type"} : {}),
+    ...(fields.length ? {"Access-Control-Allow-Headers": method === "POST" ? "Content-Type" : "Authorization"} : {}),
     // Older clients may still send a PNA preflight.
     ...(privateNetwork === "true" ? {"Access-Control-Allow-Private-Network": "true"} : {}),
     "Access-Control-Max-Age": "300"});
@@ -98,7 +137,7 @@ async function serveApi(req, res, url, origin) {
   const method = API.get(url.pathname);
   const headers = apiHeaders(origin);
   if (!method) return fail(res, 404, "not_found", headers);
-  if (req.method === "OPTIONS") return preflight(req, res, origin, method, headers);
+  if (req.method === "OPTIONS") return preflight(req, res, origin, method, headers, url.pathname);
   if (req.method !== method) return fail(res, 405, "method", {...headers, Allow: method});
   // A browser cross-origin no-CORS fetch must not reach any local API.
   if (!origin && (req.headers["sec-fetch-site"] === "cross-site" || method === "POST")) {
@@ -107,6 +146,13 @@ async function serveApi(req, res, url, origin) {
   const requestHeaders = new Headers();
   if (origin) requestHeaders.set("Origin", LOCAL);
   requestHeaders.set("Sec-Fetch-Site", "same-origin");
+  if (url.pathname === "/api/strategy/account") {
+    const authorization = req.headers.authorization;
+    if (typeof authorization === "string") {
+      if (authorization.length > 300 || !/^Bearer [\x21-\x7e]{1,280}$/.test(authorization)) return fail(res, 400, "invalid_input", headers);
+      requestHeaders.set("Authorization", authorization);
+    }
+  }
   let body;
   if (method === "POST") {
     const type = req.headers["content-type"];
@@ -139,7 +185,7 @@ async function serveApi(req, res, url, origin) {
   let reply;
   if (url.pathname === "/api/health") {
     if (url.search) return fail(res, 400, "invalid_input", headers);
-    reply = Response.json({status: "ok", service: "btcoptions", transport: "loopback"});
+    reply = Response.json({status: "ok", service: "btcoptions", transport: "loopback", ...(replaySnapshot ? {replay: true} : {})});
   } else if (url.pathname === "/api/account/time") {
     const began = Date.now();
     reply = await handleAccount(request);
@@ -161,7 +207,8 @@ async function serveApi(req, res, url, origin) {
     };
     try {reply = await handleAccount(request, {now: accountNow});}
     finally {body.fill(0);}
-  } else reply = await handleMarket(request);
+  } else if (url.pathname.startsWith("/api/strategy/")) reply = await handleStrategy(request);
+  else reply = await handleMarket(request);
   if (reply) await sendResponse(res, reply, headers);
   else fail(res, 404, "not_found", headers);
 }
@@ -188,7 +235,7 @@ async function serve(req, res) {
   const url = new URL(req.url, LOCAL);
   if (url.pathname.startsWith("/api/")) return serveApi(req, res, url, origin);
   if (!["GET", "HEAD"].includes(req.method) || !noBody(req)) return fail(res, 405, "method", {Allow: "GET, HEAD"});
-  const asset = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
+  const asset = url.pathname === "/" ? "index.html" : url.pathname === "/strategy" ? "strategy.html" : url.pathname.slice(1);
   if (!ASSETS.has(asset)) return fail(res, 404, "not_found");
   const data = await readFile(new URL(asset, DIST));
   res.writeHead(200, {...SECURITY, "Content-Security-Policy": CSP, "Content-Type": TYPES[asset.split(".").at(-1)],
@@ -212,4 +259,4 @@ server.on("error", () => {
   process.stderr.write("无法启动本地期权看板，请检查端口 " + PORT + "。\n");
   process.exitCode = 1;
 });
-server.listen(PORT, HOST, () => process.stdout.write("BTC 期权看板 " + LOCAL + "\n"));
+server.listen(PORT, HOST, () => process.stdout.write("BTC 期权看板 " + LOCAL + (replaySnapshot ? "（回放模式）" : "") + "\n策略看板 " + LOCAL + "/strategy.html\n"));
