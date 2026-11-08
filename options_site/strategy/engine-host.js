@@ -97,7 +97,9 @@ export function startHost(post, scope = globalThis) {
       const servedHeader = Number(response.headers.get("X-Served-At"));
       const servedAt = Number.isFinite(servedHeader) && servedHeader > 0 ? servedHeader : receivedAt;
       if (response.status === 304 && net.frame) {
-        accept(net.frame, {receivedAt, servedAt});
+        // Unchanged quotes: nothing to decode or re-screen; only let ages
+        // advance at the usual 15-second cadence.
+        engine.handle({type: "tick", minInterval: 15_000});
       } else if (response.ok) {
         const frame = JSON.parse(text);
         if (!validFrame(frame)) throw new Error("行情帧格式无效");

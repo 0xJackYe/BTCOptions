@@ -1,7 +1,7 @@
 // Dialogs: fund & model settings, account connection, keyboard help, palette.
 import {h, icon, fill} from "./dom.js";
 import * as F from "./format.js";
-import {dialogFrame, openDialog, closeDialog, toast} from "./ui.js";
+import {dialogFrame, openDialog, openFloating, closeDialog, toast} from "./ui.js";
 import {STRATEGIES} from "../lib/strategies.mjs";
 import {DEFAULT_SETTINGS, mergeSettings} from "../lib/checks.mjs";
 
@@ -235,7 +235,8 @@ export function openPalette(dialog, state, actions) {
   });
   fill(dialog, h("div.palette-input", {}, icon("search"), input, h("kbd", {text: "Esc"})), list,
     h("div.palette-foot", {}, h("span", {}, h("kbd", {text: "↑"}), h("kbd", {text: "↓"}), " 选择"), h("span", {}, h("kbd", {text: "Enter"}), " 执行"), h("span", {}, h("kbd", {text: "Esc"}), " 关闭")));
-  render();
-  openDialog(dialog);
+  // The field answers the shortcut in this frame; the list fills the next.
+  openFloating(dialog);
   input.focus();
+  requestAnimationFrame(() => { if (dialog.open && !list.firstChild) render(); });
 }

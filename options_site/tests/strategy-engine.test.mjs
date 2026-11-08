@@ -59,11 +59,43 @@ test("engine coalesces bursts, honours freeze and answers selections", () => {
   drain();
   assert.ok(posts.filter(m => m.type === "result").length > frozenCount, "unfreezing applies the held snapshot");
 
-  const second = last("result").result.candidates[1];
+  // Unfreezing re-screened identical data, so the newest answer is a small
+  // "same" message; the candidates are those of the last full answer.
+  assert.equal(last("result").same, true);
+  assert.equal(last("result").result, null);
+  const second = posts.filter(m => m.type === "result" && m.result).at(-1).result.candidates[1];
   engine.handle({type: "select", key: second.key});
   const detail = last("detail");
   assert.equal(detail.key, second.key);
   assert.ok(detail.detail.curve.length > 100);
+});
+
+test("engine answers a strategy switch from memory once the background pass has run", () => {
+  const {engine, posts, drain, snapshot, last} = harness();
+  engine.handle({type: "init", settings: {}, paramsById: {}, strategyId: "crash-put", autoSelect: true});
+  engine.handle({type: "snapshot", snapshot: snapshot(), source: "replay"});
+  drain();
+  const before = posts.length;
+  engine.handle({type: "strategy", strategyId: "long-straddle", selectedKey: null});
+  const answer = posts.slice(before).find(m => m.type === "result");
+  assert.ok(answer, "answered synchronously, without waiting for a computation");
+  assert.equal(answer.strategyId, "long-straddle");
+  assert.equal(answer.timings.cached, true);
+  assert.ok(answer.result.candidates.length > 0 && answer.detail?.curve?.length > 100, "candidates and the leader's analysis come with it");
+  assert.equal(answer.selectedKey, answer.result.candidates[0].key);
+
+  // Editing that strategy's parameters re-screens it without rebuilding the market context.
+  const versions = engine.state.dataVersion;
+  engine.handle({type: "params", strategyId: "long-straddle", params: {...defaultParams(getStrategy("long-straddle")), dte: [5, 20]}});
+  drain();
+  assert.equal(engine.state.dataVersion, versions, "context reused");
+  assert.deepEqual(last("result").params.dte, [5, 20]);
+
+  // Identical inputs give an identical signature, so the interface can skip repainting.
+  const sig = last("result").sig;
+  engine.handle({type: "strategy", strategyId: "crash-put", selectedKey: null});
+  engine.handle({type: "strategy", strategyId: "long-straddle", selectedKey: null});
+  assert.equal(last("result").sig, sig);
 });
 
 test("engine decodes a shared link exactly like the interface", () => {

@@ -137,9 +137,17 @@ export function closeDialog(dialog) {
     dialog.removeEventListener("animationend", finish);
     dialog.classList.remove("closing");
     if (dialog.open) dialog.close();
+    const back = dialog.__returnFocus;
+    dialog.__returnFocus = null;
+    if (back?.isConnected) back.focus({preventScroll: true});
   };
   closing.set(dialog, finish);
   dialog.classList.add("closing");
+  const scrim = dialog.__scrim;
+  if (scrim) {
+    dialog.__scrim = null;
+    scrim.animate([{opacity: 1}, {opacity: 0}], {duration: 150, easing: "ease-out", fill: "forwards"}).finished.then(() => scrim.remove(), () => scrim.remove());
+  }
   dialog.addEventListener("animationend", finish);
   timer = setTimeout(finish, 260);
 }
@@ -152,6 +160,28 @@ export function openDialog(dialog) {
   }
   closing.get(dialog)?.();              // reopening mid-exit: finish the exit first
   if (!dialog.open) dialog.showModal();
+}
+
+/**
+ * A light, non-modal overlay for frequent panels (the command palette):
+ * showModal() makes the browser re-style the whole page to inert it, which
+ * costs a visible frame on phones; this keeps the page live underneath and
+ * supplies the backdrop, Esc and focus return itself.
+ */
+export function openFloating(dialog) {
+  if (!dialog.dataset.floating) {
+    dialog.dataset.floating = "1";
+    dialog.addEventListener("keydown", event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); closeDialog(dialog); } });
+  }
+  closing.get(dialog)?.();
+  if (dialog.open) return;
+  dialog.__returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const scrim = document.createElement("div");
+  scrim.className = "floating-scrim";
+  scrim.addEventListener("pointerdown", () => closeDialog(dialog));
+  document.body.append(scrim);
+  dialog.__scrim = scrim;
+  dialog.show();
 }
 
 export function dialogFrame(title, subtitle, body, footer = null) {

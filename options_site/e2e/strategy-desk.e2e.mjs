@@ -78,6 +78,8 @@ try {
 
   await step("参数编辑器即时重新筛选并可重置", async () => {
     const before = await page.locator("#gridBody tr").count();
+    assert.equal(await page.locator('.chip[data-key="otm"]').count(), 0, "parameters start collapsed");
+    await page.click(".chip.toggle");
     await page.click('.chip[data-key="otm"]');
     const low = page.locator('.popover input.num-input').first();
     await low.fill("25");
@@ -152,9 +154,46 @@ try {
   });
 
   await step("行情在后台线程计算，界面只负责渲染", async () => {
-    await page.waitForFunction(() => document.querySelector("#statusbar")?.textContent.includes("后台线程"));
+    await page.waitForFunction(() => document.querySelector("#statusbar [data-tip]")?.getAttribute("data-tip").includes("后台线程"));
     const workers = page.workers().map(worker => worker.url());
     assert.ok(workers.some(url => /\/strategy\/engine\.worker\.js\?v=[0-9a-f]{10}$/.test(url)), "engine worker: " + workers.join(", "));
+  });
+
+  await step("性能预算：关键交互不掉帧，操作到画面 ≤ 50 ms", async () => {
+    await page.evaluate(() => {
+      window.__budget = {frames: [], events: [], rec: false};
+      let last = 0;
+      const loop = t => { if (window.__budget.rec && last) window.__budget.frames.push(t - last); last = t; requestAnimationFrame(loop); };
+      requestAnimationFrame(loop);
+      new PerformanceObserver(list => { for (const e of list.getEntries()) if (window.__budget.rec && e.interactionId) window.__budget.events.push(e.duration); })
+        .observe({type: "event", durationThreshold: 16});
+    });
+    const measure = async (name, action, settle = 900) => {
+      let result;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await page.evaluate(() => { window.__budget.frames = []; window.__budget.events = []; window.__budget.rec = true; });
+        await action();
+        await page.waitForTimeout(settle);
+        result = await page.evaluate(() => { window.__budget.rec = false; const f = window.__budget.frames.filter(d => d < 1000);
+          return {dropped: f.filter(d => d > 25).length, worst: Math.max(0, ...f), input: Math.max(0, ...window.__budget.events)}; });
+        if (!result.dropped && result.input <= 50) break;
+      }
+      console.log(`  ${name}: 掉帧 ${result.dropped} · 最长帧 ${result.worst.toFixed(1)} ms · 操作到画面 ${result.input ? result.input.toFixed(0) + " ms" : "< 16 ms"}`);
+      assert.equal(result.dropped, 0, name + " dropped frames");
+      assert.ok(result.input <= 50, name + " input to paint " + result.input);
+    };
+    await page.keyboard.press("1");
+    await page.waitForTimeout(600);
+    await measure("切换策略", () => page.keyboard.press("2"));
+    await measure("切回策略", () => page.keyboard.press("1"));
+    await measure("选择候选", () => page.click("#gridBody tr:nth-child(2)"), 1200);
+    await measure("切换详情页签", () => page.click("#tab-stress"));
+    await measure("命令面板", () => page.keyboard.press("Control+k"), 600);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(400);
+    await measure("主题墨滴", () => page.keyboard.press("t"), 1100);
+    await page.keyboard.press("t");
+    await page.waitForTimeout(1100);
   });
 
   await step("手机布局：卡片列表与详情抽屉", async () => {

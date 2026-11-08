@@ -1,10 +1,17 @@
 // Strategy Desk engine: market + klines + settings + account → screened,
 // ranked, analyzed results. DOM-free so it runs in a Web Worker (preferred)
-// or on the main thread. Inputs are coalesced; only the latest state is
-// computed, and rail counts are filled in cancellable background slices.
+// or on the main thread.
+//
+// Latency design: after the visible strategy is answered, every other
+// strategy is screened in cancellable background slices and kept with the
+// analysis of its leading candidate, so switching strategies is answered
+// from memory in about a millisecond. Cached answers are keyed by the data
+// version and the strategy's parameters; a parameter change re-screens only
+// that strategy and reuses the market context.
 import {createContext, screen, analyzeCandidate, mergeSettings} from "../lib/screener.mjs";
 import {regime as computeRegime, unpackBars} from "../lib/signals.mjs";
 import {STRATEGIES, getStrategy, normalizeParams, decodeParams} from "../lib/strategies.mjs";
+import {contentHash} from "../lib/market.mjs";
 
 const strip = candidate => {
   if (!candidate) return null;
@@ -17,10 +24,12 @@ export function createEngine(post, {now = () => Date.now(), defer = fn => setTim
     snapshot: null, snapshotAt: 0, source: null, bars: {hourly: [], daily: []}, barsSource: null, barsAt: 0,
     settings: mergeSettings({}), account: null, paramsById: {}, strategyId: STRATEGIES[0].id, selectedKey: null, pending: null,
     autoSelect: true, frozen: false, frozenAt: 0, ctx: null, result: null, seq: 0, scheduled: false, generation: 0, lastComputeAt: 0,
+    inputsVersion: 1, ctxVersion: 0, dataVersion: 0, cache: new Map(), lastSig: "",
   };
   for (const strategy of STRATEGIES) s.paramsById[strategy.id] = normalizeParams(strategy, {}).params;
 
   const params = id => s.paramsById[id] ?? normalizeParams(getStrategy(id), {}).params;
+  const paramsKey = id => JSON.stringify(params(id));
 
   function triggerSettings() {
     const p = params(s.strategyId);
@@ -40,6 +49,40 @@ export function createEngine(post, {now = () => Date.now(), defer = fn => setTim
       expiryCount: m.expiries.length, quality: m.quality} : {ok: false, quality: {status: "unavailable", notes: []}};
   }
 
+  const brief = result => ({total: result.total, blocked: result.blocked, blockedCount: result.blockedCount ?? null,
+    gate: result.gate?.status ?? null, best: result.candidates[0]?.metrics?.[result.rank] ?? null});
+
+  function remember(id, result) {
+    const top = result.candidates[0] ?? null;
+    const entry = {dataVersion: s.dataVersion, paramsKey: paramsKey(id), result, topKey: top?.key ?? null, detail: undefined};
+    s.cache.set(id, entry);
+    return entry;
+  }
+  const fresh = id => {
+    const entry = s.cache.get(id);
+    return entry && entry.dataVersion === s.dataVersion && entry.paramsKey === paramsKey(id) ? entry : null;
+  };
+
+  /** Posts the visible strategy's answer; sig lets the interface skip identical repaints. */
+  function postResult(detail, timings, extra = {}) {
+    const m = s.ctx.market;
+    const regime = m.ok ? computeRegime({hourly: s.bars.hourly, daily: s.bars.daily, nowMs: m.exchangeNow, spot: m.spot,
+      surface: s.ctx.surface, trigger: triggerSettings()}) : null;
+    const result = s.result && {...s.result, candidates: s.result.candidates.map(strip), nearMisses: s.result.nearMisses.map(strip)};
+    const sig = result ? contentHash(JSON.stringify([s.strategyId, result.candidates, result.nearMisses, result.total, result.blocked, result.gate,
+      result.rejected, s.selectedKey])) : "";
+    // An unchanged answer travels without its candidates and analysis, so
+    // the interface thread never deserialises data it already shows.
+    const same = Boolean(sig) && sig === s.lastSig;
+    s.lastSig = sig;
+    post({
+      type: "result", seq: ++s.seq, strategyId: s.strategyId, params: params(s.strategyId), selectedKey: s.selectedKey,
+      market: summary(), portfolio: s.ctx.portfolio, rv: s.ctx.rv, regime, trigger: regime?.crash ?? null,
+      result: same ? null : result, detail: same ? null : detail, same, sig,
+      source: s.source, barsSource: s.barsSource, barsAt: s.barsAt, frozen: s.frozen, timings, ...extra,
+    });
+  }
+
   function compute() {
     s.scheduled = false;
     const started = now();
@@ -48,54 +91,61 @@ export function createEngine(post, {now = () => Date.now(), defer = fn => setTim
       post({type: "result", seq: ++s.seq, waiting: true, market: summary()});
       return;
     }
-    const localNow = s.frozen ? s.frozenAt : now();
-    s.ctx = createContext({snapshot: s.snapshot, localNow, settings: s.settings, account: s.account,
-      klines: {hourlyBars: s.bars.hourly, dailyBars: s.bars.daily}});
+    // The market context is rebuilt only when its inputs changed; a
+    // parameter edit re-screens against the context already in memory.
+    if (s.ctxVersion !== s.inputsVersion || !s.ctx) {
+      const localNow = s.frozen ? s.frozenAt : now();
+      s.ctx = createContext({snapshot: s.snapshot, localNow, settings: s.settings, account: s.account,
+        klines: {hourlyBars: s.bars.hourly, dailyBars: s.bars.daily}});
+      s.ctxVersion = s.inputsVersion;
+      s.dataVersion += 1;
+    }
     const built = now();
-    const m = s.ctx.market;
-    const regime = m.ok ? computeRegime({hourly: s.bars.hourly, daily: s.bars.daily, nowMs: m.exchangeNow, spot: m.spot,
-      surface: s.ctx.surface, trigger: triggerSettings()}) : null;
-    let result = null;
-    try { result = screen(s.ctx, s.strategyId, params(s.strategyId), {limit: 150}); } catch (error) {
-      post({type: "error", where: "screen", message: String(error?.message ?? error)});
+    let entry = fresh(s.strategyId);
+    if (!entry) {
+      try { entry = remember(s.strategyId, screen(s.ctx, s.strategyId, params(s.strategyId), {limit: 150})); } catch (error) {
+        post({type: "error", where: "screen", message: String(error?.message ?? error)});
+      }
     }
-    s.result = result;
+    s.result = entry?.result ?? null;
     const screened = now();
-    if (result && s.autoSelect && !result.candidates.some(c => c.key === s.selectedKey) && !result.nearMisses.some(c => c.key === s.selectedKey)) {
-      s.selectedKey = result.candidates[0]?.key ?? null;
+    if (s.result && s.autoSelect && !s.result.candidates.some(c => c.key === s.selectedKey) && !s.result.nearMisses.some(c => c.key === s.selectedKey)) {
+      s.selectedKey = s.result.candidates[0]?.key ?? null;
     }
-    const detail = detailFor(s.selectedKey);
+    const detail = entry && s.selectedKey === entry.topKey && entry.detail !== undefined ? entry.detail : detailFor(s.selectedKey);
+    if (entry && s.selectedKey === entry.topKey) entry.detail = detail;
     s.lastComputeAt = now();
-    post({
-      type: "result", seq: ++s.seq, strategyId: s.strategyId, params: params(s.strategyId), selectedKey: s.selectedKey,
-      market: summary(), portfolio: s.ctx.portfolio, rv: s.ctx.rv, regime, trigger: regime?.crash ?? null,
-      result: result && {...result, candidates: result.candidates.map(strip), nearMisses: result.nearMisses.map(strip)},
-      detail, source: s.source, barsSource: s.barsSource, barsAt: s.barsAt, frozen: s.frozen,
-      timings: {context: built - started, screen: screened - built, total: now() - started},
-    });
-    countsFrom(generation);
+    postResult(detail, {context: built - started, screen: screened - built, total: now() - started});
+    precompute(generation);
   }
 
-  // Rail counts: one strategy per slice, abandoned as soon as inputs change.
-  function countsFrom(generation) {
-    const queue = STRATEGIES.map(strategy => strategy.id).filter(id => id !== s.strategyId);
+  // Every other strategy, one per slice, abandoned as soon as inputs change;
+  // the answers double as the rail counts.
+  function precompute(generation) {
     const counts = {};
-    if (s.result) counts[s.strategyId] = brief(s.result);
+    const queue = [];
+    for (const strategy of STRATEGIES) {
+      const entry = fresh(strategy.id);
+      if (entry) counts[strategy.id] = brief(entry.result);
+      else queue.push(strategy.id);
+    }
+    if (Object.keys(counts).length) post({type: "counts", counts: {...counts}, done: !queue.length});
     const step = () => {
       if (generation !== s.generation || !s.ctx?.market?.ok) return;
       const id = queue.shift();
       if (id) {
-        try { counts[id] = brief(screen(s.ctx, id, params(id), {limit: 1, nearMisses: 0, budgetMs: 300})); }
-        catch { counts[id] = {error: true}; }
+        try {
+          const entry = remember(id, screen(s.ctx, id, params(id), {limit: 150}));
+          const top = entry.result.candidates[0];
+          if (top) { try { entry.detail = analyzeCandidate(s.ctx, top); } catch { entry.detail = null; } }
+          counts[id] = brief(entry.result);
+        } catch { counts[id] = {error: true}; }
       }
       if (!queue.length || Object.keys(counts).length % 4 === 0) post({type: "counts", counts: {...counts}, done: !queue.length});
       if (queue.length) defer(step);
     };
-    defer(step);
+    if (queue.length) defer(step);
   }
-
-  const brief = result => ({total: result.total, blocked: result.blocked, blockedCount: result.blockedCount ?? null,
-    gate: result.gate?.status ?? null, best: result.candidates[0]?.metrics?.[result.rank] ?? null});
 
   function schedule() {
     if (s.scheduled) return;
@@ -103,10 +153,12 @@ export function createEngine(post, {now = () => Date.now(), defer = fn => setTim
     defer(compute);
   }
 
+  const changed = () => { s.inputsVersion += 1; };
+
   return {
     state: s,
     compute,
-    /** Applies one message; everything except "select" schedules a recompute. */
+    /** Applies one message; most schedule a (coalesced) recompute. */
     handle(message) {
       switch (message.type) {
         case "init":
@@ -128,16 +180,33 @@ export function createEngine(post, {now = () => Date.now(), defer = fn => setTim
           s.selectedKey = message.selectedKey ?? null;
           s.autoSelect = message.autoSelect !== false;
           s.account = message.account ?? null;
+          changed();
           break;
-        case "strategy":
+        case "strategy": {
           if (!getStrategy(message.strategyId)) return;
           s.strategyId = message.strategyId;
           s.selectedKey = message.selectedKey ?? null;
-          break;
+          // Answer from memory when this strategy was already screened on the
+          // current data; otherwise fall through to a fresh computation.
+          const entry = s.ctx && s.ctxVersion === s.inputsVersion ? fresh(s.strategyId) : null;
+          s.lastSig = "";
+          if (!entry) break;
+          const started = now();
+          s.result = entry.result;
+          if (s.autoSelect && !s.selectedKey) s.selectedKey = entry.topKey;
+          let detail;
+          if (s.selectedKey && s.selectedKey === entry.topKey) {
+            if (entry.detail === undefined) entry.detail = detailFor(s.selectedKey);
+            detail = entry.detail;
+          } else detail = detailFor(s.selectedKey);
+          postResult(detail, {context: 0, screen: 0, total: now() - started, cached: true});
+          return;
+        }
         case "params": {
           const strategy = getStrategy(message.strategyId ?? s.strategyId);
           if (!strategy) return;
           s.paramsById[strategy.id] = normalizeParams(strategy, message.params).params;
+          if (strategy.id !== s.strategyId) return;     // answered on demand when shown
           break;
         }
         case "select":
@@ -149,14 +218,17 @@ export function createEngine(post, {now = () => Date.now(), defer = fn => setTim
           return;
         case "settings":
           s.settings = mergeSettings(message.settings ?? {});
+          changed();
           break;
         case "account":
           s.account = message.data ?? null;
+          changed();
           break;
         case "freeze":
           s.frozen = Boolean(message.frozen);
           s.frozenAt = message.at ?? now();
           if (!s.frozen && s.pending) { s.snapshot = s.pending; s.pending = null; }
+          changed();
           break;
         case "snapshot":
           if (!message.snapshot || !Array.isArray(message.snapshot.options)) return;
@@ -164,16 +236,19 @@ export function createEngine(post, {now = () => Date.now(), defer = fn => setTim
           s.snapshot = message.snapshot;
           s.snapshotAt = now();
           s.source = message.source ?? null;
+          changed();
           break;
         case "bars":
           s.bars = {hourly: Array.isArray(message.hourly) ? message.hourly : unpackBars(message.hourly),
             daily: Array.isArray(message.daily) ? message.daily : unpackBars(message.daily)};
           s.barsSource = message.source ?? null;
           s.barsAt = message.at ?? now();
+          changed();
           break;
         case "tick":
           // Ages and time-to-expiry move even when quotes do not.
           if (s.frozen || !s.snapshot || now() - s.lastComputeAt < (message.minInterval ?? 15_000)) return;
+          changed();
           break;
         default:
           return;

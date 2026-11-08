@@ -10,7 +10,8 @@ import {readServerAccount, createBrowserSession, readBrowserAccount, accountErro
 import {renderRail, updateRail, renderRegime, renderHead, updateHead, renderResults, markSelection, renderStatus, sortedView} from "./views.js";
 import {renderDetail, switchTab, ticket} from "./detail.js";
 import {openSettings, openAccount, openHelp, openPalette} from "./panels.js";
-import {viewTransition, inkDrop, inkIn} from "./motion.js";
+import {inkVeil, inkIn} from "./motion.js";
+import {createDrawer} from "./drawer.js";
 import {STRATEGIES, METRICS, getStrategy, defaultParams, normalizeParams, encodeParams, decodeParams} from "../lib/strategies.mjs";
 import {mergeSettings, describeCheck, CHECK_UNITS} from "../lib/checks.mjs";
 
@@ -22,14 +23,16 @@ const els = {
   palette: $("#paletteDialog"), settings: $("#settingsDialog"), account: $("#accountDialog"), help: $("#helpDialog"),
 };
 
-const narrowQuery = matchMedia("(max-width: 1260px)"), mobileQuery = matchMedia("(max-width: 900px)");
+// Below 1500 px the detail becomes a sheet so the results keep the full width.
+const narrowQuery = matchMedia("(max-width: 1499px)"), mobileQuery = matchMedia("(max-width: 900px)");
 const narrow = () => narrowQuery.matches;
 
 const state = {
   strategyId: "crash-put", selectedKey: null, selected: null, detail: null, viewSort: null, frozen: false, frozenAt: 0,
   market: null, regime: null, trigger: null, portfolio: null, result: null, counts: {}, source: null, barsSource: null, barsAt: 0, timings: null,
   transport: {ok: false, route: local ? "local" : "site", error: null, lastOk: 0, latency: null, online: navigator.onLine !== false},
-  direct: {active: false, lastAt: 0}, engineMode: null, boot: null, switching: false, redrawChart: false,
+  direct: {active: false, lastAt: 0}, engineMode: null, boot: null, switching: null, redrawChart: false, lastSig: "",
+  paramsOpen: load("paramsOpen", false), allColumns: load("allColumns", false),
   settings: mergeSettings(load("settings", {})), detailTab: "rules", overlay: true, railFilter: "",
   watch: new Set(load("watch", [])), alerts: load("alerts", false), lastTriggerStatus: null,
   account: {mode: "none", data: null, error: null, server: undefined, session: null}, accountTab: "server", accountToken: loadSession("token"),
@@ -55,19 +58,28 @@ const detailBusy = () => {
   const active = document.activeElement;
   return active instanceof HTMLInputElement && els.detail.contains(active);
 };
+// While a strategy switch awaits the engine (usually well under a frame),
+// the old panel stays put instead of flashing an intermediate state.
+const HELD = ["head", "headLive", "results", "detail", "fresh", "banner"];
 function flush() {
   frame = 0;
   const parts = new Set(dirty);
   dirty.clear();
+  if (state.switching) for (const part of HELD) if (parts.delete(part)) dirty.add(part);
   if (parts.has("rail")) renderRail(els.rail, state, actions);
   if (parts.has("rail") || parts.has("counts")) updateRail(els.rail, els.railInk, state, {instant: parts.has("instant")});
   if (parts.has("regime")) renderRegime(els.regime, state);
-  if (parts.has("head")) renderHead(els.head, state, actions);
-  else if (parts.has("headLive")) updateHead(state, actions);
+  if (parts.has("head")) {
+    renderHead(els.head, state, actions);
+    if (parts.has("fresh")) inkIn(els.head.children, {from: .3, step: 18, max: 4, distance: 3, duration: 220});
+  } else if (parts.has("headLive")) updateHead(state, actions);
   if (parts.has("banner")) renderBanner();
   if (parts.has("results")) renderResults(state, actions, els, {fresh: parts.has("fresh")});
   if (parts.has("detail")) {
     if (detailBusy()) dirty.add("detail");      // never yank an input out from under the user
+    // A whole new panel paints the list first and the detail one frame
+    // later, so neither frame is long enough to drop.
+    else if (parts.has("results") && parts.has("fresh") && !state.market?.quality?.cached) invalidate("detail");
     else { renderDetail(els.detail, state, actions); state.redrawChart = false; }
   }
   if (parts.has("status")) renderStatus(els.status, state);
@@ -102,7 +114,7 @@ function writeHash() {
 }
 
 /* ------------------------------------------------------------ engine link */
-let switchWaiter = null, detailTimer = 0;
+let switchTimer = 0, detailTimer = 0;
 
 function handleEngineMessage(message) {
   switch (message?.type) {
@@ -154,9 +166,14 @@ function onResult(message) {
   state.timings = message.timings;
   invalidate("regime", "status", "pill", "banner");
   checkTriggerAlert();
-  // A result computed for the previous strategy (raced a click) is dropped.
-  if (message.strategyId !== state.strategyId || !message.result) return;
-  const fresh = state.result?.strategyId !== message.strategyId;
+  // A result computed for the previous strategy (raced a click) is dropped;
+  // an unchanged one ("same") only refreshes the strip and status above.
+  if (message.strategyId !== state.strategyId || !message.result || message.same) return;
+  const switching = state.switching?.id === message.strategyId;
+  const fresh = switching || state.result?.strategyId !== message.strategyId;
+  // Same candidates, same selection: nothing on the panel would change.
+  if (!fresh && message.sig && message.sig === state.lastSig && message.selectedKey === state.selectedKey) return;
+  state.lastSig = message.sig ?? "";
   state.result = message.result;
   const r = message.result;
   state.counts[state.strategyId] = {total: r.total, blocked: r.blocked, blockedCount: r.blockedCount ?? null, gate: r.gate?.status ?? null};
@@ -172,10 +189,15 @@ function onResult(message) {
     state.detail = null;
   }
   state.selected = pool.find(c => c.key === state.selectedKey) ?? null;
+  if (switching) {
+    clearTimeout(switchTimer);
+    state.switching = null;
+    els.tableWrap.scrollTop = 0;
+    invalidate("head", "banner");
+  }
   invalidate("headLive", "results", "detail", "counts");
-  if (fresh && !state.switching) dirty.add("fresh");
+  if (fresh) dirty.add("fresh");
   els.main.classList.remove("pending");
-  if (switchWaiter) { switchWaiter(); switchWaiter = null; }
 }
 
 /* ----------------------------------------------- direct Binance fallback */
@@ -217,8 +239,8 @@ function renderBanner() {
   const q = state.market?.quality, t = state.transport;
   const nodes = [];
   if (q?.replay) nodes.push(["replay", h("div.banner.replay", {role: "note"}, icon("layers"),
-    `回放模式：显示 ${q.fetchedAt ? F.beijing(Date.parse(q.fetchedAt), {date: true, seconds: false}) + "（北京）" : "历史"} 记录的币安真实快照，时间冻结在快照时刻，不是实时报价。`)]);
-  else if (state.source === "direct") nodes.push(["direct", h("div.banner.stale", {role: "note"}, "网站线路暂不可用，正在使用币安直连行情：缺少合约规则与 24h 统计，保证金按默认费率估算。")]);
+    `回放 · ${q.fetchedAt ? F.beijing(Date.parse(q.fetchedAt), {date: true, seconds: false}) + "（北京）" : "历史"}的币安快照，非实时报价`)]);
+  else if (state.source === "direct") nodes.push(["direct", h("div.banner.stale", {role: "note"}, "网站线路暂不可用 · 已改用币安直连行情（无合约规则，保证金按默认费率估算）")]);
   else if (q?.cached) nodes.push(["cached", h("div.banner.cached", {role: "note"},
     `显示上次保存的行情${state.boot?.savedAt ? "（" + F.ago(state.boot.savedAt) + "保存）" : ""}，正在连接实时数据；报价仅供参考。`)]);
   else if (t.online === false) nodes.push(["offline", h("div.banner.down", {role: "note"}, "网络已断开：显示的是最后收到的行情，恢复后自动重连。")]);
@@ -296,24 +318,19 @@ async function checkServerAccount({silent = true} = {}) {
 }
 
 /* ------------------------------------------------------- strategy switch */
-function switchView() {
-  if (!state.market?.ok) { invalidate("head", "results", "detail", "banner"); return; }
-  els.main.classList.add("pending");
-  state.switching = true;
-  // The new strategy's header and first results appear together, cross-
-  // fading like ink on paper; a slow engine never holds the frame > 240 ms.
-  viewTransition(async () => {
-    await new Promise(resolve => {
-      // The engine may already have answered before the transition began.
-      if (state.result?.strategyId === state.strategyId && !els.main.classList.contains("pending")) { resolve(); return; }
-      switchWaiter = resolve;
-      setTimeout(resolve, 240);
-    });
-    switchWaiter = null;
-    state.switching = false;
-    invalidate("head", "results", "detail", "banner");
-    flushNow();
-  }, {className: "vt-strategy"});
+// The rail answers in the same frame; the panel swaps when the engine replies
+// (from memory, typically < 5 ms). Nothing is frozen: if the engine has to
+// compute, the new header and a quiet loading state appear after 120 ms.
+function beginSwitch(id) {
+  state.switching = {id, at: performance.now()};
+  clearTimeout(switchTimer);
+  switchTimer = setTimeout(() => {
+    if (state.switching?.id !== id) return;
+    state.switching = null;
+    els.tableWrap.scrollTop = 0;
+    els.main.classList.add("pending");
+    invalidate("head", "results", "detail", "banner", "fresh");
+  }, 120);
 }
 
 /* ---------------------------------------------------------------- actions */
@@ -329,14 +346,24 @@ const actions = {
     if (!getStrategy(id) || id === state.strategyId) return;
     closePopover();
     state.strategyId = id;
-    state.selectedKey = null; state.selected = null; state.detail = null; state.viewSort = null;
-    els.tableWrap.scrollTop = 0;
+    state.selectedKey = null; state.selected = null; state.detail = null; state.viewSort = null; state.lastSig = "";
+    if (state.market?.ok) beginSwitch(id);
+    else invalidate("head", "results", "detail", "banner");
     engine.post({type: "strategy", strategyId: id, selectedKey: null});
     writeHash();
     invalidate("counts");
     flushNow();
     els.rail.querySelector(`[data-id="${id}"]`)?.scrollIntoView({block: "nearest", inline: "nearest"});
-    switchView();
+  },
+  toggleParams() {
+    state.paramsOpen = !state.paramsOpen;
+    save("paramsOpen", state.paramsOpen);
+    invalidate("headLive");
+  },
+  toggleColumns() {
+    state.allColumns = !state.allColumns;
+    save("allColumns", state.allColumns);
+    invalidate("results");
   },
   setParam(key, value) {
     state.paramsById[state.strategyId] = normalizeParams(state.strategy, {...state.params, [key]: value}).params;
@@ -369,7 +396,7 @@ const actions = {
       clearTimeout(detailTimer);
       detailTimer = setTimeout(() => invalidate("detail"), 90);
     }
-    if (open && narrow()) openDrawer();
+    if (open && narrow()) drawer.show();
   },
   selectNearMiss(key) { actions.selectCandidate(key, {open: true}); },
   setSort(metric) {
@@ -426,15 +453,11 @@ const actions = {
     if (!switchTab(state, actions)) invalidate("detail");
   },
   setOverlay(value) { state.overlay = value; state.redrawChart = true; invalidate("detail"); },
-  closeDetail() {
-    els.desk.classList.remove("detail-open");
-    const scrim = document.querySelector(".scrim");
-    if (scrim) { scrim.style.animation = "fadeOut 200ms ease both"; setTimeout(() => scrim.remove(), 200); }
-  },
+  closeDetail() { drawer.hide(); },
   toggleTheme(event) {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     const box = (event?.currentTarget instanceof Element ? event.currentTarget : $("#themeButton")).getBoundingClientRect();
-    inkDrop(() => applyTheme(next), {x: box.left + box.width / 2, y: box.top + box.height / 2});
+    inkVeil(() => applyTheme(next), {x: box.left + box.width / 2, y: box.top + box.height / 2, color: next === "dark" ? "#0f0e0c" : "#f1ece1"});
   },
   openSettings() { openSettings(els.settings, state, actions); },
   saveSettings(settings) {
@@ -510,11 +533,8 @@ const actions = {
   describe,
 };
 
-function openDrawer() {
-  els.desk.classList.add("detail-open");
-  if (!document.querySelector(".scrim")) document.body.append(h("div.scrim", {onClick: actions.closeDetail}));
-  els.detail.querySelector(".detail-close")?.focus({preventScroll: true});
-}
+const drawer = createDrawer({panel: els.detail, desk: els.desk, query: narrowQuery,
+  onClosed: () => els.gridBody.querySelector('tr[aria-selected="true"]')?.focus({preventScroll: true})});
 
 /* ---------------------------------------------------------------- keyboard */
 function moveSelection(delta) {
@@ -530,7 +550,7 @@ document.addEventListener("keydown", event => {
   const key = event.key;
   if ((event.ctrlKey || event.metaKey) && key.toLowerCase() === "k") { event.preventDefault(); actions.openPalette(); return; }
   if (isTyping(event) || document.querySelector("dialog[open]:not(.closing)") || event.ctrlKey || event.metaKey || event.altKey) return;
-  if (key === "Escape") { if (popoverOpen()) closePopover(); else actions.closeDetail(); return; }
+  if (key === "Escape") { if (popoverOpen()) closePopover(); else if (drawer.open) drawer.hide(); return; }
   if (popoverOpen()) return;
   const playbook = STRATEGIES.find(s => s.hotkey === key);
   if (playbook) { event.preventDefault(); actions.selectStrategy(playbook.id); return; }
@@ -540,7 +560,7 @@ document.addEventListener("keydown", event => {
     "[": () => actions.selectStrategy(STRATEGIES[(index - 1 + STRATEGIES.length) % STRATEGIES.length].id),
     "]": () => actions.selectStrategy(STRATEGIES[(index + 1) % STRATEGIES.length].id),
     ArrowDown: () => moveSelection(1), j: () => moveSelection(1), ArrowUp: () => moveSelection(-1), k: () => moveSelection(-1),
-    Enter: () => { if (state.selected && narrow()) openDrawer(); },
+    Enter: () => { if (state.selected && narrow()) drawer.show(); },
     f: actions.toggleFreeze, F: actions.toggleFreeze, e: actions.exportCsv, t: () => actions.toggleTheme(), s: actions.openSettings, a: actions.openAccount,
   };
   if (handlers[key]) { event.preventDefault(); handlers[key](); }
@@ -567,7 +587,7 @@ addEventListener("hashchange", () => {
   } else invalidate("head");
 });
 mobileQuery.addEventListener("change", () => { engine.post({type: "autoselect", value: !mobileQuery.matches}); invalidate("results", "counts", "instant"); });
-narrowQuery.addEventListener("change", () => { if (!narrow()) actions.closeDetail(); invalidate("counts", "instant"); });
+narrowQuery.addEventListener("change", () => invalidate("counts", "instant", "detail"));
 addEventListener("resize", () => invalidate("counts", "instant"));
 installTooltips();
 

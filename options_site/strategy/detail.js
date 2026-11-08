@@ -21,6 +21,7 @@ const N = ["01", "02", "03", "04", "05", "06", "07", "08"];
 
 let chart = null;
 let refs = null;          // {root, key, strategyId, tabs: Map, ink, body}
+let lastFreshAt = 0;
 
 const legLabel = leg => `${leg.action === "SELL" ? "卖出" : "买入"} ${leg.type === "PUT" ? "Put" : "Call"}`;
 
@@ -41,24 +42,29 @@ function kpi(label, value, sub, tone = "", tip = "") {
 
 function kpis(candidate, state) {
   const m = candidate.metrics, sells = candidate.legs.some(leg => leg.action === "SELL"), strategy = state.strategy;
-  const evSource = {rv30: "RV30", rv7: "RV7", atm: "平值 IV", custom: "自定义"}[m.evSigmaSource] ?? "";
   const cards = [
-    kpi(m.netCredit >= 0 ? "净权利金（收）" : "净支出（付）", F.signed(m.netCredit, 2), `毛额 ${F.num(Math.abs(m.grossPremium), 2)} · 费 ${F.num(m.entryFees, 3)}`, F.tone(m.netCredit),
-      "净权利金|卖出按买一、买入按卖一成交，已扣开仓手续费 min(0.024%×指数, 10%×权利金)"),
+    kpi(m.netCredit >= 0 ? "净权利金" : "净支出", F.signed(m.netCredit, 2), `毛额 ${F.num(Math.abs(m.grossPremium), 2)}`, F.tone(m.netCredit),
+      `净权利金|卖出按买一、买入按卖一成交，已扣开仓手续费 ${F.num(m.entryFees, 3)} USDT：min(0.024%×指数, 10%×权利金)`),
     kpi("最大亏损", m.maxLoss === Infinity ? "无上限" : F.num(m.maxLoss, 2), m.maxLoss === Infinity ? "裸卖 Call" : "持有到期 · USDT", m.maxLoss === Infinity ? "neg" : "", METRICS.maxLoss.help),
   ];
   const longVol = ["straddle", "strangle"].includes(candidate.structure);
   const hedge = candidate.legs.length === 1 && candidate.legs[0].action === "BUY" && candidate.legs[0].type === "PUT";
-  if (m.annualYield !== null && sells && m.netCredit > 0) cards.push(kpi("年化收益率", F.pct(m.annualYield, 2), `本期 ${F.pct(m.periodYield, 3)} · ${{cash: "现金担保", maxLoss: "最大亏损", notional: "名义"}[m.collateralBasis] ?? ""}口径`, "pos", METRICS.annualYield.help));
+  if (m.annualYield !== null && sells && m.netCredit > 0) cards.push(kpi("年化收益", F.pct(m.annualYield, 2), `本期 ${F.pct(m.periodYield, 3)}`, "pos",
+    `年化收益（${{cash: "现金担保", maxLoss: "最大亏损", notional: "名义"}[m.collateralBasis] ?? ""}口径）|` + METRICS.annualYield.help));
   else if (hedge && m.costAnnual !== null) cards.push(kpi("年化成本", F.pct(m.costAnnual, 2), strategy.overlay === "spot" ? "相对被保护名义" : "相对名义本金", "", METRICS.costAnnual.help));
   else if (longVol) cards.push(kpi("保本所需波动", F.pct(m.moveToBe, 2), "隐含 1σ " + F.pct(m.expectedMove, 2), "", METRICS.moveToBe.help));
   else cards.push(kpi("收益 / 风险", F.pct(m.returnOnRisk, 1), m.maxProfit === Infinity ? "最大盈利无上限" : "最大盈利 " + F.num(m.maxProfit, 2), "", METRICS.returnOnRisk.help));
-  cards.push(
-    kpi("盈利概率", F.pct((m.pop ?? NaN) * 100, 1), "隐含 σ " + F.pct((m.popSigma ?? NaN) * 100, 1), "", METRICS.pop.help),
-    kpi("模型期望", F.signed(m.ev, 2), `σ ${evSource} ${F.pct((m.evSigma ?? NaN) * 100, 1)}`, F.tone(m.ev), METRICS.ev.help),
-    kpi("尾部 ES99", F.num(state.detail?.tail?.es99, 2), "最差 1% 平均亏损", "neg", METRICS.es99.help),
-  );
   return h("div.kpis", {}, cards);
+}
+
+/** The model's view in one quiet line: probability, expectation, tail. */
+function modelLine(candidate, state) {
+  const m = candidate.metrics;
+  const evSource = {rv30: "RV30", rv7: "RV7", atm: "平值 IV", custom: "自定义"}[m.evSigmaSource] ?? "";
+  return h("p.model-line", {},
+    h("span", {"data-tip": "盈利概率|" + METRICS.pop.help}, "胜率 ", h("b", {text: F.pct((m.pop ?? NaN) * 100, 1)})),
+    h("span", {"data-tip": `模型期望（σ ${evSource} ${F.pct((m.evSigma ?? NaN) * 100, 1)}）|` + METRICS.ev.help}, "期望 ", h("b", {class: F.tone(m.ev), text: F.signed(m.ev, 2)})),
+    h("span", {"data-tip": "尾部 ES99|" + METRICS.es99.help}, "ES99 ", h("b", {class: "neg", text: F.num(state.detail?.tail?.es99, 2)})));
 }
 
 function checkList(checks) {
@@ -78,6 +84,11 @@ function rulesTab(candidate, state) {
   }
   const other = candidate.checks.filter(check => !known.has(check.id));
   if (other.length) sections.push(section(n++, "其他"), checkList(other));
+  sections.push(section(n++, "策略要点"),
+    h("dl.kv", {},
+      h("dt", {text: "方向"}), h("dd", {text: strategy.view.direction}),
+      h("dt", {text: "波动率"}), h("dd", {text: strategy.view.vol}),
+      h("dt", {text: "风险"}), h("dd", {class: /极高|高/.test(strategy.view.risk) ? "neg" : "", text: strategy.view.risk})));
   sections.push(section(n++, "对话出处"),
     ...strategy.citations.map(ref => {
       const quote = CITATIONS[ref];
@@ -205,41 +216,15 @@ function emptyDetail(root) {
   chart?.dispose();
   chart = null;
   fill(root, h("div.detail-empty", {},
-    h("span.ghost-glyph", {"aria-hidden": "true", text: "静观其变"}),
     h("div", {}, enso({loop: false}),
       h("p", {text: "选择一个候选，查看到期损益、规则检查、压力测试与资金规划。"}),
       h("p.muted", {}, h("kbd", {text: "↑"}), " ", h("kbd", {text: "↓"}), " 在候选间移动"))));
 }
 
-/**
- * fresh: a different candidate (or strategy) than the one on screen, which
- * earns the entrance motion; otherwise the panel refreshes in place.
- */
-export function renderDetail(root, state, actions) {
-  const candidate = state.selected, strategy = state.strategy;
-  if (!candidate) { if (refs !== null || !root.querySelector(".detail-empty")) emptyDetail(root); return; }
-  const fresh = !refs || refs.key !== candidate.key || refs.strategyId !== strategy.id;
-  const scroller = root.querySelector(".detail-scroll");
-  const previousScroll = !fresh && scroller ? scroller.scrollTop : 0;
-  const m = candidate.metrics, overlay = strategy.overlay === "spot";
+function buildHead(candidate, strategy, actions) {
   const holdToExpiry = candidate.legs.some(leg => leg.action === "SELL" && leg.type === "PUT") && ["crash-put", "bull-put", "income-put", "budget-put"].includes(strategy.id);
-  const watched = state.watch.has(candidate.key);
-
   const seal = h("span.seal-stamp." + (candidate.passed ? "ok" : "no"), {text: candidate.passed ? "入选" : "差一条"});
-  const warnCount = candidate.checks.filter(c => c.status === "warn").length;
-  const tabButtons = new Map(), ink = h("i.tab-ink", {"aria-hidden": "true"});
-  const tabs = h("div.tabs", {role: "tablist", "aria-label": "详情"}, TABS.map(([id, label]) => {
-    const button = h("button", {type: "button", role: "tab", id: "tab-" + id, "aria-controls": "tabPanel", "aria-selected": String(state.detailTab === id),
-      onClick: () => actions.setDetailTab(id)}, label, id === "rules" && warnCount ? h("span.badge.w", {text: String(warnCount)}) : null);
-    tabButtons.set(id, button);
-    return button;
-  }), ink);
-  const body = h("div.tab-body", {role: "tabpanel", id: "tabPanel", "aria-labelledby": "tab-" + state.detailTab}, tabBody(candidate, state, actions));
-
-  if (fresh) { chart?.dispose(); chart = null; }
-  if (state.detail && !chart) chart = createPayoffChart();
-  const kpiNode = kpis(candidate, state);
-  const head = h("div.detail-head", {},
+  const node = h("div.detail-head", {},
     h("button.icon-btn.detail-close", {type: "button", "aria-label": "关闭详情", onClick: actions.closeDetail}, icon("close")),
     h("h2", {}, title(candidate, strategy), seal),
     h("div.meta", {text: `到期 ${F.expiry(candidate.expiryMs, {year: true})} 16:00 · 剩余 ${F.dte(candidate.dte)} · 数量 ${F.num(candidate.qty, 2)} BTC` + (holdToExpiry ? " · 持有到期（你的选择 A，对话 #77）" : "")}),
@@ -248,6 +233,94 @@ export function renderDetail(root, state, actions) {
       h("div", {}, h("div.sym", {text: (leg.ratio !== 1 ? leg.ratio + "× " : "") + leg.symbol}),
         h("div.muted", {style: {"font-size": "11px"}, text: `价外 ${F.signedPct(leg.otmPct, 1)} · IV ${F.pct((leg.iv ?? NaN) * 100, 1)} · Δ ${F.num(leg.delta, 3)}`})),
       h("div.px", {}, F.num(leg.price, leg.price >= 100 ? 0 : 2), h("small", {text: leg.action === "SELL" ? "买一" : "卖一"}))))));
+  return {node, seal};
+}
+
+function buildFoot(candidate, state, actions) {
+  const watched = state.watch.has(candidate.key);
+  return h("div.detail-foot", {},
+    h("button.btn.primary", {type: "button", onClick: () => actions.copyTicket(candidate)}, icon("copy"), "复制订单参数"),
+    h("span.spacer"),
+    h("a.icon-btn", {href: "https://www.binance.com/zh-CN/eoptions/BTCUSDT", target: "_blank", rel: "noopener noreferrer", "aria-label": "在币安查看", "data-tip": "在币安查看|打开币安期权交易页面"}, icon("external")),
+    h("button.icon-btn", {type: "button", "aria-pressed": String(watched), "aria-label": watched ? "移出观察" : "加入观察", onClick: () => actions.toggleWatch(candidate.key),
+      "data-tip": watched ? "已观察|再次点击移出" : "观察|在列表中以 ★ 标记"}, icon("star")));
+}
+
+function rulesLabel(candidate) {
+  const warnCount = candidate.checks.filter(c => c.status === "warn").length;
+  return ["规则检查", warnCount ? h("span.badge.w", {text: String(warnCount)}) : null];
+}
+
+function drawChart(candidate, state, animate) {
+  if (!chart || !state.detail) return;
+  const overlay = state.strategy.overlay === "spot";
+  chart.update({...state.detail, strikes: [...new Set(candidate.legs.map(leg => leg.strike))], breakevens: candidate.metrics.breakevens},
+    {spot: state.market?.spot, combined: overlay && state.overlay}, {animate});
+}
+
+/**
+ * A different candidate (or strategy) earns the entrance: seal stamp,
+ * figures, then the brush. The same candidate refreshes in place over three
+ * short frames (figures → chart → tab), so a live update never costs a
+ * long frame or moves the scroll position.
+ */
+export function renderDetail(root, state, actions) {
+  const candidate = state.selected, strategy = state.strategy;
+  if (!candidate) { if (refs !== null || !root.querySelector(".detail-empty")) emptyDetail(root); return; }
+  const fresh = !refs || refs.key !== candidate.key || refs.strategyId !== strategy.id;
+  const overlay = strategy.overlay === "spot";
+
+  if (!fresh && refs.scroll?.isConnected && !state.redrawChart && refs.hasChart === Boolean(state.detail) && refs.overlay === state.overlay) {
+    const {node: head} = buildHead(candidate, strategy, actions);
+    refs.head.replaceWith(head); refs.head = head;
+    const figures = kpis(candidate, state);
+    refs.kpis.replaceWith(figures); refs.kpis = figures;
+    const model = modelLine(candidate, state);
+    refs.model.replaceWith(model); refs.model = model;
+    const foot = buildFoot(candidate, state, actions);
+    refs.foot.replaceWith(foot); refs.foot = foot;
+    fill(refs.tabs.get("rules"), ...rulesLabel(candidate));
+    const key = candidate.key;
+    // Deferred steps re-check that this candidate is still the one shown.
+    const current = () => refs?.key === key && state.selected?.key === key;
+    requestAnimationFrame(() => {
+      if (!current()) return;
+      drawChart(state.selected, state, false);
+      requestAnimationFrame(() => {
+        if (!current() || refs.body.contains(document.activeElement)) return;
+        const top = refs.scroll.scrollTop;
+        fill(refs.body, tabBody(state.selected, state, actions));
+        refs.scroll.scrollTop = top;
+      });
+    });
+    return;
+  }
+
+  const scroller = root.querySelector(".detail-scroll");
+  const previousScroll = !fresh && scroller ? scroller.scrollTop : 0;
+  const tabButtons = new Map(), ink = h("i.tab-ink", {"aria-hidden": "true"});
+  const tabs = h("div.tabs", {role: "tablist", "aria-label": "详情"}, TABS.map(([id, label]) => {
+    const button = h("button", {type: "button", role: "tab", id: "tab-" + id, "aria-controls": "tabPanel", "aria-selected": String(state.detailTab === id),
+      onClick: () => actions.setDetailTab(id)}, ...(id === "rules" ? rulesLabel(candidate) : [label]));
+    tabButtons.set(id, button);
+    return button;
+  }), ink);
+  // A new candidate's tab body joins two frames later (after the chart); a
+  // structural rebuild of the same candidate fills it at once.
+  const body = h("div.tab-body", {role: "tabpanel", id: "tabPanel", "aria-labelledby": "tab-" + state.detailTab}, fresh ? null : tabBody(candidate, state, actions));
+  if (fresh) {
+    const key = candidate.key;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (refs?.key !== key || refs.body !== body || state.selected?.key !== key) return;
+      fill(body, tabBody(state.selected, state, actions));
+      inkIn(body.children, {step: 16, max: 6, from: .2, duration: 220});
+    }));
+  }
+
+  if (fresh) { chart?.dispose(); chart = null; }
+  if (state.detail && !chart) chart = createPayoffChart();
+  const figures = kpis(candidate, state), model = modelLine(candidate, state);
+  const {node: head, seal} = buildHead(candidate, strategy, actions);
   const chartBox = state.detail ? h("div.chart-box", {},
     h("div.chart-toolbar", {},
       h("span.key", {}, h("i" + (overlay && state.overlay ? ".comb" : "")), overlay && state.overlay ? "现货 + 期权（到期）" : "到期"),
@@ -258,28 +331,28 @@ export function renderDetail(root, state, actions) {
         h("button", {type: "button", "aria-pressed": String(!state.overlay), onClick: () => actions.setOverlay(false)}, "仅期权"),
         h("button", {type: "button", "aria-pressed": String(state.overlay), onClick: () => actions.setOverlay(true)}, "含现货")) : null),
     chart.node) : h("div.chart-box", {}, h("div.loading", {style: {padding: "48px 0", height: "260px"}}, enso()));
-
-  fill(root,
-    h("div.detail-scroll", {}, head, kpiNode, chartBox, tabs, body),
-    h("div.detail-foot", {},
-      h("button.btn.primary", {type: "button", onClick: () => actions.copyTicket(candidate)}, icon("copy"), "复制订单参数"),
-      h("a.btn", {href: "https://www.binance.com/zh-CN/eoptions/BTCUSDT", target: "_blank", rel: "noopener noreferrer"}, icon("external"), "在币安查看"),
-      h("button.btn", {type: "button", "aria-pressed": String(watched), onClick: () => actions.toggleWatch(candidate.key)}, icon("star"), watched ? "已观察" : "观察")));
+  const scroll = h("div.detail-scroll", {}, head, figures, model, chartBox, tabs, body);
+  const foot = buildFoot(candidate, state, actions);
+  fill(root, scroll, foot);
 
   const drawnBefore = refs?.drawnKey === candidate.key;
-  refs = {root, key: candidate.key, strategyId: strategy.id, tabs: tabButtons, ink, body, drawnKey: state.detail ? candidate.key : refs?.drawnKey ?? null,
-    overlay: state.overlay};
+  refs = {root, key: candidate.key, strategyId: strategy.id, tabs: tabButtons, ink, body, scroll, head, kpis: figures, model, foot,
+    hasChart: Boolean(state.detail), drawnKey: state.detail ? candidate.key : refs?.drawnKey ?? null, overlay: state.overlay};
   if (state.detail) {
-    chart.update({...state.detail, strikes: [...new Set(candidate.legs.map(leg => leg.strike))], breakevens: m.breakevens},
-      {spot: state.market?.spot, combined: overlay && state.overlay}, {animate: !drawnBefore || state.redrawChart});
+    const quick = performance.now() - lastFreshAt < 1200;
+    const animate = !drawnBefore || state.redrawChart ? (quick ? 300 : 520) : false;
+    // A new candidate's chart draws in the next frame: the stamp and
+    // figures answer the click first, then the brush starts.
+    if (fresh) requestAnimationFrame(() => { if (refs?.key === candidate.key && state.selected?.key === candidate.key) drawChart(candidate, state, animate); });
+    else drawChart(candidate, state, animate);
   }
   placeInk(ink, tabButtons.get(state.detailTab), {axis: "x", instant: true});
-  const newScroller = root.querySelector(".detail-scroll");
-  if (newScroller) newScroller.scrollTop = previousScroll;
+  scroll.scrollTop = previousScroll;
   if (fresh) {
+    lastFreshAt = performance.now();
     stamp(seal);
-    inkIn([head.querySelector("h2"), head.querySelector(".meta"), ...head.querySelectorAll(".leg-row")], {step: 40});
-    inkIn(kpiNode.children, {step: 34, distance: 8});
+    inkIn([head.querySelector("h2"), head.querySelector(".meta"), ...head.querySelectorAll(".leg-row")], {step: 24, from: .2});
+    inkIn([...figures.children, model], {step: 26, distance: 4, from: .2});
   }
 }
 
@@ -289,8 +362,13 @@ export function switchTab(state, actions) {
   for (const [id, button] of refs.tabs) button.setAttribute("aria-selected", String(id === state.detailTab));
   placeInk(refs.ink, refs.tabs.get(state.detailTab), {axis: "x"});
   refs.body.setAttribute("aria-labelledby", "tab-" + state.detailTab);
-  fill(refs.body, tabBody(state.selected, state, actions));
-  inkIn(refs.body.children, {step: 26, max: 10});
+  // The ink moves in this frame; the (possibly large) body follows in the next.
+  const tab = state.detailTab, key = refs.key;
+  requestAnimationFrame(() => {
+    if (!refs || refs.key !== key || state.detailTab !== tab || state.selected?.key !== key) return;
+    fill(refs.body, tabBody(state.selected, state, actions));
+    inkIn(refs.body.children, {step: 16, max: 8, from: .2, duration: 220});
+  });
   return true;
 }
 

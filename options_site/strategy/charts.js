@@ -41,7 +41,7 @@ export function createPayoffChart({height = 236} = {}) {
     built.svg.addEventListener("pointermove", event => { pointer = {clientX: event.clientX, clientY: event.clientY}; });
     built.svg.addEventListener("pointerleave", () => { pointer = null; });
     fill(node, built.svg);
-    if (animate && !reduced()) brush(built.svg);
+    if (animate && !reduced()) brush(built.svg, typeof animate === "number" ? animate : 520);
     if (pointer) move(pointer);
   };
   const observer = new ResizeObserver(entries => {
@@ -65,16 +65,17 @@ export function createPayoffChart({height = 236} = {}) {
   };
 }
 
-function brush(svg) {
-  const strokes = [...svg.querySelectorAll(".expiry, .combined")];
-  for (const path of strokes) {
+// One stroke of the brush along the expiry line; everything else settles in
+// with it. Short on purpose: it plays on every new candidate.
+function brush(svg, duration) {
+  for (const path of svg.querySelectorAll(".expiry, .combined")) {
     const length = Math.ceil(path.getTotalLength());
     path.style.strokeDasharray = `${length} ${length}`;
-    path.animate([{strokeDashoffset: length}, {strokeDashoffset: 0}], {duration: 1150, easing: EASE_INK, fill: "both"})
+    path.animate([{strokeDashoffset: length}, {strokeDashoffset: 0}], {duration, easing: EASE_INK, fill: "both"})
       .finished.then(() => { path.style.strokeDasharray = ""; }, () => {});
   }
   const late = svg.querySelectorAll(".gain, .loss, .density, .be, .label, .now, .spot-only");
-  late.forEach(node => node.animate([{opacity: 0}, {opacity: 1}], {duration: 700, delay: 380, easing: EASE, fill: "backwards"}));
+  late.forEach(node => node.animate([{opacity: 0}, {opacity: 1}], {duration: Math.round(duration * .7), delay: Math.round(duration * .3), easing: EASE, fill: "backwards"}));
 }
 
 function build(detail, {spot, combined, width: W, height: H}) {
