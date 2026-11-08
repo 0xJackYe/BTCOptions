@@ -4,9 +4,10 @@ import {existsSync} from "node:fs";
 import {readFile, readdir} from "node:fs/promises";
 import {Readable} from "node:stream";
 import {pipeline} from "node:stream/promises";
+import {brotliCompressSync, constants as zlibConstants, createBrotliCompress, createGzip, gzipSync} from "node:zlib";
 import {handleAccount} from "./dist/_worker.js/worker-account.mjs";
 import {handleMarket as liveMarket} from "./dist/_worker.js/worker-market.mjs";
-import {createStrategyHandler, readCredentials} from "./dist/_worker.js/worker-strategy.mjs";
+import {CONDITIONAL_ROUTES, createStrategyHandler, readCredentials} from "./dist/_worker.js/worker-strategy.mjs";
 import {createReplayMarket} from "./replay.mjs";
 
 const CLOUD = process.env.BTCOPT_HOSTED === "1";
@@ -32,6 +33,7 @@ const LIMIT = 1024;
 const API = new Map([
   ["/api/health", "GET"], ["/api/market", "GET"], ["/api/focused-market", "GET"],
   ["/api/mark-watch", "GET"], ["/api/account/time", "GET"], ["/api/account", "POST"],
+  ["/api/strategy/market", "GET"], ["/api/strategy/klines", "GET"],
   ["/api/strategy/catalog", "GET"], ["/api/strategy/signals", "GET"], ["/api/strategy/screen", "GET"],
   ["/api/strategy/account", "GET"],
 ]);
@@ -66,7 +68,10 @@ const replayKlinesFile = process.env.BTCOPT_REPLAY_KLINES;
 const replayDaily = replayKlinesFile ? JSON.parse(await readFile(replayKlinesFile, "utf8")) : null;
 const handleMarket = replaySnapshot ? createReplayMarket(replaySnapshot) : liveMarket;
 const handleStrategy = createStrategyHandler({
+  // In-process snapshot object: no second JSON encode/parse per request.
+  latest: typeof handleMarket.latest === "function" ? () => handleMarket.latest(LOCAL) : null,
   getMarket: async () => (await handleMarket(new Request(LOCAL + "/api/market"))).json(),
+  serverClock: replaySnapshot ? handleMarket.clock : null,
   credentials: readCredentials(process.env),
   accessToken: typeof process.env.BTCOPT_ACCESS_TOKEN === "string" && process.env.BTCOPT_ACCESS_TOKEN.trim().length >= 24
     ? process.env.BTCOPT_ACCESS_TOKEN.trim() : null,
@@ -97,8 +102,30 @@ function allowOrigin(origin) {
 }
 
 function apiHeaders(origin) {
-  return allowOrigin(origin) ? {Vary: CORS_VARY, "Access-Control-Allow-Origin": origin} : {Vary: CORS_VARY};
+  return allowOrigin(origin) ? {Vary: CORS_VARY, "Access-Control-Allow-Origin": origin, "Access-Control-Expose-Headers": "ETag, X-Served-At"}
+    : {Vary: CORS_VARY};
 }
+
+/* Compression: brotli or gzip by Accept-Encoding. Bodies that carry a strong
+ * validator are compressed once per ETag and replayed from memory. */
+const COMPRESSIBLE = /^(application\/json|text\/|image\/svg\+xml)/i;
+const compressed = new Map(), compressedAssets = new Map();
+function negotiate(req) {
+  const offers = String(req.headers["accept-encoding"] ?? "").toLowerCase().split(",").map(part => part.trim().split(";"));
+  const accepts = name => offers.some(([token, ...params]) => token.trim() === name && !params.some(param => /^\s*q=0(?:\.0*)?\s*$/.test(param)));
+  return accepts("br") ? "br" : accepts("gzip") ? "gzip" : null;
+}
+function compressOnce(key, raw, encoding, cache = compressed) {
+  let body = cache.get(key);
+  if (!body) {
+    body = encoding === "br" ? brotliCompressSync(raw, {params: {[zlibConstants.BROTLI_PARAM_QUALITY]: 6, [zlibConstants.BROTLI_PARAM_SIZE_HINT]: raw.length}})
+      : gzipSync(raw, {level: 6});
+    cache.set(key, body);
+    if (cache === compressed && cache.size > 48) cache.delete(cache.keys().next().value);
+  }
+  return body;
+}
+const withVary = (headers, value) => ({...headers, Vary: headers.Vary ? headers.Vary + ", " + value : value});
 
 function noBody(req) {
   return !req.headers["transfer-encoding"] && (!req.headers["content-length"] || req.headers["content-length"] === "0");
@@ -108,7 +135,8 @@ function preflight(req, res, origin, method, headers, path) {
   const requested = req.headers["access-control-request-headers"];
   const fields = requested ? requested.toLowerCase().split(",").map(field => field.trim()) : [];
   const privateNetwork = req.headers["access-control-request-private-network"];
-  const allowedField = field => field === "content-type" ? method === "POST" : field === "authorization" && path === "/api/strategy/account";
+  const allowedField = field => field === "content-type" ? method === "POST"
+    : field === "authorization" ? path === "/api/strategy/account" : field === "if-none-match" && CONDITIONAL_ROUTES.has(path);
   if (!allowOrigin(origin) || !noBody(req) || req.headers["access-control-request-method"] !== method ||
       fields.some(field => !allowedField(field)) ||
       (privateNetwork !== undefined && privateNetwork !== "true")) {
@@ -116,21 +144,39 @@ function preflight(req, res, origin, method, headers, path) {
     return;
   }
   res.writeHead(204, {...SECURITY, ...headers, "Access-Control-Allow-Methods": method,
-    ...(fields.length ? {"Access-Control-Allow-Headers": method === "POST" ? "Content-Type" : "Authorization"} : {}),
+    ...(fields.length ? {"Access-Control-Allow-Headers": method === "POST" ? "Content-Type" : CONDITIONAL_ROUTES.has(path) ? "If-None-Match" : "Authorization"} : {}),
     // Older clients may still send a PNA preflight.
     ...(privateNetwork === "true" ? {"Access-Control-Allow-Private-Network": "true"} : {}),
     "Access-Control-Max-Age": "300"});
   res.end();
 }
 
-async function sendResponse(res, reply, headers) {
+async function sendResponse(res, reply, headers, req) {
   const outgoing = Object.fromEntries(reply.headers);
   // Use Node's normal response framing and enforce no-store even for public
   // data. Never pass a provider-supplied header or a credential to the browser.
   delete outgoing["content-length"];
-  res.writeHead(reply.status, {...outgoing, ...SECURITY, ...headers});
-  if (reply.body) await pipeline(Readable.fromWeb(reply.body), res);
-  else res.end();
+  const compressible = reply.body && reply.status === 200 && COMPRESSIBLE.test(outgoing["content-type"] ?? "");
+  const encoding = compressible ? negotiate(req) : null;
+  const finalHeaders = compressible ? withVary({...outgoing, ...SECURITY, ...headers}, "Accept-Encoding") : {...outgoing, ...SECURITY, ...headers};
+  if (!encoding) {
+    res.writeHead(reply.status, finalHeaders);
+    if (reply.body) await pipeline(Readable.fromWeb(reply.body), res);
+    else res.end();
+    return;
+  }
+  if (outgoing.etag) {
+    const key = outgoing.etag + "|" + encoding;
+    let body = compressed.get(key);
+    if (body) await reply.body.cancel().catch(() => {});
+    else body = compressOnce(key, Buffer.from(await reply.arrayBuffer()), encoding);
+    res.writeHead(reply.status, {...finalHeaders, "Content-Encoding": encoding, "Content-Length": body.length});
+    res.end(body);
+    return;
+  }
+  res.writeHead(reply.status, {...finalHeaders, "Content-Encoding": encoding});
+  const stream = encoding === "br" ? createBrotliCompress({params: {[zlibConstants.BROTLI_PARAM_QUALITY]: 4}}) : createGzip({level: 5});
+  await pipeline(Readable.fromWeb(reply.body), stream, res);
 }
 
 async function serveApi(req, res, url, origin) {
@@ -146,6 +192,13 @@ async function serveApi(req, res, url, origin) {
   const requestHeaders = new Headers();
   if (origin) requestHeaders.set("Origin", LOCAL);
   requestHeaders.set("Sec-Fetch-Site", "same-origin");
+  if (CONDITIONAL_ROUTES.has(url.pathname)) {
+    const validator = req.headers["if-none-match"];
+    if (typeof validator === "string") {
+      if (validator.length > 200 || !/^[\x21-\x7e ,]+$/.test(validator)) return fail(res, 400, "invalid_input", headers);
+      requestHeaders.set("If-None-Match", validator);
+    }
+  }
   if (url.pathname === "/api/strategy/account") {
     const authorization = req.headers.authorization;
     if (typeof authorization === "string") {
@@ -209,7 +262,7 @@ async function serveApi(req, res, url, origin) {
     finally {body.fill(0);}
   } else if (url.pathname.startsWith("/api/strategy/")) reply = await handleStrategy(request);
   else reply = await handleMarket(request);
-  if (reply) await sendResponse(res, reply, headers);
+  if (reply) await sendResponse(res, reply, headers, req);
   else fail(res, 404, "not_found", headers);
 }
 
@@ -238,8 +291,21 @@ async function serve(req, res) {
   const asset = url.pathname === "/" ? "index.html" : url.pathname === "/strategy" ? "strategy.html" : url.pathname.slice(1);
   if (!ASSETS.has(asset)) return fail(res, 404, "not_found");
   const data = await readFile(new URL(asset, DIST));
-  res.writeHead(200, {...SECURITY, "Content-Security-Policy": CSP, "Content-Type": TYPES[asset.split(".").at(-1)],
-    "Content-Length": data.length});
+  const type = TYPES[asset.split(".").at(-1)];
+  const encoding = COMPRESSIBLE.test(type) ? negotiate(req) : null;
+  // Strategy Desk URLs carry a content version (?v=…) from build.mjs, so
+  // they never change: cache them for a year. Everything else revalidates.
+  const caching = {"Cache-Control": /^\?v=[0-9a-f]{10}$/.test(url.search) && /^(strategy|lib)\//.test(asset)
+    ? "public, max-age=31536000, immutable" : "no-cache"};
+  if (encoding) {
+    const body = compressOnce(asset + "|" + data.length + "|" + encoding, data, encoding, compressedAssets);
+    res.writeHead(200, {...SECURITY, "Content-Security-Policy": CSP, "Content-Type": type, "Content-Encoding": encoding,
+      "Content-Length": body.length, Vary: "Accept-Encoding", ...caching});
+    res.end(req.method === "HEAD" ? undefined : body);
+    return;
+  }
+  res.writeHead(200, {...SECURITY, "Content-Security-Policy": CSP, "Content-Type": type,
+    "Content-Length": data.length, ...caching});
   res.end(req.method === "HEAD" ? undefined : data);
 }
 
@@ -259,4 +325,16 @@ server.on("error", () => {
   process.stderr.write("无法启动本地期权看板，请检查端口 " + PORT + "。\n");
   process.exitCode = 1;
 });
+// Render sends SIGTERM before replacing an instance: finish in-flight
+// responses, drop idle keep-alive sockets, then exit.
+let stopping = false;
+const shutdown = () => {
+  if (stopping) return;
+  stopping = true;
+  server.close(() => process.exit(0));
+  server.closeIdleConnections();
+  setTimeout(() => { server.closeAllConnections(); process.exit(0); }, 2500).unref();
+};
+process.once("SIGTERM", shutdown);
+process.once("SIGINT", shutdown);
 server.listen(PORT, HOST, () => process.stdout.write("BTC 期权看板 " + LOCAL + (replaySnapshot ? "（回放模式）" : "") + "\n策略看板 " + LOCAL + "/strategy.html\n"));

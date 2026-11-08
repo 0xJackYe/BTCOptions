@@ -142,10 +142,19 @@ try {
     await page.keyboard.press("Escape");
   });
 
-  await step("主题切换", async () => {
+  await step("主题切换（墨滴过渡）并与期权链共享偏好", async () => {
     await page.keyboard.press("t");
-    assert.equal(await page.getAttribute("html", "data-theme"), "light");
+    await page.waitForFunction(() => document.documentElement.dataset.theme === "light");
+    assert.equal(await page.evaluate(() => localStorage.getItem("btc-options-anthropic-light-theme")), "true");
+    await page.waitForTimeout(800);
     await page.keyboard.press("t");
+    await page.waitForFunction(() => document.documentElement.dataset.theme === "dark");
+  });
+
+  await step("行情在后台线程计算，界面只负责渲染", async () => {
+    await page.waitForFunction(() => document.querySelector("#statusbar")?.textContent.includes("后台线程"));
+    const workers = page.workers().map(worker => worker.url());
+    assert.ok(workers.some(url => /\/strategy\/engine\.worker\.js\?v=[0-9a-f]{10}$/.test(url)), "engine worker: " + workers.join(", "));
   });
 
   await step("手机布局：卡片列表与详情抽屉", async () => {

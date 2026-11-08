@@ -224,3 +224,73 @@ test("relay forwards strategy routes with strict validation and a bearer only fo
   const bad = await relay(new Request(site + "/api/strategy/catalog"), env, async () => jsonResponse({nope: true}));
   assert.equal(bad.status, 502);
 });
+
+import {decodeFrame, prepareMarket} from "../lib/market.mjs";
+import {etagMatches} from "../worker-strategy.mjs";
+
+test("compact market frame: content ETag, X-Served-At and 304 revalidation", async () => {
+  const market = createReplayMarket(fixture, {now: () => capturedLocal + 5_000});
+  const handler = createStrategyHandler({latest: market.latest, serverClock: market.clock, fetcher: spotFetcher, now: () => capturedLocal + 5_000});
+  const first = await get(handler, "/api/strategy/market");
+  assert.equal(first.status, 200);
+  const etag = first.headers.get("ETag");
+  assert.match(etag, /^"f[0-9a-z]{14}"$/);
+  assert.equal(first.headers.get("X-Served-At"), String(capturedLocal), "replay serves with its frozen clock");
+  const frame = await first.json();
+  const decoded = prepareMarket(decodeFrame(frame, {receivedAt: Date.now(), servedAt: capturedLocal}), Date.now());
+  assert.equal(decoded.contracts.length, 694);
+  const again = await get(handler, "/api/strategy/market", {"If-None-Match": etag});
+  assert.equal(again.status, 304);
+  assert.equal(again.headers.get("ETag"), etag);
+  assert.equal(await again.text(), "");
+  assert.equal((await get(handler, "/api/strategy/market", {"If-None-Match": '"stale", W/' + etag})).status, 304);
+  assert.equal((await get(handler, "/api/strategy/market", {"If-None-Match": '"other"'})).status, 200);
+  assert.equal((await get(handler, "/api/strategy/market?x=1")).status, 400);
+});
+
+test("klines endpoint returns bars with a stable validator", async () => {
+  const {handler, calls} = setup({fetcher: spotFetcher});
+  const first = await get(handler, "/api/strategy/klines");
+  const body = await first.json();
+  assert.equal(body.hourly.t.length, 240);
+  assert.equal(body.daily.c.length, 120);
+  const etag = first.headers.get("ETag");
+  assert.match(etag, /^"k/);
+  const cached = calls.length;
+  const again = await get(handler, "/api/strategy/klines", {"If-None-Match": etag});
+  assert.equal(again.status, 304);
+  assert.equal(calls.length, cached, "served from the kline cache");
+});
+
+test("If-None-Match parsing follows RFC 9110 list semantics", () => {
+  assert.equal(etagMatches('"a"', '"a"'), true);
+  assert.equal(etagMatches('W/"a"', '"a"'), true);
+  assert.equal(etagMatches('"x", "a"', '"a"'), true);
+  assert.equal(etagMatches("*", '"a"'), true);
+  assert.equal(etagMatches('"b"', '"a"'), false);
+  assert.equal(etagMatches(null, '"a"'), false);
+  assert.equal(etagMatches("x".repeat(600), '"a"'), false);
+});
+
+test("relay forwards validators only on revalidated routes and passes 304 through", async () => {
+  const site = "https://btcopt.pages.dev", env = {BINANCE_RELAY_URL: "https://btcoptions.onrender.com"};
+  const seen = [];
+  const frameBody = {v: 1, builtAt: 1, expiries: [], rows: {s: []}};
+  const backend = async (url, init) => {
+    seen.push({path: new URL(url).pathname, validator: init.headers.get("If-None-Match")});
+    if (init.headers.get("If-None-Match") === '"f1"') return new Response(null, {status: 304, headers: {ETag: '"f1"', "X-Served-At": "123"}});
+    return jsonResponse(frameBody, 200, {ETag: '"f1"', "X-Served-At": "123"});
+  };
+  const fresh = await relay(new Request(site + "/api/strategy/market"), env, backend);
+  assert.equal(fresh.status, 200);
+  assert.equal(fresh.headers.get("ETag"), '"f1"');
+  assert.equal(fresh.headers.get("X-Served-At"), "123");
+  const revalidated = await relay(new Request(site + "/api/strategy/market", {headers: {"If-None-Match": '"f1"'}}), env, backend);
+  assert.equal(revalidated.status, 304);
+  assert.equal(revalidated.headers.get("ETag"), '"f1"');
+  await relay(new Request(site + "/api/strategy/catalog", {headers: {"If-None-Match": '"f1"'}}), env,
+    async (url, init) => { seen.push({path: "/api/strategy/catalog", validator: init.headers.get("If-None-Match")}); return jsonResponse({strategies: []}); });
+  assert.equal(seen.at(-1).validator, null, "validators are not forwarded on other routes");
+  assert.equal((await relay(new Request(site + "/api/strategy/market", {headers: {"If-None-Match": '"\u0001"'}}), env, backend)).status, 400);
+  assert.equal((await relay(new Request(site + "/api/strategy/market"), env, async () => jsonResponse({v: 2}))).status, 502);
+});

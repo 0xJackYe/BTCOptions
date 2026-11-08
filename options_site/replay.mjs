@@ -36,7 +36,7 @@ export function createReplayMarket(snapshot, {now = Date.now} = {}) {
     };
   }
 
-  return async function handleReplay(request) {
+  async function handleReplay(request) {
     const url = new URL(request.url);
     if (!["/api/market", "/api/focused-market", "/api/mark-watch"].includes(url.pathname)) return null;
     if (request.method !== "GET") return new Response(null, {status: 405, headers: {Allow: "GET", "Cache-Control": "no-store"}});
@@ -50,5 +50,13 @@ export function createReplayMarket(snapshot, {now = Date.now} = {}) {
     const wanted = new Set(symbols);
     const options = body.options.filter(row => wanted.has(row.symbol));
     return new Response(JSON.stringify({...body, options, selected_contracts: options.length}), {headers});
-  };
+  }
+
+  // The replay server's clock is frozen at the capture moment: the Strategy
+  // Desk receives a byte-stable frame (so revalidation answers 304) whose
+  // quote ages and exchange clock stay exactly as recorded.
+  const captured = frame(capturedLocal);
+  handleReplay.latest = async () => ({snapshot: captured, builtAt: capturedLocal});
+  handleReplay.clock = () => capturedLocal;
+  return handleReplay;
 }

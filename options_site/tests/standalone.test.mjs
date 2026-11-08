@@ -15,10 +15,12 @@ test("standalone build includes the original chain, portfolio, risk and account 
   assert.match(markup, /portfolio-ui\.js/);
   assert.match(markup, /href="\.\/account.html"/);
   assert.doesNotMatch(markup, /terminal-embed|DeepSeek|apiKeyForm|option-ai-ui\.js/);
-  for (const [, name] of markup.matchAll(/(?:href|src)="\.\/([^"]+)"/g)) await readFile(new URL(name, dist));
+  // Extensionless page links are served as their .html file (Pages and the local bridge).
+  const asset = name => name === "strategy" ? "strategy.html" : name;
+  for (const [, name] of markup.matchAll(/(?:href|src)="\.\/([^"]+)"/g)) await readFile(new URL(asset(name), dist));
   assert.deepEqual((await readdir(new URL("_worker.js/", dist))).sort(),
     ["index.js", "lib", "worker-account.mjs", "worker-market.mjs", "worker-relay.mjs", "worker-strategy.mjs"]);
-  assert.match(markup, /href="\.\/strategy\.html"/);
+  assert.match(markup, /href="\.\/strategy"/, "links the desk without a .html redirect");
   assert.match(JSON.parse(await readFile(new URL("version.json", dist), "utf8")).commit, /^[a-f\d]{40}$/);
 });
 
@@ -69,23 +71,35 @@ test("strategy desk ships every module its import graph needs, with no inline sc
   const page = await readFile(new URL("strategy.html", dist), "utf8");
   assert.doesNotMatch(page, /<script(?![^>]*\bsrc=)[^>]*>/, "no inline scripts (CSP script-src 'self')");
   assert.doesNotMatch(page, /\son[a-z]+=/i, "no inline event handlers");
-  for (const [, name] of page.matchAll(/(?:href|src)="\.\/([^"#]+)"/g)) await readFile(new URL(name, dist));
-  const seen = new Set();
-  const walk = async url => {
-    if (seen.has(url.href)) return;
-    seen.add(url.href);
-    const source = await readFile(url, "utf8");
-    for (const [, spec] of source.matchAll(/^\s*import\s[^"']*["'](\.{1,2}\/[^"']+)["']/gm)) await walk(new URL(spec, url));
+  const versions = new Set();
+  for (const [, name, version] of page.matchAll(/(?:href|src)="\.\/([^"#?]+)(\?v=[0-9a-f]{10})?"/g)) {
+    await readFile(new URL(name === "strategy" ? "strategy.html" : name, dist));
+    if (name.startsWith("strategy/")) versions.add(version);
+  }
+  assert.equal(versions.size, 1, "every desk asset carries the same content version");
+  assert.match([...versions][0] ?? "", /^\?v=[0-9a-f]{10}$/, "desk assets are versioned");
+  const walk = async (entry, seen = new Set()) => {
+    const visit = async url => {
+      if (seen.has(url.href)) return;
+      seen.add(url.href);
+      const source = await readFile(url, "utf8");
+      // Static imports and re-exports ("from" / bare "import"), never import(…).
+      for (const [, spec] of source.matchAll(/\b(?:from|import)\s*["'](\.{1,2}\/[^"'?]+)(\?v=[0-9a-f]{10})?["']/g)) await visit(new URL(spec, url));
+    };
+    await visit(entry);
+    return seen;
   };
-  await walk(new URL("strategy/app.js", dist));
-  assert.ok([...seen].some(href => href.endsWith("/lib/screener.mjs")) && seen.size >= 12, "app imports the shared library");
-  const workerSeen = new Set();
-  const walkWorker = async url => {
-    if (workerSeen.has(url.href)) return;
-    workerSeen.add(url.href);
-    const source = await readFile(url, "utf8");
-    for (const [, spec] of source.matchAll(/^\s*import\s[^"']*["'](\.{1,2}\/[^"']+)["']/gm)) await walkWorker(new URL(spec, url));
-  };
-  await walkWorker(new URL("_worker.js/index.js", dist));
+  const ui = await walk(new URL("strategy/app.js", dist), await walk(new URL("strategy/boot.js", dist)));
+  assert.ok([...ui].some(href => href.endsWith("/lib/strategies.mjs")) && ui.size >= 12, "the interface imports the strategy catalog");
+  assert.ok(![...ui].some(href => /screener\.mjs|engine\.js|engine-host\.js/.test(href)), "the interface thread never loads the screening engine");
+  const preloads = [...page.matchAll(/rel="modulepreload" href="\.\/([^"?]+)\?v=/g)].map(([, path]) => new URL(path, dist).href);
+  assert.ok(preloads.length >= 10 && preloads.every(href => ui.has(href)), "modulepreload covers only the interface graph");
+  const engine = await walk(new URL("strategy/engine.worker.js", dist));
+  assert.ok([...engine].some(href => href.endsWith("/lib/screener.mjs")), "the engine worker resolves the screening library");
+  const workerSeen = await walk(new URL("_worker.js/index.js", dist));
   assert.ok([...workerSeen].some(href => href.endsWith("_worker.js/lib/screener.mjs")), "Worker bundle resolves the shared library");
+  const headers = await readFile(new URL("_headers", dist), "utf8");
+  for (const route of ["/strategy/*", "/lib/*"]) {
+    assert.match(headers, new RegExp(route.replace(/[/*]/g, "\\$&") + "\\n\\s+Cache-Control: public, max-age=31536000, immutable"), route + " is immutable");
+  }
 });

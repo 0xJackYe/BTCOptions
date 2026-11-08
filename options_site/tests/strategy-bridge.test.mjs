@@ -4,6 +4,8 @@ import {once} from "node:events";
 import {createServer} from "node:net";
 import test, {after, before} from "node:test";
 import {fileURLToPath} from "node:url";
+import {request as httpRequest} from "node:http";
+import {brotliDecompressSync, gunzipSync} from "node:zlib";
 
 const bridgeFile = fileURLToPath(new URL("../local_bridge.mjs", import.meta.url));
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -96,4 +98,50 @@ test("replay mode refuses to start on a public host", async () => {
   const [code] = await once(child, "exit");
   assert.notEqual(code, 0);
   assert.match(stderr, /Replay mode is local-only/);
+});
+
+function raw(path, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const req = httpRequest(local + path, {headers}, res => {
+      const chunks = [];
+      res.on("data", chunk => chunks.push(chunk));
+      res.on("end", () => resolve({status: res.statusCode, headers: res.headers, body: Buffer.concat(chunks)}));
+    });
+    req.on("error", reject);
+    req.end();
+  });
+}
+
+test("responses are compressed by Accept-Encoding and market frames revalidate with 304", async () => {
+  const plain = await raw("/api/strategy/market");
+  assert.equal(plain.status, 200);
+  assert.equal(plain.headers["content-encoding"], undefined);
+  const br = await raw("/api/strategy/market", {"Accept-Encoding": "gzip, br"});
+  assert.equal(br.headers["content-encoding"], "br");
+  assert.match(br.headers.vary, /Accept-Encoding/);
+  assert.deepEqual(JSON.parse(brotliDecompressSync(br.body)), JSON.parse(plain.body));
+  assert.ok(br.body.length * 3 < plain.body.length, "brotli at least 3× smaller");
+  const repeat = await raw("/api/strategy/market", {"Accept-Encoding": "br"});
+  assert.deepEqual(repeat.body, br.body, "compressed once per validator and replayed");
+  const noBrotli = await raw("/strategy/app.js", {"Accept-Encoding": "gzip, br;q=0"});
+  assert.equal(noBrotli.headers["content-encoding"], "gzip");
+  assert.match(gunzipSync(noBrotli.body).toString(), /import/);
+  const revalidated = await raw("/api/strategy/market", {"If-None-Match": plain.headers.etag, "Accept-Encoding": "br"});
+  assert.equal(revalidated.status, 304);
+  assert.equal(revalidated.body.length, 0);
+  assert.equal(revalidated.headers.etag, plain.headers.etag);
+  const klines = await raw("/api/strategy/klines");
+  assert.equal((await raw("/api/strategy/klines", {"If-None-Match": klines.headers.etag})).status, 304);
+});
+
+test("CORS: validators are allowed only on revalidated routes and timing headers are exposed", async () => {
+  const preflight = (path, header) => fetch(local + path, {method: "OPTIONS",
+    headers: {Origin: HOSTED, "Access-Control-Request-Method": "GET", "Access-Control-Request-Headers": header}});
+  const allowed = await preflight("/api/strategy/market", "if-none-match");
+  assert.equal(allowed.status, 204);
+  assert.equal(allowed.headers.get("access-control-allow-headers"), "If-None-Match");
+  assert.equal((await preflight("/api/strategy/catalog", "if-none-match")).status, 403);
+  const exposed = await fetch(local + "/api/strategy/market", {headers: {Origin: HOSTED}});
+  assert.match(exposed.headers.get("access-control-expose-headers"), /ETag, X-Served-At/);
+  await exposed.arrayBuffer();
 });

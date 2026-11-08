@@ -220,3 +220,11 @@ test("does not invent values or new observation times during a provider outage",
   assert.equal(data.options[1].mark_iv, null);
   assert.equal(data.data_health.mark.rest_refresh_failed, true);
 });
+
+test("concurrent readers share one upstream refresh and latest() reuses the frame", async () => {
+  const market = fixture();
+  const [a, b] = await Promise.all([market.get(), market.get()]);
+  assert.equal((await a.json()).status, (await b.json()).status);
+  const reads = market.calls.filter(([key]) => key === "exchangeInfo").length;
+  assert.equal(reads, 1, "one catalog read for two concurrent requests");
+});

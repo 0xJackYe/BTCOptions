@@ -10,7 +10,7 @@ const backend = {BINANCE_RELAY_URL: "https://btcoptions.onrender.com"};
 let strategyHandler = null;
 const strategy = request => {
   strategyHandler ??= createStrategyHandler({
-    getMarket: async () => (await handleMarket(new Request(new URL("/api/market", request.url)))).json(),
+    latest: () => handleMarket.latest(new URL(request.url).origin),
   });
   return strategyHandler(request);
 };

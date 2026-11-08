@@ -28,6 +28,7 @@ export function hideTip() {
 
 export function installTooltips() {
   document.addEventListener("pointerover", event => {
+    if (event.pointerType === "touch") return;     // a tap is not a hover
     const target = event.target instanceof Element ? event.target.closest("[data-tip]") : null;
     if (target === tipFor) return;
     clearTimeout(tipTimer);
@@ -46,16 +47,36 @@ const ICONS = {ok: "✓", err: "!", warn: "!", info: "i"};
 export function toast(kind, title, body = "", {timeout = 4200} = {}) {
   const host = document.getElementById("toasts");
   if (!host) return;
-  const close = () => { node.classList.add("out"); setTimeout(() => node.remove(), 200); };
+  let timer = 0, remaining = timeout, startedAt = 0, closed = false;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    clearTimeout(timer);
+    node.classList.add("out");
+    node.addEventListener("animationend", () => node.remove(), {once: true});
+    setTimeout(() => node.remove(), 400);
+  };
+  const life = timeout ? h("i.life", {style: {"animation-duration": timeout + "ms"}}) : null;
   const node = h("div.toast." + kind, {role: kind === "err" ? "alert" : "status"},
     h("span.ic", {text: ICONS[kind] ?? "i"}),
     h("div", {}, h("strong", {text: title}), body ? h("p", {text: body}) : null),
-    h("button", {type: "button", "aria-label": "关闭提示", onClick: close}, icon("close")));
-  node.querySelector("svg").setAttribute("width", "12");
-  node.querySelector("svg").setAttribute("height", "12");
+    h("button", {type: "button", "aria-label": "关闭提示", onClick: close}, icon("close")), life);
+  const run = () => { startedAt = Date.now(); timer = setTimeout(close, remaining); };
+  // Hovering holds the toast (and its life line) so it can be read in full.
+  node.addEventListener("pointerenter", () => {
+    if (!timeout || closed) return;
+    clearTimeout(timer);
+    remaining = Math.max(600, remaining - (Date.now() - startedAt));
+    life.style.animationPlayState = "paused";
+  });
+  node.addEventListener("pointerleave", () => {
+    if (!timeout || closed) return;
+    life.style.animationPlayState = "running";
+    run();
+  });
   host.append(node);
   while (host.children.length > 4) host.firstElementChild.remove();
-  if (timeout) setTimeout(close, timeout);
+  if (timeout) run();
 }
 
 /* ---------------------------------------------------------------- popovers */
@@ -102,16 +123,42 @@ export function openPopover(anchor, content, {onClose, label = "编辑"} = {}) {
 export const popoverOpen = () => Boolean(activePopover);
 
 /* ----------------------------------------------------------------- dialogs */
+/** Closes with an exit animation; Esc and backdrop clicks go through here too. */
+const closing = new WeakMap();
+export function closeDialog(dialog) {
+  if (!dialog?.open || closing.has(dialog)) return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { dialog.close(); return; }
+  let timer = 0;
+  const finish = event => {
+    if (event && event.target !== dialog) return;   // a descendant's animation ended
+    if (closing.get(dialog) !== finish) return;
+    closing.delete(dialog);
+    clearTimeout(timer);
+    dialog.removeEventListener("animationend", finish);
+    dialog.classList.remove("closing");
+    if (dialog.open) dialog.close();
+  };
+  closing.set(dialog, finish);
+  dialog.classList.add("closing");
+  dialog.addEventListener("animationend", finish);
+  timer = setTimeout(finish, 260);
+}
+
 export function openDialog(dialog) {
+  if (!dialog.dataset.wired) {
+    dialog.dataset.wired = "1";
+    dialog.addEventListener("cancel", event => { event.preventDefault(); closeDialog(dialog); });
+    dialog.addEventListener("click", event => { if (event.target === dialog) closeDialog(dialog); });
+  }
+  closing.get(dialog)?.();              // reopening mid-exit: finish the exit first
   if (!dialog.open) dialog.showModal();
-  dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); }, {once: true});
 }
 
 export function dialogFrame(title, subtitle, body, footer = null) {
   const id = title.replace(/\s+/g, "") + "Title";
   return [
     h("div.dialog-head", {}, h("div", {}, h("h2", {id, text: title}), subtitle ? h("p", {text: subtitle}) : null),
-      h("button.icon-btn", {type: "button", "aria-label": "关闭", onClick: event => event.currentTarget.closest("dialog").close()}, icon("close"))),
+      h("button.icon-btn", {type: "button", "aria-label": "关闭", onClick: event => closeDialog(event.currentTarget.closest("dialog"))}, icon("close"))),
     h("div.dialog-body", {}, body),
     footer ? h("div.dialog-foot", {}, footer) : null,
   ];

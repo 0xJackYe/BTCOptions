@@ -1,6 +1,6 @@
 # BTCOptions
 
-[打开 BTC 期权独立看板](https://btcopt.pages.dev/) · [策略看板](https://btcopt.pages.dev/strategy.html)（[使用说明](策略看板使用说明.md)） · [部署、测试与只读账户说明](options_site/README.md)
+[打开 BTC 期权独立看板](https://btcopt.pages.dev/) · [策略看板](https://btcopt.pages.dev/strategy)（[使用说明](策略看板使用说明.md)） · [部署、测试与只读账户说明](options_site/README.md)
 
 ## 本地比特币终端
 

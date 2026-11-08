@@ -6,3 +6,19 @@
 .site-screener .risk-table-scroll { max-height: 42vh; overflow: auto; }
 .site-bridge-banner:not([hidden]) { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem; }
 .site-bridge-banner a { color: inherit; }
+
+/* 和 palette shared with the Strategy Desk: washi paper and sumi ink by day,
+ * urushi lacquer and gold by night. Only colour tokens change; the mirrored
+ * option-chain layout stays exactly as it was. */
+:root {
+  --bg: #f1ece1; --panel: #f8f5ee; --raised: #efe9dd; --text: #1c1a17; --muted: #7a7366; --line: #e2dacb;
+  --accent: #1c1a17; --accent-text: #f8f5ee; --green: #2c6a4e; --red: #a43a33; --itm: rgba(44, 106, 78, .05);
+  --hover: #ebe4d6; --shadow: 0 16px 70px #3c2d1418; --amber-bg: #f0e4cc; --selected: #e9dfcb; --chart-put: #bf452b;
+}
+body.dark {
+  --bg: #0f0e0c; --panel: #151310; --raised: #1b1915; --text: #ede6d6; --muted: #857b6a; --line: #2d2922;
+  --accent: #d3af68; --accent-text: #17130b; --green: #7bb895; --red: #de6e60; --itm: rgba(123, 184, 149, .05);
+  --hover: #1f1c17; --shadow: 0 16px 70px #0008; --amber-bg: #2a2418; --selected: #2a251c; --chart-put: #d55a37;
+}
+.topbar .site-strategy-link { color: #bf452b; font-weight: 600; }
+body.dark .topbar .site-strategy-link { color: #d55a37; }

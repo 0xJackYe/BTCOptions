@@ -1,7 +1,8 @@
-// Hand-built SVG charts: no libraries, crisp at any DPI, CSP-safe.
+// Hand-built SVG: payoff chart (brush-drawn, crosshair), ensō, sparklines and
+// strategy glyphs. No libraries, crisp at any DPI, CSP-safe.
 import {svgEl, h, fill} from "./dom.js";
-import {compact, signed, num, price, pct} from "./format.js";
-import {normCdf} from "../lib/quant.mjs";
+import {compact, signed, price, pct} from "./format.js";
+import {reduced, EASE_INK, EASE} from "./motion.js";
 
 function niceStep(span, count) {
   const raw = span / Math.max(1, count), mag = 10 ** Math.floor(Math.log10(raw)), norm = raw / mag;
@@ -13,25 +14,67 @@ function ticks(min, max, count) {
   return out;
 }
 
+// Standard normal CDF (Abramowitz–Stegun 7.1.26 via erf), enough for a tooltip.
+function normCdf(z) {
+  const t = 1 / (1 + .3275911 * Math.abs(z) / Math.SQRT2);
+  const erf = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - .284496736) * t + .254829592) * t * Math.exp(-z * z / 2);
+  return z >= 0 ? .5 * (1 + erf) : .5 * (1 - erf);
+}
+
 let uid = 0;
 let tipNode = null;
 const hideChartTip = () => { tipNode?.remove(); tipNode = null; };
 
 /**
- * Payoff chart. detail: analyzeCandidate() output. options.combined shows the
- * spot + option line for overlay strategies.
+ * Payoff chart controller. update(detail, {spot, combined}, {animate}) redraws;
+ * animate=true draws the expiry line like a brush stroke (new candidate),
+ * otherwise the chart refreshes silently and keeps the crosshair in place.
  */
-export function payoffChart(detail, {spot, combined = false, height = 230} = {}) {
-  const wrap = h("div.chart-host");
-  const draw = () => {
+export function createPayoffChart({height = 236} = {}) {
+  const node = h("div.chart-host");
+  let current = null, width = 0, pointer = null, move = null, pendingAnimate = false;
+  const draw = animate => {
+    if (!current || width < 10) { pendingAnimate ||= animate; return; }
     hideChartTip();
-    const width = Math.max(280, Math.round(wrap.clientWidth || 400));
-    fill(wrap, build(detail, {spot, combined, width, height}));
+    const built = build(current.detail, {...current.options, width: Math.max(280, width), height});
+    move = built.move;
+    built.svg.addEventListener("pointermove", event => { pointer = {clientX: event.clientX, clientY: event.clientY}; });
+    built.svg.addEventListener("pointerleave", () => { pointer = null; });
+    fill(node, built.svg);
+    if (animate && !reduced()) brush(built.svg);
+    if (pointer) move(pointer);
   };
-  const observer = new ResizeObserver(() => draw());
-  queueMicrotask(() => { draw(); observer.observe(wrap); });
-  wrap.dispose = () => { observer.disconnect(); hideChartTip(); };
-  return wrap;
+  const observer = new ResizeObserver(entries => {
+    const next = Math.round(entries[0].contentRect.width);
+    if (next > 0 && Math.abs(next - width) > 1) {
+      width = next;
+      const animate = pendingAnimate;
+      pendingAnimate = false;
+      draw(animate);
+    }
+  });
+  observer.observe(node);
+  return {
+    node,
+    update(detail, options, {animate = false} = {}) {
+      current = {detail, options};
+      if (!width) width = Math.round(node.clientWidth);
+      draw(animate);
+    },
+    dispose() { observer.disconnect(); hideChartTip(); },
+  };
+}
+
+function brush(svg) {
+  const strokes = [...svg.querySelectorAll(".expiry, .combined")];
+  for (const path of strokes) {
+    const length = Math.ceil(path.getTotalLength());
+    path.style.strokeDasharray = `${length} ${length}`;
+    path.animate([{strokeDashoffset: length}, {strokeDashoffset: 0}], {duration: 1150, easing: EASE_INK, fill: "both"})
+      .finished.then(() => { path.style.strokeDasharray = ""; }, () => {});
+  }
+  const late = svg.querySelectorAll(".gain, .loss, .density, .be, .label, .now, .spot-only");
+  late.forEach(node => node.animate([{opacity: 0}, {opacity: 1}], {duration: 700, delay: 380, easing: EASE, fill: "backwards"}));
 }
 
 function build(detail, {spot, combined, width: W, height: H}) {
@@ -57,7 +100,6 @@ function build(detail, {spot, combined, width: W, height: H}) {
   defs.lastChild.append(svgEl("rect", {x: 0, y: y0, width: W, height: Math.max(0, H - y0)}));
   svg.append(defs);
 
-  // Grid and axes
   for (const v of ticks(lo, hi, 5)) {
     svg.append(svgEl("line", {class: v === 0 ? "zero" : "grid-line", x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v)}));
     const label = svgEl("text", {class: "axis", x: m.l - 6, y: Y(v) + 3, "text-anchor": "end"});
@@ -71,7 +113,7 @@ function build(detail, {spot, combined, width: W, height: H}) {
     svg.append(label);
   }
 
-  // Model density along the bottom band
+  // Model density as a soft wash along the bottom band.
   const maxDensity = Math.max(...pts.map(p => p.density || 0));
   if (maxDensity > 0) {
     const band = (H - m.t - m.b) * .24;
@@ -81,14 +123,12 @@ function build(detail, {spot, combined, width: W, height: H}) {
     svg.append(svgEl("path", {class: "density", d}));
   }
 
-  // Gain / loss areas under the main expiry line
   let area = `M${X(pts[0].spot)},${y0}`;
   for (const p of pts) area += `L${X(p.spot).toFixed(1)},${Y(main(p)).toFixed(1)}`;
   area += `L${X(pts[pts.length - 1].spot)},${y0}Z`;
   svg.append(svgEl("path", {class: "gain", d: area, "clip-path": `url(#${id}g)`}));
   svg.append(svgEl("path", {class: "loss", d: area, "clip-path": `url(#${id}l)`}));
 
-  // Strikes and spot
   // Strike lines; labels step upward when strikes sit close together.
   let lastLabelX = -Infinity, lift = 0;
   for (const k of [...(detail.strikes ?? [])].sort((a, b) => a - b)) {
@@ -118,7 +158,7 @@ function build(detail, {spot, combined, width: W, height: H}) {
 
   // Break-evens of the series actually plotted: exact roots for expiry
   // payoffs, linear interpolation for calendars and the spot overlay.
-  let marks = useCombined || !(detail.breakevens?.length) ? [] : detail.breakevens;
+  const marks = useCombined || !(detail.breakevens?.length) ? [] : [...detail.breakevens];
   if (useCombined || !(detail.breakevens?.length)) {
     for (let i = 1; i < pts.length; i++) {
       const a = main(pts[i - 1]), b = main(pts[i]);
@@ -133,21 +173,21 @@ function build(detail, {spot, combined, width: W, height: H}) {
     svg.append(label);
   }
 
-  // Crosshair interaction
+  // Crosshair interaction.
   const cross = svgEl("line", {class: "cross", y1: m.t, y2: bottom, visibility: "hidden"});
   const dot = svgEl("circle", {class: "hover-dot", r: 4, visibility: "hidden"});
   const hit = svgEl("rect", {x: m.l, y: 0, width: W - m.l - m.r, height: H, fill: "transparent"});
   svg.append(cross, dot, hit);
-  const sorted = pts;
   const {sigma, years} = detail.distribution ?? {};
   const probBelow = x => sigma > 0 && years > 0 ? normCdf((Math.log(x / spot) + .5 * sigma * sigma * years) / (sigma * Math.sqrt(years))) : null;
   const move = event => {
     const box = svg.getBoundingClientRect();
+    if (!box.width) return;
     const px = (event.clientX - box.left) * (W / box.width);
     const target = x0 + (px - m.l) / (W - m.l - m.r) * (x1 - x0);
-    let lo2 = 0, hi2 = sorted.length - 1;
-    while (hi2 - lo2 > 1) { const mid = (lo2 + hi2) >> 1; if (sorted[mid].spot < target) lo2 = mid; else hi2 = mid; }
-    const p = Math.abs(sorted[lo2].spot - target) < Math.abs(sorted[hi2].spot - target) ? sorted[lo2] : sorted[hi2];
+    let a = 0, b = pts.length - 1;
+    while (b - a > 1) { const mid = (a + b) >> 1; if (pts[mid].spot < target) a = mid; else b = mid; }
+    const p = Math.abs(pts[a].spot - target) < Math.abs(pts[b].spot - target) ? pts[a] : pts[b];
     cross.setAttribute("x1", X(p.spot)); cross.setAttribute("x2", X(p.spot)); cross.setAttribute("visibility", "visible");
     dot.setAttribute("cx", X(p.spot)); dot.setAttribute("cy", Y(main(p))); dot.setAttribute("visibility", "visible");
     tipNode ??= document.body.appendChild(h("div.chart-tip", {role: "status"}));
@@ -163,12 +203,51 @@ function build(detail, {spot, combined, width: W, height: H}) {
     if (top < 8) top = event.clientY + 16;
     tipNode.style.left = left + "px"; tipNode.style.top = top + "px";
   };
+  const leave = () => { cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); hideChartTip(); };
   hit.addEventListener("pointermove", move);
   hit.addEventListener("pointerdown", move);
-  hit.addEventListener("pointerleave", () => { cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); hideChartTip(); });
+  hit.addEventListener("pointerleave", leave);
+  return {svg, move};
+}
+
+/* ------------------------------------------------------------------- ensō */
+// A calligraphic ensō: a tapered brush shape revealed by an animated mask
+// stroke, so it "draws" like a single breath of ink.
+const ENSO_R = 36, ENSO_FROM = -78, ENSO_SWEEP = 322;
+const ensoPoint = (deg, r) => {
+  const a = deg * Math.PI / 180;
+  return [50 + r * Math.cos(a), 50 + r * Math.sin(a)];
+};
+const ENSO_SHAPE = (() => {
+  const n = 84, outer = [], inner = [];
+  for (let i = 0; i <= n; i++) {
+    const u = i / n, deg = ENSO_FROM + ENSO_SWEEP * u;
+    const press = Math.min(1, u / .07) ** .6 * (1 - .72 * u ** 1.5) * (1 - .78 * Math.max(0, (u - .9) / .1));
+    const width = .8 + 8.6 * press;
+    const r = ENSO_R + .9 * Math.sin(u * Math.PI * 1.4) - .6 * u;
+    outer.push(ensoPoint(deg, r + width / 2));
+    inner.push(ensoPoint(deg, r - width / 2));
+  }
+  const pts = [...outer, ...inner.reverse()];
+  return "M" + pts.map(([x, y]) => x.toFixed(2) + " " + y.toFixed(2)).join("L") + "Z";
+})();
+const ENSO_GUIDE = (() => {
+  const [sx, sy] = ensoPoint(ENSO_FROM, ENSO_R), [ex, ey] = ensoPoint(ENSO_FROM + ENSO_SWEEP, ENSO_R - .6);
+  return `M${sx.toFixed(2)} ${sy.toFixed(2)}A${ENSO_R} ${ENSO_R} 0 1 1 ${ex.toFixed(2)} ${ey.toFixed(2)}`;
+})();
+
+export function enso({loop = true, label = null} = {}) {
+  const id = "enso" + (++uid);
+  const svg = svgEl("svg", {class: "enso" + (loop ? " loop" : ""), viewBox: "0 0 100 100", role: label ? "img" : null,
+    "aria-label": label, "aria-hidden": label ? null : "true"});
+  const defs = svgEl("defs"), mask = svgEl("mask", {id, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 100, height: 100});
+  mask.append(svgEl("path", {class: "brush", d: ENSO_GUIDE, pathLength: 240, fill: "none", stroke: "#fff", "stroke-width": 15, "stroke-linecap": "round"}));
+  defs.append(mask);
+  svg.append(defs, svgEl("path", {class: "ink", d: ENSO_SHAPE, fill: "currentColor", mask: `url(#${id})`}));
   return svg;
 }
 
+/* -------------------------------------------------------------- sparkline */
 /** ATM IV term structure sparkline (x on √DTE so near expiries stay readable). */
 export function termSparkline(term, {width = 132, height = 30} = {}) {
   const points = (term ?? []).filter(p => p.atmIv > 0 && p.dte >= .5);
@@ -197,7 +276,7 @@ const GLYPHS = {
 export function strategyGlyph(id) {
   const svg = svgEl("svg", {class: "glyph", viewBox: "0 0 20 20", "aria-hidden": "true"});
   svg.append(svgEl("path", {d: "M1 10.5H19", stroke: "currentColor", "stroke-opacity": ".25", "stroke-width": "1", fill: "none"}));
-  svg.append(svgEl("path", {d: GLYPHS[id] ?? "M2 10 L18 10", fill: "none", stroke: "currentColor", "stroke-width": "1.8", "stroke-linecap": "round", "stroke-linejoin": "round"}));
+  svg.append(svgEl("path", {d: GLYPHS[id] ?? "M2 10 L18 10", fill: "none", stroke: "currentColor", "stroke-width": "1.6", "stroke-linecap": "round", "stroke-linejoin": "round"}));
   return svg;
 }
 
@@ -208,5 +287,3 @@ export function bar(fraction, tone = "") {
   node.style.setProperty("--w", Math.max(0, Math.min(100, fraction * 100)).toFixed(1) + "%");
   return node;
 }
-
-export const fmtNum = num;

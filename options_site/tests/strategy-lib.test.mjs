@@ -340,3 +340,49 @@ test("unavailable market data yields an explicit empty result", () => {
   assert.deepEqual([result.total, result.candidates.length], [0, 0]);
   assert.equal(prepareMarket(null).ok, false);
 });
+
+/* ------------------------------------------------------------ frame codec */
+import {encodeFrame, decodeFrame, validFrame, contentHash} from "../lib/market.mjs";
+
+test("compact frame round-trips the real snapshot exactly and is far smaller", () => {
+  const frame = encodeFrame(fixture, fixtureNow);
+  const body = JSON.stringify(frame);
+  assert.ok(body.length < JSON.stringify(fixture).length / 15, "at least 15× smaller than the full snapshot");
+  const decoded = decodeFrame(JSON.parse(body), {receivedAt: fixtureNow, servedAt: fixtureNow});
+  const original = prepareMarket(fixture, fixtureNow), roundTrip = prepareMarket(decoded, fixtureNow);
+  assert.equal(roundTrip.contracts.length, original.contracts.length);
+  for (const contract of original.contracts) {
+    const other = roundTrip.bySymbol.get(contract.symbol);
+    for (const [key, value] of Object.entries(contract)) {
+      if (key === "rules") assert.deepEqual(other.rules, value);
+      else if (typeof value === "number") close(other[key], value, 1e-9, contract.symbol + "." + key);
+      else assert.deepEqual(other[key], value, contract.symbol + "." + key);
+    }
+  }
+  assert.equal(roundTrip.quality.status, original.quality.status);
+});
+
+test("frame decoding carries ages forward and re-anchors both clocks", () => {
+  const frame = encodeFrame(fixture, fixtureNow);
+  const receivedAt = fixtureNow + 3_600_000;                       // client clock one hour ahead of the server
+  const fresh = prepareMarket(decodeFrame(frame, {receivedAt, servedAt: fixtureNow}), receivedAt);
+  const later = prepareMarket(decodeFrame(frame, {receivedAt, servedAt: fixtureNow + 30_000}), receivedAt);
+  const original = prepareMarket(fixture, fixtureNow);
+  const symbol = original.contracts[0].symbol;
+  close(fresh.bySymbol.get(symbol).quoteAge, original.bySymbol.get(symbol).quoteAge, 1, "skew-independent age");
+  close(later.bySymbol.get(symbol).quoteAge, original.bySymbol.get(symbol).quoteAge + 30_000, 1, "unchanged frame ages with time");
+  close(fresh.exchangeNow, original.exchangeNow, 1, "exchange clock unaffected by local skew");
+});
+
+test("frame validation rejects malformed or inconsistent payloads", () => {
+  const frame = encodeFrame(fixture, fixtureNow);
+  assert.equal(validFrame(frame), true);
+  for (const broken of [null, {...frame, v: 2}, {...frame, rows: {...frame.rows, k: frame.rows.k.slice(1)}},
+    {...frame, rows: {...frame.rows, t: frame.rows.t + "P"}}, {...frame, rules: [[1, 2]]}, {...frame, builtAt: "x"}]) {
+    assert.equal(validFrame(broken), false);
+  }
+  assert.throws(() => decodeFrame({v: 1}, {receivedAt: 0, servedAt: 0}), TypeError);
+  assert.equal(contentHash("abc"), contentHash("abc"));
+  assert.notEqual(contentHash("abc"), contentHash("abd"));
+  assert.equal(JSON.stringify(encodeFrame(fixture, fixtureNow)), JSON.stringify(frame), "deterministic encoding");
+});

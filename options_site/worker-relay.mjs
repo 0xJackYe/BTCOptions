@@ -5,9 +5,14 @@ const SYMBOL = /^BTC-\d{6}-\d{1,12}(?:\.\d{1,4})?-[CP]$/;
 const METHODS = new Map([
   ["/api/market", "GET"], ["/api/focused-market", "GET"], ["/api/mark-watch", "GET"],
   ["/api/account/time", "GET"], ["/api/account", "POST"],
+  ["/api/strategy/market", "GET"], ["/api/strategy/klines", "GET"],
   ["/api/strategy/catalog", "GET"], ["/api/strategy/signals", "GET"], ["/api/strategy/screen", "GET"],
   ["/api/strategy/account", "GET"],
 ]);
+// Revalidated routes: the browser sends If-None-Match, the backend may answer
+// 304, and the validator plus serve time travel back unchanged.
+const CONDITIONAL = new Set(["/api/strategy/market", "/api/strategy/klines"]);
+const VALIDATOR = /^[\x21-\x7e ,]{1,200}$/;
 const STRATEGY_ACCOUNT = "/api/strategy/account";
 const STRATEGY_ACCOUNT_KEYS = ["configured", "authorized", "reason", "mode", "error", "assets", "positions", "time", "receivedAt"];
 const ACCOUNT_ERRORS = new Set(["invalid_input", "timestamp", "throttled", "credentials", "region",
@@ -87,7 +92,8 @@ function validateQuery(url) {
   if (url.pathname === "/api/market") {
     if (url.search && url.search !== "?refresh=1") throw new RelayError(400, "invalid_input");
   } else if (url.pathname === "/api/account" || url.pathname === "/api/account/time" ||
-      url.pathname === "/api/strategy/catalog" || url.pathname === "/api/strategy/signals" || url.pathname === STRATEGY_ACCOUNT) {
+      url.pathname === "/api/strategy/catalog" || url.pathname === "/api/strategy/signals" || url.pathname === STRATEGY_ACCOUNT ||
+      CONDITIONAL.has(url.pathname)) {
     if (url.search) throw new RelayError(400, "invalid_input");
   } else if (url.pathname === "/api/strategy/screen") {
     // Same grammar the backend enforces: short alphabetic keys, plain values.
@@ -117,6 +123,9 @@ function accountBody(body) {
 
 function validResponse(data, path) {
   if (!object(data)) return false;
+  if (path === "/api/strategy/market") return data.v === 1 && object(data.rows) && Array.isArray(data.rows.s) && data.rows.s.length <= 4000 &&
+    Array.isArray(data.expiries) && Number.isFinite(data.builtAt);
+  if (path === "/api/strategy/klines") return object(data.hourly) && Array.isArray(data.hourly.t) && object(data.daily) && Array.isArray(data.daily.t);
   if (path === "/api/strategy/catalog") return Array.isArray(data.strategies) && data.strategies.length <= 100;
   if (path === "/api/strategy/signals") return Number.isFinite(data.asOf) || data.asOf === null;
   if (path === "/api/strategy/screen") return Array.isArray(data.candidates) && data.candidates.length <= 200;
@@ -149,6 +158,13 @@ export async function relay(request, env, fetcher = fetch) {
     if (request.headers.has("Transfer-Encoding")) throw new RelayError(400, "invalid_input");
     const headers = new Headers();
     if (source === url.origin) headers.set("Origin", source);
+    if (CONDITIONAL.has(url.pathname)) {
+      const validator = request.headers.get("If-None-Match");
+      if (validator !== null) {
+        if (!VALIDATOR.test(validator)) throw new RelayError(400, "invalid_input");
+        headers.set("If-None-Match", validator);
+      }
+    }
     if (url.pathname === STRATEGY_ACCOUNT) {
       const authorization = request.headers.get("Authorization");
       if (authorization !== null) {
@@ -169,6 +185,16 @@ export async function relay(request, env, fetcher = fetch) {
     const upstream = await fetcher(target + url.pathname + url.search, {
       method, headers, body, redirect: "manual", signal: AbortSignal.timeout(11_000),
     });
+    const timing = {};
+    for (const name of ["ETag", "X-Served-At"]) {
+      const value = upstream.headers.get(name);
+      if (CONDITIONAL.has(url.pathname) && value !== null && VALIDATOR.test(value)) timing[name] = value;
+    }
+    if (upstream.status === 304 && CONDITIONAL.has(url.pathname) && timing.ETag) {
+      await upstream.body?.cancel().catch(() => {});
+      const {"Content-Type": _type, ...bare} = HEADERS;
+      return new Response(null, {status: 304, headers: {...bare, ...timing}});
+    }
     if (upstream.redirected || upstream.status >= 300 && upstream.status < 400) {
       await upstream.body?.cancel().catch(() => {});
       throw new RelayError(503, "unavailable");
@@ -194,7 +220,7 @@ export async function relay(request, env, fetcher = fetch) {
       return failure(status, code, isPrivate, upstream.status === 429 ? {"Retry-After": "60"} : {});
     }
     if (!validResponse(data, url.pathname)) throw new RelayError(502, "invalid_response");
-    return Response.json(data, {headers: HEADERS});
+    return Response.json(data, {headers: {...HEADERS, ...timing}});
   } catch (error) {
     return error instanceof RelayError ? failure(error.status, error.code, isPrivate)
       : failure(503, "unavailable", isPrivate);

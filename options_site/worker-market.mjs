@@ -293,6 +293,16 @@ export function createMarketHandler({
   const streamAttempts = [];
   let embargo = 0;
   let marketResponse = null;
+  // Concurrent readers share one in-flight read, so a burst of requests (or
+  // the chain page and the Strategy Desk together) costs one upstream refresh.
+  let pendingRead = null;
+  const sharedRead = origin => pendingRead ??= readMarket(origin).finally(() => { pendingRead = null; });
+  function rememberFrame(snapshot, next) {
+    const {server_now_ms, snapshot_served_at_ms, ...body} = snapshot;
+    marketResponse = {next, offset: snapshot.exchange_clock_offset_ms, tail: JSON.stringify(body).slice(1),
+      snapshot, builtAt: snapshot_served_at_ms};
+    return marketResponse;
+  }
 
   function remember(key, entry) {
     memory.delete(key);
@@ -437,7 +447,7 @@ export function createMarketHandler({
     return {snapshot, next};
   }
 
-  return async function handleMarket(request) {
+  async function handleMarket(request) {
     const url = new URL(request.url);
     if (!ROUTES.has(url.pathname)) return null;
     if (request.method !== "GET") return new Response(null, {status: 405, headers: {Allow: "GET", "Cache-Control": "no-store"}});
@@ -461,12 +471,10 @@ export function createMarketHandler({
         return new Response(`{"server_now_ms":${current + marketResponse.offset},"snapshot_served_at_ms":${current},${marketResponse.tail}`,
           {headers: JSON_HEADERS});
       }
-      const {snapshot, next} = await readMarket(url.origin);
+      const {snapshot, next} = await sharedRead(url.origin);
       if (url.pathname === "/api/market") {
-        const {server_now_ms, snapshot_served_at_ms, ...body} = snapshot;
-        const tail = JSON.stringify(body).slice(1);
-        marketResponse = {next, offset: snapshot.exchange_clock_offset_ms, tail};
-        return new Response(`{"server_now_ms":${server_now_ms},"snapshot_served_at_ms":${snapshot_served_at_ms},${tail}`,
+        const {tail} = rememberFrame(snapshot, next);
+        return new Response(`{"server_now_ms":${snapshot.server_now_ms},"snapshot_served_at_ms":${snapshot.snapshot_served_at_ms},${tail}`,
           {headers: JSON_HEADERS});
       }
       if (!snapshot.options.length) return json({error: snapshot.error?.message ?? MESSAGES.unavailable}, 503);
@@ -476,7 +484,10 @@ export function createMarketHandler({
       const options = [];
       for (let start = 0; start < symbols.length; start += 4) {
         const group = await Promise.all(symbols.slice(start, start + 4).map(async symbol => {
-          const row = bySymbol.get(symbol);
+          // Copy before enriching with depth so a shared snapshot never changes.
+          const source = bySymbol.get(symbol);
+          const row = {...source, field_updated_at: {...source.field_updated_at}, field_event_ms: {...source.field_event_ms},
+            field_source: {...source.field_source}};
           if (row.quote_group_valid && now() - row.quote_updated_at <= STREAM_AGE) return row;
           const depth = await take(url.origin, "depth/" + symbol, 15_000,
             () => upstream("depth?symbol=" + encodeURIComponent(symbol) + "&limit=10", 1, depthBook));
@@ -495,7 +506,25 @@ export function createMarketHandler({
       return json(url.pathname === "/api/market" ? invalidMarket(MESSAGES.unavailable) : {error: MESSAGES.unavailable},
         url.pathname === "/api/market" ? 200 : 503);
     }
+  }
+
+  /**
+   * Latest snapshot object (no JSON round trip) for in-process consumers such
+   * as the Strategy Desk API. builtAt is the server clock the receipt times
+   * refer to; unavailable markets resolve to an explicit empty snapshot.
+   */
+  handleMarket.latest = async (origin = "https://btcoptions.local") => {
+    if (marketResponse && now() < marketResponse.next) return {snapshot: marketResponse.snapshot, builtAt: marketResponse.builtAt};
+    try {
+      const {snapshot, next} = await sharedRead(origin);
+      const entry = rememberFrame(snapshot, next);
+      return {snapshot: entry.snapshot, builtAt: entry.builtAt};
+    } catch {
+      const current = now();
+      return {snapshot: {...invalidMarket(MESSAGES.unavailable), server_now_ms: current, snapshot_served_at_ms: current}, builtAt: current};
+    }
   };
+  return handleMarket;
 }
 
 export const handleMarket = createMarketHandler();

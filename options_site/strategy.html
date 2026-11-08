@@ -4,15 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0f0e0c">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, noarchive">
   <meta name="description" content="基于对话整理的 BTC 期权策略看板：点击策略，实时筛选币安期权中满足交易条件的合约。">
   <title>策略看板 · BTC 期权</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f3b33d'/%3E%3Cpath d='M14 44 L27 28 L36 36 L50 18' fill='none' stroke='%231a1305' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='12' fill='%23bf452b' transform='rotate(-4 32 32)'/%3E%3Cpath d='M41 17.5A16 16 0 1 0 47.5 27' fill='none' stroke='%23fbf6ec' stroke-width='5.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <script src="./strategy/preload.js" async></script>
+  <script src="./strategy/theme.js"></script>
   <link rel="preload" href="./strategy/fonts/inter-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./strategy/fonts/noto-serif-sc-600-ui.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./strategy/fonts/jetbrains-mono-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="./strategy/desk.css">
+  <!-- modulepreload -->
   <script src="./hosted.js" defer></script>
   <script src="./browser-market.js" defer></script>
+  <script type="module" src="./strategy/boot.js"></script>
   <script type="module" src="./strategy/app.js"></script>
 </head>
 <body>
@@ -40,18 +47,17 @@
     <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
     <symbol id="i-shield" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3 5 6v6c0 4.5 3 7.7 7 9 4-1.3 7-4.5 7-9V6z"/></symbol>
     <symbol id="i-layers" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></g></symbol>
-    <symbol id="i-empty" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 36 L18 22 L26 28 L42 10"/><path d="M6 42h36" opacity=".5"/><circle cx="42" cy="10" r="3"/></g></symbol>
   </svg>
 
   <div class="desk" id="desk">
     <header class="topbar">
-      <a class="brand" href="./strategy.html" aria-label="BTC 期权策略看板">
-        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17 L9 10 L13 14 L21 5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span>策略看板<small>BTC OPTIONS DESK</small></span>
+      <a class="brand" href="./strategy" aria-label="BTC 期权策略看板">
+        <span class="hanko" aria-hidden="true">策</span>
+        <span class="brand-name"><strong>策略看板</strong><small>BTC OPTIONS</small></span>
       </a>
       <nav class="nav" aria-label="页面">
         <a href="./">期权链</a>
-        <a href="./strategy.html" aria-current="page">策略看板</a>
+        <a href="./strategy" aria-current="page">策略看板</a>
         <a href="./account.html">账户查询</a>
       </nav>
       <button class="omnibox" id="omnibox" type="button" aria-label="打开命令面板（Ctrl+K）">
@@ -59,9 +65,9 @@
       </button>
       <div class="top-actions">
         <span class="pill" id="livePill" role="status" aria-live="polite"><i></i><span>连接中</span></span>
-        <span class="clock" id="clock" aria-label="北京时间">--:--:--<small>UTC+8</small></span>
+        <span class="clock" id="clock" aria-label="北京时间">--:--:--<small>北京</small></span>
         <button class="icon-btn" id="alertsButton" type="button" aria-pressed="false" aria-label="急跌触发提醒" data-tip="急跌触发提醒|开启后，当 BTC 满足急跌条件时弹出提醒（浏览器通知需授权）"><svg aria-hidden="true"><use href="#i-bell"/></svg></button>
-        <button class="icon-btn" id="themeButton" type="button" aria-label="切换明暗主题" data-tip="切换主题|快捷键 T"><svg aria-hidden="true"><use href="#i-sun"/></svg></button>
+        <button class="icon-btn" id="themeButton" type="button" aria-label="切换明暗主题" data-tip="切换主题|和纸 · 漆黑（快捷键 T）"><svg aria-hidden="true"><use href="#i-sun"/></svg></button>
         <button class="icon-btn" id="settingsButton" type="button" aria-label="我的资金与模型设置" data-tip="我的资金与模型|风险预算、现货持仓、纪律与模型波动率"><svg aria-hidden="true"><use href="#i-gear"/></svg></button>
         <button class="account-chip" id="accountChip" type="button" aria-label="币安账户"><svg aria-hidden="true"><use href="#i-wallet"/></svg><span id="accountChipText">账户未连接</span></button>
       </div>
@@ -71,7 +77,10 @@
 
     <aside class="rail" aria-label="策略列表">
       <div class="rail-search"><label class="field"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="railFilter" type="search" placeholder="筛选策略" autocomplete="off" aria-label="筛选策略"></label></div>
-      <div class="rail-scroll" id="rail" role="listbox" aria-label="策略"></div>
+      <div class="rail-scroll">
+        <i class="rail-ink" id="railInk" aria-hidden="true"></i>
+        <div class="rail-list" id="rail" role="listbox" aria-label="策略"></div>
+      </div>
       <div class="rail-foot">
         <div class="legend" aria-label="参数来源图例">
           <span><i class="origin-dot" data-origin="user"></i>你的规则</span>
@@ -88,7 +97,7 @@
       <div class="strategy-head" id="strategyHead"></div>
       <div class="results-bar" id="resultsBar"></div>
       <div class="table-wrap" id="tableWrap">
-        <table class="grid" id="grid" role="grid" aria-label="满足条件的期权">
+        <table class="grid" id="grid" role="grid" aria-label="满足条件的期权" hidden>
           <thead id="gridHead"></thead>
           <tbody id="gridBody"></tbody>
         </table>

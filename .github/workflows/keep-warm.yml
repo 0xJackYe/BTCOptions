@@ -1,0 +1,23 @@
+name: Keep the cloud backend warm
+# Render's free instance sleeps after 15 idle minutes and needs about a minute
+# to wake, during which the site falls back to direct Binance data without
+# contract rules. A light health ping keeps it ready. One always-on free
+# service uses about 744 of Render's 750 free monthly instance hours; delete
+# this file (or disable the workflow) to let the backend sleep again.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: keep-warm
+  cancel-in-progress: true
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping the backend health check
+        run: |
+          curl --silent --show-error --max-time 90 --retry 2 --retry-delay 10 \
+            https://btcoptions.onrender.com/api/health --output /dev/null || echo "Backend did not answer; the next run retries."

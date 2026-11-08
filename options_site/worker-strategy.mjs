@@ -2,6 +2,8 @@
  * Strategy Desk API. Portable request → response handlers for Node.js (local
  * connector and the Render backend) and Cloudflare Workers.
  *
+ *   GET /api/strategy/market    compact columnar market frame (ETag / 304)
+ *   GET /api/strategy/klines    hourly and daily BTCUSDT bars (ETag / 304)
  *   GET /api/strategy/catalog   strategy definitions, metrics and citations
  *   GET /api/strategy/signals   regime: crash trigger, realized vol, IV surface, klines
  *   GET /api/strategy/screen    server-side screening (?id=crash-put&dte=30~60…)
@@ -15,10 +17,13 @@
 import {catalog, getStrategy} from "./lib/strategies.mjs";
 import {createContext, screen, serializeResult} from "./lib/screener.mjs";
 import {parseKlines, packBars, regime} from "./lib/signals.mjs";
+import {encodeFrame, contentHash} from "./lib/market.mjs";
 import {QueryError, binanceJson, normalizeAccount, normalizePositions} from "./worker-account.mjs";
 
 const SPOT_HOSTS = ["https://api.binance.com", "https://data-api.binance.vision"];
-const ROUTES = new Set(["/api/strategy/catalog", "/api/strategy/signals", "/api/strategy/screen", "/api/strategy/account"]);
+const ROUTES = new Set(["/api/strategy/market", "/api/strategy/klines", "/api/strategy/catalog", "/api/strategy/signals",
+  "/api/strategy/screen", "/api/strategy/account"]);
+export const CONDITIONAL_ROUTES = new Set(["/api/strategy/market", "/api/strategy/klines"]);
 const KLINE_LIMIT = 768 * 1024;
 const PUBLIC_HEADERS = {"Content-Type": "application/json; charset=utf-8", "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"};
 const PRIVATE_HEADERS = {...PUBLIC_HEADERS, "Cache-Control": "private, no-store, max-age=0", "Referrer-Policy": "no-referrer",
@@ -72,8 +77,19 @@ async function tokenMatches(header, expected) {
   return diff === 0;
 }
 
+/** True when an If-None-Match list names the current strong or weak validator. */
+export function etagMatches(header, etag) {
+  if (typeof header !== "string" || header.length > 512) return false;
+  return header.split(",").some(item => {
+    const tag = item.trim().replace(/^W\//, "");
+    return tag === "*" || tag === etag;
+  });
+}
+
 export function createStrategyHandler({
   getMarket,
+  latest = null,
+  serverClock = null,
   fetcher = (...args) => fetch(...args),
   now = Date.now,
   credentials = {configured: false, reason: "missing"},
@@ -81,7 +97,11 @@ export function createStrategyHandler({
   hosted = false,
   replayKlines = null,
 } = {}) {
-  if (typeof getMarket !== "function") throw new TypeError("getMarket is required");
+  if (typeof latest !== "function" && typeof getMarket !== "function") throw new TypeError("latest or getMarket is required");
+  // Prefer the in-process snapshot object; fall back to a JSON market source.
+  const source = latest ?? (async () => ({snapshot: await getMarket(), builtAt: now()}));
+  const clockNow = serverClock ?? now;
+  let frameMemo = null, klineMemo = null;
   const klineCache = new Map();
   let embargo = 0, clock = {offset: 0, at: 0}, signingKey = null, accountFlight = null, accountMemo = null;
   const catalogBody = JSON.stringify(catalog());
@@ -134,8 +154,41 @@ export function createStrategyHandler({
   }
 
   async function marketAndKlines() {
-    const [snapshot, hourly, daily] = await Promise.all([getMarket(), loadKlines("1h", 240, 60_000), loadKlines("1d", 120, 1_800_000)]);
+    const [{snapshot}, hourly, daily] = await Promise.all([source(), loadKlines("1h", 240, 60_000), loadKlines("1d", 120, 1_800_000)]);
     return {snapshot, hourly, daily};
+  }
+
+  /** Conditional response: 304 when the client already holds this exact body. */
+  function conditional(request, entry) {
+    const headers = {...PUBLIC_HEADERS, "Cache-Control": "no-cache", ETag: entry.etag, "X-Served-At": String(clockNow())};
+    if (etagMatches(request.headers.get("If-None-Match"), entry.etag)) {
+      const {"Content-Type": _type, ...bare} = headers;
+      return new Response(null, {status: 304, headers: bare});
+    }
+    return new Response(entry.body, {headers});
+  }
+
+  async function marketRoute(request) {
+    const {snapshot, builtAt} = await source();
+    // Encode once per market frame: every poll of an unchanged frame reuses
+    // the same body and validator.
+    if (frameMemo?.snapshot !== snapshot) {
+      const body = JSON.stringify(encodeFrame(snapshot, builtAt));
+      frameMemo = {snapshot, body, etag: `"f${contentHash(body)}"`};
+    }
+    return conditional(request, frameMemo);
+  }
+
+  async function klinesRoute(request) {
+    const [hourly, daily] = await Promise.all([loadKlines("1h", 240, 60_000), loadKlines("1d", 120, 1_800_000)]);
+    const key = [hourly.at, daily.at, hourly.stale, daily.stale, hourly.error, daily.error].join("|");
+    if (klineMemo?.key !== key) {
+      const meta = entry => ({stale: entry.stale, error: entry.error ?? null, source: entry.source});
+      const body = JSON.stringify({hourly: packBars(hourly.bars.slice(-240)), daily: packBars(daily.bars.slice(-120)),
+        sources: {hourly: meta(hourly), daily: meta(daily)}});
+      klineMemo = {key, body, etag: `"k${contentHash(body)}"`};
+    }
+    return conditional(request, klineMemo);
   }
 
   async function signals() {
@@ -248,6 +301,8 @@ export function createStrategyHandler({
       if (url.pathname === "/api/strategy/catalog") {
         return new Response(catalogBody, {headers: {...PUBLIC_HEADERS, "Cache-Control": "public, max-age=300"}});
       }
+      if (url.pathname === "/api/strategy/market") return await marketRoute(request);
+      if (url.pathname === "/api/strategy/klines") return await klinesRoute(request);
       if (url.pathname === "/api/strategy/signals") return await signals();
       if (url.pathname === "/api/strategy/screen") return await screenRoute(url);
       return await accountRoute(request);

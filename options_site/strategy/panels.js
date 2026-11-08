@@ -1,9 +1,9 @@
 // Dialogs: fund & model settings, account connection, keyboard help, palette.
 import {h, icon, fill} from "./dom.js";
 import * as F from "./format.js";
-import {dialogFrame, openDialog, toast} from "./ui.js";
+import {dialogFrame, openDialog, closeDialog, toast} from "./ui.js";
 import {STRATEGIES} from "../lib/strategies.mjs";
-import {DEFAULT_SETTINGS, mergeSettings} from "../lib/screener.mjs";
+import {DEFAULT_SETTINGS, mergeSettings} from "../lib/checks.mjs";
 
 /* ------------------------------------------------------------- settings */
 const FIELDS = [
@@ -64,9 +64,9 @@ export function openSettings(dialog, state, actions) {
     return mergeSettings(next);
   };
   fill(dialog, ...dialogFrame("我的资金与模型", "这些数字决定仓位、纪律检查与模型统计；保存在本浏览器", body, [
-    h("button.btn.ghost", {type: "button", onClick: () => { actions.saveSettings(mergeSettings({})); dialog.close(); toast("ok", "已恢复默认设置"); }}, icon("reset"), "恢复默认"),
-    h("button.btn", {type: "button", onClick: () => dialog.close()}, "取消"),
-    h("button.btn.primary", {type: "button", onClick: () => { actions.saveSettings(collect()); dialog.close(); toast("ok", "设置已保存", "所有策略已按新设置重新计算"); }}, "保存"),
+    h("button.btn.ghost", {type: "button", onClick: () => { actions.saveSettings(mergeSettings({})); closeDialog(dialog); toast("ok", "已恢复默认设置"); }}, icon("reset"), "恢复默认"),
+    h("button.btn", {type: "button", onClick: () => closeDialog(dialog)}, "取消"),
+    h("button.btn.primary", {type: "button", onClick: () => { actions.saveSettings(collect()); closeDialog(dialog); toast("ok", "设置已保存", "所有策略已按新设置重新计算"); }}, "保存"),
   ]));
   openDialog(dialog);
 }
@@ -77,7 +77,7 @@ export function openAccount(dialog, state, actions) {
   const body = [];
   if (a.data) {
     const usdt = a.data.assets?.find(asset => asset.asset === "USDT") ?? a.data.assets?.[0];
-    const p = state.ctx?.portfolio;
+    const p = state.portfolio;
     body.push(h("div.callout.safe", {}, h("strong", {text: a.mode === "server" ? "已通过服务器密钥连接（只读）" : "已在浏览器内连接（只读，密钥仅在内存）"}),
       `读取于 ${F.beijing(a.data.receivedAt, {date: true})}（北京）。本看板没有任何下单、撤单或划转接口。`));
     body.push(h("div.account-grid", {},
@@ -114,7 +114,7 @@ export function openAccount(dialog, state, actions) {
             : serverInfo.reason === "token_required" ? "服务器已配置 Key，请输入访问令牌。" : serverInfo.error ? "币安返回错误：" + serverInfo.error : "已配置。";
       body.push(h("p", {text: status}));
       body.push(h("div.section-title", {text: "本机运行（options_site/local_bridge.mjs）"}),
-        h("pre.code", {text: "# 在仓库根目录创建 .env（已被 git 忽略）\nBINANCE_API_KEY=你的64位只读Key\nBINANCE_API_SECRET=你的64位Secret\n\nnode options_site/build.mjs\nnode options_site/local_bridge.mjs\n# 打开 http://127.0.0.1:8767/strategy.html"}),
+        h("pre.code", {text: "# 在仓库根目录创建 .env（已被 git 忽略）\nBINANCE_API_KEY=你的64位只读Key\nBINANCE_API_SECRET=你的64位Secret\n\nnode options_site/build.mjs\nnode options_site/local_bridge.mjs\n# 打开 http://127.0.0.1:8767/strategy"}),
         h("div.section-title", {text: "公网部署（Render）"}),
         h("pre.code", {text: "# Render → btcoptions → Environment（Secret）\nBINANCE_API_KEY=…\nBINANCE_API_SECRET=…\nBTCOPT_ACCESS_TOKEN=至少24位随机字符串\n# 在下方输入同一个访问令牌即可读取"}));
       const token = h("input.text-input", {type: "password", autocomplete: "off", placeholder: "访问令牌（仅公网部署需要）", "aria-label": "访问令牌", value: state.accountToken ?? ""});
@@ -138,8 +138,8 @@ export function openAccount(dialog, state, actions) {
   const footer = a.data ? [
     h("button.btn", {type: "button", onClick: () => actions.refreshAccount()}, icon("reset"), "刷新"),
     h("button.btn", {type: "button", onClick: () => { actions.disconnectAccount(); }}, "断开"),
-    h("button.btn.primary", {type: "button", onClick: () => dialog.close()}, "完成"),
-  ] : [h("button.btn", {type: "button", onClick: () => dialog.close()}, "关闭")];
+    h("button.btn.primary", {type: "button", onClick: () => closeDialog(dialog)}, "完成"),
+  ] : [h("button.btn", {type: "button", onClick: () => closeDialog(dialog)}, "关闭")];
   fill(dialog, ...dialogFrame("币安期权账户", "只读：持仓、保证金与风险预算占用", body, footer));
   openDialog(dialog);
 }
@@ -156,10 +156,10 @@ export function openHelp(dialog) {
       h("li", {text: "行情来自币安期权公开接口：卖出按买一价、买入按卖一价计算，已扣币安基础手续费。"}),
       h("li", {text: "到期损益为精确的现金结算公式（含行权费）；胜率用市场隐含 IV，期望收益与 ES 用预测波动率，均为对数正态模型值。"}),
       h("li", {text: "急跌触发使用币安 BTCUSDT 小时 K 线：窗口内最高价到当前指数的回撤。"}),
-      h("li", {text: "参数旁的彩色圆点表示来源：金色为你的规则，蓝色为对话建议，紫色为工作台设置，灰色为默认。"}),
+      h("li", {text: "参数旁的彩色圆点表示来源：朱色为你的规则，蓝色为对话建议，紫色为工作台设置，灰色为默认。"}),
       h("li", {text: "看板只读，没有任何下单接口；所有结果仅供研究，不构成投资建议。"})),
   ];
-  fill(dialog, ...dialogFrame("快捷键与说明", "像交易终端一样，用键盘完成大部分操作", body, [h("button.btn.primary", {type: "button", onClick: () => dialog.close()}, "知道了")]));
+  fill(dialog, ...dialogFrame("快捷键与说明", "像交易终端一样，用键盘完成大部分操作", body, [h("button.btn.primary", {type: "button", onClick: () => closeDialog(dialog)}, "知道了")]));
   openDialog(dialog);
 }
 
@@ -213,7 +213,7 @@ export function openPalette(dialog, state, actions) {
       const nodes = [];
       if (item.group !== lastGroup) { nodes.push(h("div.palette-group", {text: item.group})); lastGroup = item.group; }
       nodes.push(h("button.palette-item", {type: "button", role: "option", id: "pal" + index, "aria-selected": String(index === active),
-        onClick: () => { dialog.close(); item.run(); }, onPointermove: () => { if (active !== index) { active = index; paint(); } }},
+        onClick: () => { closeDialog(dialog); item.run(); }, onPointermove: () => { if (active !== index) { active = index; paint(); } }},
       item.icon ? icon(item.icon) : h("span", {}),
       h("span", {}, highlight(item.label, query), item.sub ? h("small", {text: "  " + item.sub}) : null),
       item.hint ? h("kbd", {text: item.hint}) : h("span")));
@@ -231,7 +231,7 @@ export function openPalette(dialog, state, actions) {
   input.addEventListener("keydown", event => {
     if (event.key === "ArrowDown") { event.preventDefault(); active = Math.min(items.length - 1, active + 1); paint(); }
     else if (event.key === "ArrowUp") { event.preventDefault(); active = Math.max(0, active - 1); paint(); }
-    else if (event.key === "Enter") { event.preventDefault(); const item = items[active]; if (item) { dialog.close(); item.run(); } }
+    else if (event.key === "Enter") { event.preventDefault(); const item = items[active]; if (item) { closeDialog(dialog); item.run(); } }
   });
   fill(dialog, h("div.palette-input", {}, icon("search"), input, h("kbd", {text: "Esc"})), list,
     h("div.palette-foot", {}, h("span", {}, h("kbd", {text: "↑"}), h("kbd", {text: "↓"}), " 选择"), h("span", {}, h("kbd", {text: "Enter"}), " 执行"), h("span", {}, h("kbd", {text: "Esc"}), " 关闭")));
